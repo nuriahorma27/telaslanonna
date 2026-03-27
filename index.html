@@ -243,25 +243,32 @@ header{height:var(--header-h);padding:0 1.2rem;display:flex;align-items:center;j
 .edit-img-lbl input{position:absolute;inset:0;opacity:0;cursor:pointer;font-size:0;}
 
 /* ── VIEWER OVERLAY ── */
-.viewer-overlay{position:fixed;inset:0;z-index:600;background:rgba(20,16,12,.96);display:flex;align-items:center;justify-content:center;}
+.viewer-overlay{position:fixed;inset:0;z-index:600;background:rgba(26,22,18,.72);backdrop-filter:blur(3px);display:flex;align-items:center;justify-content:center;padding:1.2rem;}
 .viewer-overlay.hidden{display:none;}
-.viewer-inner{display:flex;flex-direction:column;width:100%;height:100%;max-width:560px;position:relative;}
-.viewer-close{position:absolute;top:.75rem;right:.75rem;background:none;border:1px solid rgba(255,255,255,.25);border-radius:4px;color:rgba(255,255,255,.7);padding:.28rem .6rem;cursor:pointer;font-size:.72rem;font-family:'Barlow',sans-serif;letter-spacing:.1em;z-index:10;transition:all .15s;}
-.viewer-close:hover{border-color:#fff;color:#fff;}
-.viewer-carousel-wrap{display:flex;align-items:center;gap:.4rem;padding:.7rem .8rem .5rem;border-bottom:1px solid rgba(255,255,255,.1);flex-shrink:0;}
-.viewer-car-btn{background:none;border:none;color:rgba(255,255,255,.55);font-size:1.9rem;cursor:pointer;padding:0 .2rem;line-height:1;transition:color .15s;flex-shrink:0;}
-.viewer-car-btn:hover:not(:disabled){color:#fff;}
-.viewer-car-btn:disabled{opacity:.18;cursor:default;}
-.viewer-car-track{display:flex;gap:.4rem;flex:1;justify-content:center;align-items:center;}
-.viewer-car-thumb{width:68px;height:68px;object-fit:cover;border-radius:4px;cursor:pointer;border:2px solid transparent;opacity:.5;transition:all .18s;flex-shrink:0;}
-.viewer-car-thumb:hover{opacity:.8;}
+.viewer-card{background:var(--cream);border:1px solid var(--border);border-radius:10px;width:100%;max-width:360px;overflow:hidden;box-shadow:0 16px 48px rgba(0,0,0,.35);display:flex;flex-direction:column;}
+.viewer-card-hdr{padding:.55rem 1rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.viewer-card-lbl{font-size:.5rem;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);font-weight:500;}
+.viewer-close{background:none;border:none;cursor:pointer;color:var(--muted);font-size:.9rem;padding:.1rem .35rem;line-height:1;transition:color .15s;}
+.viewer-close:hover{color:var(--dark);}
+.viewer-carousel-wrap{display:flex;align-items:center;gap:.3rem;padding:.5rem .7rem .4rem;border-bottom:1px solid var(--border);}
+.viewer-car-btn{background:none;border:none;color:var(--muted);font-size:1.4rem;cursor:pointer;padding:0 .15rem;line-height:1;transition:color .15s;flex-shrink:0;}
+.viewer-car-btn:hover:not(:disabled){color:var(--dark);}
+.viewer-car-btn:disabled{opacity:.2;cursor:default;}
+.viewer-car-track{display:flex;gap:.3rem;flex:1;justify-content:center;align-items:center;}
+.viewer-car-thumb{width:56px;height:56px;object-fit:cover;border-radius:3px;cursor:pointer;border:2px solid transparent;opacity:.55;transition:all .15s;flex-shrink:0;}
+.viewer-car-thumb:hover{opacity:.85;}
 .viewer-car-thumb.active{border-color:var(--accent);opacity:1;}
-.viewer-car-info{text-align:center;font-size:.52rem;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.35);padding:.28rem 0;flex-shrink:0;}
-.viewer-main-wrap{flex:1;display:flex;align-items:center;justify-content:center;padding:1rem;min-height:0;overflow:hidden;}
-#viewerMainImg{max-width:100%;max-height:100%;object-fit:contain;border-radius:5px;}
-.viewer-info{padding:.6rem 1rem 1rem;text-align:center;flex-shrink:0;}
-.viewer-fabric-name{font-family:'Cormorant Garamond',serif;font-size:1.25rem;font-weight:300;color:#fff;letter-spacing:.05em;}
-.viewer-fabric-meta{font-size:.56rem;letter-spacing:.18em;text-transform:uppercase;color:rgba(255,255,255,.42);margin-top:.22rem;}
+.viewer-car-info{text-align:center;font-size:.48rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);padding:.2rem 0;flex-shrink:0;}
+.viewer-main-wrap{background:var(--light-warm);display:flex;align-items:center;justify-content:center;padding:1rem;height:260px;position:relative;}
+#viewerMainImg{max-width:100%;max-height:100%;object-fit:contain;border-radius:3px;box-shadow:0 4px 18px rgba(0,0,0,.14);}
+.viewer-nav-btn{position:absolute;top:50%;transform:translateY(-50%);background:rgba(26,22,18,.55);border:none;color:#fff;width:34px;height:34px;border-radius:50%;cursor:pointer;font-size:1.1rem;display:flex;align-items:center;justify-content:center;transition:background .15s;}
+.viewer-nav-btn:hover{background:rgba(26,22,18,.82);}
+.viewer-nav-btn:disabled{opacity:.18;cursor:default;}
+.viewer-nav-l{left:.55rem;}
+.viewer-nav-r{right:.55rem;}
+.viewer-info{padding:.6rem 1rem .9rem;text-align:center;}
+.viewer-fabric-name{font-family:'Cormorant Garamond',serif;font-size:1.05rem;color:var(--dark);font-weight:400;letter-spacing:.04em;}
+.viewer-fabric-meta{font-size:.55rem;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);margin-top:.2rem;}
 
 /* Toast & loading */
 .toast{position:fixed;bottom:1rem;left:50%;transform:translateX(-50%) translateY(70px);background:var(--dark);color:var(--cream);padding:.48rem 1.1rem;border-radius:20px;font-size:.68rem;z-index:999;transition:transform .28s ease;white-space:nowrap;pointer-events:none;}
@@ -438,8 +445,11 @@ header{height:var(--header-h);padding:0 1.2rem;display:flex;align-items:center;j
 
 <!-- VIEWER -->
 <div id="viewerOverlay" class="viewer-overlay hidden">
-  <div class="viewer-inner">
-    <button class="viewer-close" id="viewerClose">✕ Cerrar</button>
+  <div class="viewer-card">
+    <div class="viewer-card-hdr">
+      <span class="viewer-card-lbl">Vista de tela</span>
+      <button class="viewer-close" id="viewerClose">✕</button>
+    </div>
     <div class="viewer-carousel-wrap">
       <button class="viewer-car-btn" id="viewerCarPrev">‹</button>
       <div class="viewer-car-track" id="viewerCarTrack"></div>
@@ -447,7 +457,9 @@ header{height:var(--header-h);padding:0 1.2rem;display:flex;align-items:center;j
     </div>
     <div class="viewer-car-info" id="viewerCarInfo"></div>
     <div class="viewer-main-wrap">
+      <button class="viewer-nav-btn viewer-nav-l" id="viewerPrev">‹</button>
       <img id="viewerMainImg" src="" alt="">
+      <button class="viewer-nav-btn viewer-nav-r" id="viewerNext">›</button>
     </div>
     <div class="viewer-info">
       <div class="viewer-fabric-name" id="viewerName"></div>
@@ -1608,6 +1620,13 @@ function renderViewerCarousel() {
 
   document.getElementById('viewerCarPrev').disabled = pg === 0;
   document.getElementById('viewerCarNext').disabled = pg >= totalCarPages - 1;
+
+  // Update side nav arrows
+  const curIdx = VIEWER.fabrics.findIndex(f => f.code === VIEWER.fabric?.code);
+  const prevBtn = document.getElementById('viewerPrev');
+  const nextBtn = document.getElementById('viewerNext');
+  if(prevBtn) prevBtn.disabled = curIdx <= 0;
+  if(nextBtn) nextBtn.disabled = curIdx >= total - 1;
 }
 
 function closeViewer() {
@@ -1616,10 +1635,23 @@ function closeViewer() {
   VIEWER.open = false;
 }
 
+function viewerStep(dir) {
+  const idx = VIEWER.fabrics.findIndex(f => f.code === VIEWER.fabric?.code);
+  const next = idx + dir;
+  if(next < 0 || next >= VIEWER.fabrics.length) return;
+  VIEWER.fabric = VIEWER.fabrics[next];
+  VIEWER.carPage = Math.floor(next / CAR_SIZE);
+  renderViewerMain(VIEWER.fabric);
+  renderViewerCarousel();
+  document.getElementById('viewerPrev').disabled = next === 0;
+  document.getElementById('viewerNext').disabled = next === VIEWER.fabrics.length - 1;
+}
+
 document.getElementById('viewerClose').addEventListener('click', closeViewer);
 document.getElementById('viewerOverlay').addEventListener('click', e => {
   if(e.target === document.getElementById('viewerOverlay')) closeViewer();
 });
+// Carousel scroll arrows (3 by 3)
 document.getElementById('viewerCarPrev').addEventListener('click', () => {
   if(VIEWER.carPage > 0){ VIEWER.carPage--; renderViewerCarousel(); }
 });
@@ -1627,24 +1659,16 @@ document.getElementById('viewerCarNext').addEventListener('click', () => {
   const tot = Math.ceil(VIEWER.fabrics.length / CAR_SIZE);
   if(VIEWER.carPage < tot - 1){ VIEWER.carPage++; renderViewerCarousel(); }
 });
+// Side arrows: navigate fabric by fabric
+document.getElementById('viewerPrev').addEventListener('click', () => viewerStep(-1));
+document.getElementById('viewerNext').addEventListener('click', () => viewerStep(1));
 
 // Keyboard navigation
 document.addEventListener('keydown', e => {
   if(!VIEWER.open) return;
   if(e.key === 'Escape'){ closeViewer(); return; }
-  const idx = VIEWER.fabrics.findIndex(f => f.code === VIEWER.fabric?.code);
-  if(e.key === 'ArrowLeft' && idx > 0){
-    VIEWER.fabric = VIEWER.fabrics[idx - 1];
-    VIEWER.carPage = Math.floor((idx - 1) / CAR_SIZE);
-    renderViewerMain(VIEWER.fabric);
-    renderViewerCarousel();
-  }
-  if(e.key === 'ArrowRight' && idx < VIEWER.fabrics.length - 1){
-    VIEWER.fabric = VIEWER.fabrics[idx + 1];
-    VIEWER.carPage = Math.floor((idx + 1) / CAR_SIZE);
-    renderViewerMain(VIEWER.fabric);
-    renderViewerCarousel();
-  }
+  if(e.key === 'ArrowLeft') viewerStep(-1);
+  if(e.key === 'ArrowRight') viewerStep(1);
 });
 
 // ── CROP MODAL ──
