@@ -1379,29 +1379,32 @@ function renderGrid(){
       el.appendChild(div);
     });
 
-    if(totalPages>1){
+    {
       const nav=document.createElement('div');
       nav.className='section-nav';
+      const canNav=totalPages>1;
       nav.innerHTML=`
-        <button class="grid-nav-btn sec-prev" data-mat="${mat}">← Ver más</button>
+        <button class="grid-nav-btn sec-prev" data-mat="${mat}"${canNav?'':' disabled'}>← Ver más</button>
         <span class="grid-page-counter">${pg+1}/${totalPages}</span>
-        <button class="grid-nav-btn sec-next" data-mat="${mat}">Ver más →</button>
+        <button class="grid-nav-btn sec-next" data-mat="${mat}"${canNav?'':' disabled'}>Ver más →</button>
       `;
       el.appendChild(nav);
-      nav.querySelector('.sec-prev').addEventListener('click',async e=>{
-        e.stopPropagation();
-        const tot=Math.ceil(getFilteredByMat(mat).length/PAGE_SIZE);
-        S.pages[mat]=((S.pages[mat]||0)-1+tot)%tot;
-        await loadSectionPage(mat);
-        renderGrid();
-      });
-      nav.querySelector('.sec-next').addEventListener('click',async e=>{
-        e.stopPropagation();
-        const tot=Math.ceil(getFilteredByMat(mat).length/PAGE_SIZE);
-        S.pages[mat]=((S.pages[mat]||0)+1)%tot;
-        await loadSectionPage(mat);
-        renderGrid();
-      });
+      if(canNav){
+        nav.querySelector('.sec-prev').addEventListener('click',async e=>{
+          e.stopPropagation();
+          const tot=Math.ceil(getFilteredByMat(mat).length/PAGE_SIZE);
+          S.pages[mat]=((S.pages[mat]||0)-1+tot)%tot;
+          await loadSectionPage(mat);
+          renderGrid();
+        });
+        nav.querySelector('.sec-next').addEventListener('click',async e=>{
+          e.stopPropagation();
+          const tot=Math.ceil(getFilteredByMat(mat).length/PAGE_SIZE);
+          S.pages[mat]=((S.pages[mat]||0)+1)%tot;
+          await loadSectionPage(mat);
+          renderGrid();
+        });
+      }
     }
   });
 }
