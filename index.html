@@ -398,6 +398,38 @@ header{height:var(--header-h);padding:0 1.2rem;display:flex;align-items:center;j
 .mn-type-block{border-bottom:1px solid var(--border);}
 .mn-type-block:last-child{border-bottom:none;}
 .mn-type-hdr{padding:.3rem .9rem;font-size:.5rem;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);font-weight:500;background:var(--cream);}
+
+/* ── PEDIDOS (Medidas tab) ── */
+.ped-empty{text-align:center;padding:2.5rem 1rem;color:var(--muted);font-family:'Cormorant Garamond',serif;font-style:italic;font-size:.95rem;}
+.ped-list{display:flex;flex-direction:column;gap:.7rem;padding:1rem;}
+.ped-card{background:#fff;border:1px solid var(--border);border-radius:8px;overflow:hidden;transition:box-shadow .15s;}
+.ped-card.urgente{border-color:#d07060;}
+.ped-card.proximo{border-color:#c8a030;}
+.ped-card.realizado{opacity:.55;}
+.ped-card-hdr{padding:.58rem .9rem;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;justify-content:space-between;gap:.5rem;}
+.ped-card-titulo{font-family:'Cormorant Garamond',serif;font-size:1rem;color:var(--dark);flex:1;}
+.ped-badge{font-size:.46rem;letter-spacing:.12em;text-transform:uppercase;padding:.15rem .45rem;border-radius:20px;font-weight:600;white-space:nowrap;flex-shrink:0;}
+.ped-badge.urgente{background:#fcecea;color:#b04040;border:1px solid #e0a0a0;}
+.ped-badge.proximo{background:#fdf5e0;color:#8a6000;border:1px solid #e0c060;}
+.ped-badge.realizado{background:#eef4f0;color:var(--lino);border:1px solid #a0c8a8;}
+.ped-card-fecha{padding:.35rem .9rem;font-size:.6rem;color:var(--muted);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:.4rem;}
+.ped-fecha-ico{font-size:.75rem;}
+.ped-ninos{display:flex;flex-direction:column;gap:0;}
+.ped-nino-row{padding:.45rem .9rem;border-bottom:1px dashed var(--border);display:flex;align-items:center;gap:.6rem;}
+.ped-nino-row:last-child{border-bottom:none;}
+.ped-nino-name{font-size:.82rem;font-weight:500;color:var(--dark);min-width:5rem;}
+.ped-nino-edad{font-size:.58rem;color:var(--muted);background:var(--cream);padding:.08rem .32rem;border-radius:20px;border:1px solid var(--border);flex-shrink:0;}
+.ped-nino-prenda{font-size:.68rem;color:var(--warm);flex:1;}
+.ped-card-footer{padding:.55rem .9rem;display:flex;align-items:center;justify-content:flex-end;gap:.5rem;border-top:1px solid var(--border);background:var(--cream);}
+.ped-mark-btn{padding:.38rem .82rem;background:var(--dark);color:var(--cream);border:none;border-radius:5px;cursor:pointer;font-family:'Barlow',sans-serif;font-size:.62rem;font-weight:500;letter-spacing:.08em;transition:background .15s;}
+.ped-mark-btn:hover{background:var(--warm);}
+.ped-unmark-btn{padding:.36rem .7rem;background:none;border:1px solid var(--border);border-radius:5px;cursor:pointer;color:var(--muted);font-family:'Barlow',sans-serif;font-size:.6rem;transition:all .15s;}
+.ped-unmark-btn:hover{border-color:var(--accent);color:var(--accent);}
+
+/* specs textarea */
+.specs-textarea{width:100%;padding:.38rem .55rem;border:1.5px solid var(--border);border-radius:5px;background:#fff;color:var(--dark);font-family:'Barlow',sans-serif;font-size:.78rem;resize:vertical;min-height:52px;transition:border-color .2s;line-height:1.4;margin-top:.4rem;}
+.specs-textarea:focus{outline:none;border-color:var(--accent);}
+.fd-specs{font-size:.78rem;color:var(--muted);font-style:italic;line-height:1.5;padding:.38rem .6rem;background:var(--cream);border-radius:5px;border:1px solid var(--border);margin-top:.3rem;}
 </style>
 </head>
 <body>
@@ -437,7 +469,7 @@ header{height:var(--header-h);padding:0 1.2rem;display:flex;align-items:center;j
     <button class="admin-tab active" data-tab="subir">📥 Subir telas</button>
     <button class="admin-tab" data-tab="gestionar">🗂 Gestionar</button>
     <button class="admin-tab" data-tab="fichas">📋 Fichas</button>
-    <button class="admin-tab" data-tab="medidas">📏 Medidas</button>
+    <button class="admin-tab" data-tab="medidas">📦 Pedidos</button>
   </div>
 
   <!-- TAB SUBIR -->
@@ -1900,6 +1932,7 @@ let fichasViewState = 'list'; // 'list' | 'new' | 'detail'
 let fichasCurrentId = null;
 let fichasFormNinos = [];
 let fichasFormName = '';
+let fichasFormFecha = '';
 
 function escF(s){ if(!s)return''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
@@ -1923,10 +1956,10 @@ function makeNinoEmpty(){
     nombre:'', edad:'', producto:'', tela:'', descripcion:'',
     medidasOpen:{camisa:false,pantalon:false,vestido:false,capota:false},
     medidas:{
-      camisa:{largo:'',cintura:'',espalda:'',manga:''},
-      pantalon:{cintura:'',cadera:'',largoPierna:'',entrepierna:''},
-      vestido:{largo:'',cintura:'',cadera:'',espalda:''},
-      capota:{contornoCabeza:'',diametroCabeza:''}
+      camisa:{largo:'',cintura:'',espalda:'',manga:'',specs:''},
+      pantalon:{cintura:'',cadera:'',largoPierna:'',entrepierna:'',specs:''},
+      vestido:{largo:'',cintura:'',cadera:'',espalda:'',specs:''},
+      capota:{contornoCabeza:'',diametroCabeza:'',specs:''}
     }
   };
 }
@@ -1969,6 +2002,7 @@ function renderFichasList(c){
     fichasViewState='new';
     fichasFormNinos=[makeNinoEmpty()];
     fichasFormName='';
+    fichasFormFecha='';
     renderFichaForm(c);
   });
   c.querySelectorAll('.fp-item').forEach(el=>{
@@ -1986,8 +2020,8 @@ function renderFichaForm(c){
   const ninoHtml = (n,i)=>{
     const typeBtns = Object.entries(MED_TYPES).map(([tkey,tval])=>{
       const isOpen = n.medidasOpen[tkey];
-      const fields = tval.fields;
-      const hasData = fields.some(f=>n.medidas[tkey]?.[f.k]);
+      const fields = tval.fields.filter(f=>f.k!=='specs');
+      const hasData = fields.some(f=>n.medidas[tkey]?.[f.k]) || n.medidas[tkey]?.specs;
       return `
         <div class="mtype-block">
           <button class="mtype-toggle-btn${isOpen?' open':''}${hasData?' has-data':''}" data-mt="${i}" data-mtype="${tkey}">
@@ -2002,6 +2036,10 @@ function renderFichaForm(c){
                     <span class="medidas-unit">cm</span>
                   </div>
                 </div>`).join('')}
+            </div>
+            <div>
+              <label class="f2-lbl" style="margin-top:.4rem;">Especificaciones</label>
+              <textarea class="specs-textarea fmn-specs" data-i="${i}" data-mt="${tkey}" placeholder="Notas específicas para esta prenda…">${escF(n.medidas[tkey]?.specs||'')}</textarea>
             </div>
           </div>
         </div>`;
@@ -2043,9 +2081,15 @@ function renderFichaForm(c){
         <button class="ficha-back-btn" id="fichaBack">← Volver a fichas</button>
         <div class="ficha-view-title">Nueva ficha de pedido</div>
       </div>
-      <div>
-        <label class="f2-lbl">Nombre de la ficha</label>
-        <input class="f2-inp" id="fichaNameInp" placeholder="Ej: Pedido primavera Lucía" value="${escF(fichasFormName)}">
+      <div class="f2-row">
+        <div>
+          <label class="f2-lbl">Nombre de la ficha</label>
+          <input class="f2-inp" id="fichaNameInp" placeholder="Ej: Pedido primavera Lucía" value="${escF(fichasFormName)}">
+        </div>
+        <div>
+          <label class="f2-lbl">Fecha del evento</label>
+          <input type="date" class="f2-inp" id="fichaFechaInp" value="${escF(fichasFormFecha)}">
+        </div>
       </div>
       ${ninos.map((n,i)=>ninoHtml(n,i)).join('')}
       <button class="add-nino-btn" id="addNinoBtn">+ Añadir niño</button>
@@ -2055,8 +2099,9 @@ function renderFichaForm(c){
       </div>
     </div>`;
 
-  // Sync ficha name
+  // Sync ficha name + fecha
   c.querySelector('#fichaNameInp').addEventListener('input',e=>fichasFormName=e.target.value);
+  c.querySelector('#fichaFechaInp').addEventListener('input',e=>fichasFormFecha=e.target.value);
 
   // Sync child text/textarea inputs
   c.querySelectorAll('.fn-nombre,.fn-edad,.fn-producto,.fn-tela,.fn-descripcion').forEach(el=>{
@@ -2067,12 +2112,20 @@ function renderFichaForm(c){
     });
   });
 
-  // Sync measurement inputs
+  // Sync measurement number inputs
   c.querySelectorAll('.fmn').forEach(el=>{
     el.addEventListener('input',()=>{
       const idx=parseInt(el.dataset.i);
       const mt=el.dataset.mt, mk=el.dataset.mk;
       if(!isNaN(idx)&&mt&&mk) ninos[idx].medidas[mt][mk]=el.value;
+    });
+  });
+  // Sync specs textareas
+  c.querySelectorAll('.fmn-specs').forEach(el=>{
+    el.addEventListener('input',()=>{
+      const idx=parseInt(el.dataset.i);
+      const mt=el.dataset.mt;
+      if(!isNaN(idx)&&mt) ninos[idx].medidas[mt].specs=el.value;
     });
   });
 
@@ -2108,6 +2161,8 @@ function renderFichaForm(c){
       id:'f_'+Date.now(),
       createdAt:new Date().toISOString(),
       nombre: fichasFormName.trim(),
+      fechaEvento: fichasFormFecha,
+      pedidoRealizado: false,
       ninos: fichasFormNinos.map(n=>({
         id:n.id, nombre:n.nombre, edad:n.edad,
         producto:n.producto, tela:n.tela, descripcion:n.descripcion,
@@ -2161,6 +2216,7 @@ function renderFichaDetail(c, fichaId){
                 <span class="fd-medida-val">${mdata[f.k]} cm</span>
               </div>`).join('')}
           </div>
+          ${mdata.specs?`<div class="fd-specs">${escF(mdata.specs)}</div>`:''}
         </div>`;
     }).filter(Boolean).join('');
 
@@ -2187,7 +2243,7 @@ function renderFichaDetail(c, fichaId){
       <div class="fd-header-block">
         <button class="ficha-back-btn" id="fichaDetailBack">← Todas las fichas</button>
         <div class="fd-titulo">${escF(titulo)}</div>
-        <div class="fd-fecha-badge">${ds} · ${ficha.ninos.length} niño${ficha.ninos.length!==1?'s':''}</div>
+        <div class="fd-fecha-badge">${ds} · ${ficha.ninos.length} niño${ficha.ninos.length!==1?'s':''}${ficha.fechaEvento?` · 🗓 ${new Date(ficha.fechaEvento+'T12:00:00').toLocaleDateString('es-ES',{day:'2-digit',month:'long',year:'numeric'})}`:''}</div>
       </div>
       ${ficha.ninos.map((n,i)=>ninoCard(n,i)).join('')}
       <div class="ficha-detail-actions">
@@ -2210,49 +2266,92 @@ function renderFichaDetail(c, fichaId){
   });
 }
 
-// ── MEDIDAS NIÑOS ──
+// ── PEDIDOS (seguimiento) ──
+function eventoUrgencia(fechaEvento, pedidoRealizado){
+  if(!fechaEvento || pedidoRealizado) return null;
+  const diff = (new Date(fechaEvento+'T12:00:00') - new Date()) / 86400000;
+  if(diff < 0) return 'pasado';
+  if(diff <= 30) return 'urgente';
+  if(diff <= 60) return 'proximo';
+  return null;
+}
+
 function renderMedidasTab(){
   const c = document.getElementById('tab-medidas-inner');
   if(!c) return;
   loadFichas();
-  const all = [];
-  fichasData.forEach(f=>{
-    const ds = new Date(f.createdAt).toLocaleDateString('es-ES',{day:'2-digit',month:'short',year:'numeric'});
-    f.ninos.forEach(n=>all.push({...n, fichaDate:ds, fichaNombre:f.nombre||''}));
-  });
-  if(!all.length){
-    c.innerHTML='<div class="mn-empty">No hay medidas todavía.<br>Crea fichas de pedido para ver las medidas aquí.</div>';
+
+  if(!fichasData.length){
+    c.innerHTML='<div class="ped-empty">No hay fichas todavía.<br>Crea fichas de pedido para gestionar aquí.</div>';
     return;
   }
-  c.innerHTML=`<div class="mn-list">
-    ${all.map(n=>{
-      const medBlocks = Object.entries(MED_TYPES).map(([tkey,tval])=>{
-        const mdata = n.medidas?.[tkey]||{};
-        const filled = tval.fields.filter(f=>mdata[f.k]&&mdata[f.k]!=='');
-        if(!filled.length) return '';
-        return `
-          <div class="mn-type-block">
-            <div class="mn-type-hdr">${tval.emoji} ${tval.label}</div>
-            <div class="mn-card-body">
-              ${filled.map(f=>`
-                <div class="mn-item">
-                  <span class="mn-item-key">${f.l}</span>
-                  <span class="mn-item-val">${mdata[f.k]} cm</span>
-                </div>`).join('')}
-            </div>
-          </div>`;
-      }).filter(Boolean).join('');
 
-      return `<div class="mn-card">
-        <div class="mn-card-hdr">
-          <div class="mn-card-name">${escF(n.nombre||'—')}</div>
-          <div class="mn-card-meta">${escF(n.edad||'')}</div>
-        </div>
-        ${medBlocks||'<div class="mn-no-medidas">Sin medidas registradas</div>'}
-        <div class="mn-card-source">${n.fichaNombre?escF(n.fichaNombre)+' · ':''} ${n.fichaDate}</div>
+  // Sort: urgente → proximo → sin fecha → realizado
+  const urgOrder = {urgente:0, proximo:1, null:2, pasado:3};
+  const sorted = fichasData.slice().sort((a,b)=>{
+    const ua = eventoUrgencia(a.fechaEvento, a.pedidoRealizado);
+    const ub = eventoUrgencia(b.fechaEvento, b.pedidoRealizado);
+    if(a.pedidoRealizado !== b.pedidoRealizado) return a.pedidoRealizado ? 1 : -1;
+    return (urgOrder[ua]??2) - (urgOrder[ub]??2);
+  });
+
+  const cards = sorted.map(f=>{
+    const urg = eventoUrgencia(f.fechaEvento, f.pedidoRealizado);
+    const titulo = f.nombre || `Ficha ${new Date(f.createdAt).toLocaleDateString('es-ES',{day:'2-digit',month:'short'})}`;
+    const badgeTxt = f.pedidoRealizado ? '✓ Pedido realizado'
+      : urg==='urgente' ? '⚠ Menos de 1 mes'
+      : urg==='proximo' ? '⏳ Menos de 2 meses'
+      : urg==='pasado'  ? '📅 Evento pasado' : '';
+    const cardCls = f.pedidoRealizado ? 'realizado' : urg || '';
+    const badgeCls = f.pedidoRealizado ? 'realizado' : urg || '';
+
+    const fechaStr = f.fechaEvento
+      ? new Date(f.fechaEvento+'T12:00:00').toLocaleDateString('es-ES',{weekday:'long',day:'2-digit',month:'long',year:'numeric'})
+      : null;
+
+    const ninosRows = f.ninos.map(n=>{
+      const prendas = Object.entries(MED_TYPES)
+        .filter(([tk])=>Object.values(n.medidas?.[tk]||{}).some(v=>v&&v!==''))
+        .map(([,tv])=>tv.emoji+' '+tv.label).join(', ');
+      const info = [n.producto, n.tela, prendas].filter(Boolean).join(' · ');
+      return `<div class="ped-nino-row">
+        <span class="ped-nino-name">${escF(n.nombre||'—')}</span>
+        ${n.edad?`<span class="ped-nino-edad">${escF(n.edad)}</span>`:''}
+        <span class="ped-nino-prenda">${escF(info)}</span>
       </div>`;
-    }).join('')}
-  </div>`;
+    }).join('');
+
+    return `<div class="ped-card ${cardCls}" data-fid="${escF(f.id)}">
+      <div class="ped-card-hdr">
+        <div class="ped-card-titulo">${escF(titulo)}</div>
+        ${badgeTxt?`<span class="ped-badge ${badgeCls}">${badgeTxt}</span>`:''}
+      </div>
+      ${fechaStr?`<div class="ped-card-fecha"><span class="ped-fecha-ico">🗓</span>${fechaStr}</div>`:''}
+      <div class="ped-ninos">${ninosRows}</div>
+      <div class="ped-card-footer">
+        ${f.pedidoRealizado
+          ? `<button class="ped-unmark-btn" data-unmark="${escF(f.id)}">Desmarcar</button>`
+          : `<button class="ped-mark-btn" data-mark="${escF(f.id)}">✓ Marcar como pedido</button>`}
+      </div>
+    </div>`;
+  }).join('');
+
+  c.innerHTML=`<div class="ped-list">${cards}</div>`;
+
+  c.querySelectorAll('[data-mark]').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      const fid=btn.dataset.mark;
+      const f=fichasData.find(x=>x.id===fid);
+      if(f){ f.pedidoRealizado=true; saveFichasData(); renderMedidasTab(); toast('Marcado como pedido ✓'); }
+    });
+  });
+  c.querySelectorAll('[data-unmark]').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      const fid=btn.dataset.unmark;
+      const f=fichasData.find(x=>x.id===fid);
+      if(f){ f.pedidoRealizado=false; saveFichasData(); renderMedidasTab(); }
+    });
+  });
 }
 
 document.getElementById('cropCancel').addEventListener('click',()=>{
