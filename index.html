@@ -411,7 +411,16 @@ header{height:var(--header-h);padding:0 1.2rem;display:flex;align-items:center;j
 .ped-badge{font-size:.46rem;letter-spacing:.12em;text-transform:uppercase;padding:.15rem .45rem;border-radius:20px;font-weight:600;white-space:nowrap;flex-shrink:0;}
 .ped-badge.urgente{background:#fcecea;color:#b04040;border:1px solid #e0a0a0;}
 .ped-badge.proximo{background:#fdf5e0;color:#8a6000;border:1px solid #e0c060;}
+.ped-badge.tres_meses{background:#fff3e8;color:#a06000;border:1px solid #e0b070;}
 .ped-badge.realizado{background:#eef4f0;color:var(--lino);border:1px solid #a0c8a8;}
+.ped-card.tres_meses{border-color:#d09040;}
+
+/* Section dividers inside Pedidos */
+.ped-section{display:flex;flex-direction:column;gap:.6rem;}
+.ped-section-hdr{display:flex;align-items:center;gap:.6rem;padding:.3rem 0 .2rem;}
+.ped-section-line{flex:1;height:1px;background:var(--border);}
+.ped-section-label{font-family:'Cormorant Garamond',serif;font-size:.95rem;font-weight:400;color:var(--warm);white-space:nowrap;letter-spacing:.06em;}
+.ped-section-count{font-size:.5rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);white-space:nowrap;}
 .ped-card-fecha{padding:.35rem .9rem;font-size:.6rem;color:var(--muted);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:.4rem;}
 .ped-fecha-ico{font-size:.75rem;}
 .ped-ninos{display:flex;flex-direction:column;gap:0;}
@@ -2268,12 +2277,13 @@ function renderFichaDetail(c, fichaId){
 
 // ── PEDIDOS (seguimiento) ──
 function eventoUrgencia(fechaEvento, pedidoRealizado){
-  if(!fechaEvento || pedidoRealizado) return null;
+  if(pedidoRealizado) return 'realizado';
+  if(!fechaEvento) return 'resto';
   const diff = (new Date(fechaEvento+'T12:00:00') - new Date()) / 86400000;
-  if(diff < 0) return 'pasado';
-  if(diff <= 30) return 'urgente';
-  if(diff <= 60) return 'proximo';
-  return null;
+  if(diff <= 30)  return 'urgente';      // < 1 mes (incluye pasado)
+  if(diff <= 60)  return 'proximo';      // < 2 meses
+  if(diff <= 90)  return 'tres_meses';   // < 3 meses
+  return 'resto';                        // > 3 meses o sin fecha
 }
 
 function renderMedidasTab(){
@@ -2286,29 +2296,34 @@ function renderMedidasTab(){
     return;
   }
 
-  // Sort: urgente → proximo → sin fecha → realizado
-  const urgOrder = {urgente:0, proximo:1, null:2, pasado:3};
-  const sorted = fichasData.slice().sort((a,b)=>{
-    const ua = eventoUrgencia(a.fechaEvento, a.pedidoRealizado);
-    const ub = eventoUrgencia(b.fechaEvento, b.pedidoRealizado);
-    if(a.pedidoRealizado !== b.pedidoRealizado) return a.pedidoRealizado ? 1 : -1;
-    return (urgOrder[ua]??2) - (urgOrder[ub]??2);
+  const SECTIONS = [
+    {key:'urgente',    label:'Menos de 1 mes',   badge:'⚠ Menos de 1 mes'},
+    {key:'proximo',    label:'Menos de 2 meses',  badge:'⏳ Menos de 2 meses'},
+    {key:'tres_meses', label:'Menos de 3 meses',  badge:'🟠 Menos de 3 meses'},
+    {key:'resto',      label:'Resto sin pedir',   badge:''},
+    {key:'realizado',  label:'Pedidos realizados',badge:'✓ Pedido realizado'},
+  ];
+
+  // Group by urgency, sorted by event date within each group
+  const groups = {};
+  SECTIONS.forEach(s=>groups[s.key]=[]);
+  fichasData.forEach(f=>{
+    const u = eventoUrgencia(f.fechaEvento, f.pedidoRealizado);
+    groups[u].push(f);
   });
+  Object.values(groups).forEach(arr=>arr.sort((a,b)=>{
+    if(!a.fechaEvento && !b.fechaEvento) return 0;
+    if(!a.fechaEvento) return 1;
+    if(!b.fechaEvento) return -1;
+    return new Date(a.fechaEvento) - new Date(b.fechaEvento);
+  }));
 
-  const cards = sorted.map(f=>{
-    const urg = eventoUrgencia(f.fechaEvento, f.pedidoRealizado);
+  function pedCard(f, skey){
+    const s = SECTIONS.find(x=>x.key===skey);
     const titulo = f.nombre || `Ficha ${new Date(f.createdAt).toLocaleDateString('es-ES',{day:'2-digit',month:'short'})}`;
-    const badgeTxt = f.pedidoRealizado ? '✓ Pedido realizado'
-      : urg==='urgente' ? '⚠ Menos de 1 mes'
-      : urg==='proximo' ? '⏳ Menos de 2 meses'
-      : urg==='pasado'  ? '📅 Evento pasado' : '';
-    const cardCls = f.pedidoRealizado ? 'realizado' : urg || '';
-    const badgeCls = f.pedidoRealizado ? 'realizado' : urg || '';
-
     const fechaStr = f.fechaEvento
       ? new Date(f.fechaEvento+'T12:00:00').toLocaleDateString('es-ES',{weekday:'long',day:'2-digit',month:'long',year:'numeric'})
       : null;
-
     const ninosRows = f.ninos.map(n=>{
       const prendas = Object.entries(MED_TYPES)
         .filter(([tk])=>Object.values(n.medidas?.[tk]||{}).some(v=>v&&v!==''))
@@ -2320,11 +2335,10 @@ function renderMedidasTab(){
         <span class="ped-nino-prenda">${escF(info)}</span>
       </div>`;
     }).join('');
-
-    return `<div class="ped-card ${cardCls}" data-fid="${escF(f.id)}">
+    return `<div class="ped-card ${skey}">
       <div class="ped-card-hdr">
         <div class="ped-card-titulo">${escF(titulo)}</div>
-        ${badgeTxt?`<span class="ped-badge ${badgeCls}">${badgeTxt}</span>`:''}
+        ${s.badge?`<span class="ped-badge ${skey}">${s.badge}</span>`:''}
       </div>
       ${fechaStr?`<div class="ped-card-fecha"><span class="ped-fecha-ico">🗓</span>${fechaStr}</div>`:''}
       <div class="ped-ninos">${ninosRows}</div>
@@ -2334,9 +2348,24 @@ function renderMedidasTab(){
           : `<button class="ped-mark-btn" data-mark="${escF(f.id)}">✓ Marcar como pedido</button>`}
       </div>
     </div>`;
-  }).join('');
+  }
 
-  c.innerHTML=`<div class="ped-list">${cards}</div>`;
+  const html = SECTIONS.map(s=>{
+    const items = groups[s.key];
+    if(!items.length) return '';
+    const n = items.length;
+    return `<div class="ped-section">
+      <div class="ped-section-hdr">
+        <div class="ped-section-line"></div>
+        <div class="ped-section-label">${s.label}</div>
+        <div class="ped-section-count">${n} ficha${n!==1?'s':''}</div>
+        <div class="ped-section-line"></div>
+      </div>
+      ${items.map(f=>pedCard(f,s.key)).join('')}
+    </div>`;
+  }).filter(Boolean).join('');
+
+  c.innerHTML=`<div class="ped-list">${html}</div>`;
 
   c.querySelectorAll('[data-mark]').forEach(btn=>{
     btn.addEventListener('click',()=>{
