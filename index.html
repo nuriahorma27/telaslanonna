@@ -373,6 +373,31 @@ header{height:var(--header-h);padding:0 1.2rem;display:flex;align-items:center;j
 .mn-item-val.empty{color:var(--border);font-weight:400;font-style:italic;}
 .mn-card-source{font-size:.5rem;color:var(--muted);padding:.2rem .9rem .52rem;font-style:italic;}
 .mn-no-medidas{font-size:.72rem;color:var(--muted);padding:.6rem .9rem;font-style:italic;}
+
+/* Medidas por tipo de producto (form) */
+.mtype-list{display:flex;flex-direction:column;gap:.4rem;}
+.mtype-block{display:flex;flex-direction:column;}
+.mtype-toggle-btn{display:inline-flex;align-items:center;gap:.4rem;padding:.38rem .72rem;border:1.5px solid var(--border);border-radius:5px;background:none;cursor:pointer;color:var(--muted);font-size:.64rem;font-family:'Barlow',sans-serif;letter-spacing:.05em;transition:all .15s;text-align:left;}
+.mtype-toggle-btn:hover{border-color:var(--warm);color:var(--warm);}
+.mtype-toggle-btn.open{border-color:var(--accent);background:var(--light-warm);color:var(--dark);font-weight:500;}
+.mtype-toggle-btn.has-data{border-color:var(--lino);color:var(--lino);}
+.mtype-toggle-btn.open.has-data{background:#eef4f0;}
+.mtype-section{display:none;flex-direction:column;padding:.6rem .65rem .65rem;background:var(--light-warm);border:1px solid var(--border);border-top:none;border-radius:0 0 5px 5px;margin-bottom:.15rem;}
+.mtype-section.open{display:flex;}
+
+/* Ficha detail — improved */
+.fd-header-block{background:var(--dark);border-radius:7px;padding:.85rem 1rem;display:flex;flex-direction:column;gap:.25rem;}
+.fd-titulo{font-family:'Cormorant Garamond',serif;font-size:1.35rem;font-weight:400;color:var(--cream);letter-spacing:.04em;}
+.fd-fecha-badge{font-size:.52rem;letter-spacing:.15em;text-transform:uppercase;color:var(--accent);}
+.fd-chip{display:inline-block;padding:.25rem .58rem;background:var(--cream);border:1px solid var(--border);border-radius:20px;font-size:.78rem;color:var(--dark);margin-top:.18rem;}
+.fd-med-block{background:var(--cream);border:1px solid var(--border);border-radius:6px;overflow:hidden;margin-bottom:.4rem;}
+.fd-med-type-hdr{padding:.32rem .7rem;font-size:.52rem;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--border);font-weight:500;}
+.fd-medidas-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:.3rem .5rem;padding:.5rem .7rem;}
+
+/* Medidas niños tab — type blocks */
+.mn-type-block{border-bottom:1px solid var(--border);}
+.mn-type-block:last-child{border-bottom:none;}
+.mn-type-hdr{padding:.3rem .9rem;font-size:.5rem;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);font-weight:500;background:var(--cream);}
 </style>
 </head>
 <body>
@@ -1544,7 +1569,7 @@ function renderGrid(){
     items.forEach(f=>{
       const div=document.createElement('div');
       div.className='gi'+(S.sel===f.code?' active':'');
-      div.innerHTML=`<img class="gi-img" src="${thumbUrl(f.image_url)}" loading="lazy" alt=""><div class="gi-code">${f.name||'Sin nombre'}</div>`;
+      div.innerHTML=`<img class="gi-img" src="${thumbUrl(f.image_url)}" data-fallback="${escF(f.image_url)}" onerror="if(this.src!==this.dataset.fallback){this.onerror=null;this.src=this.dataset.fallback;}" loading="lazy" alt=""><div class="gi-code">${f.name||'Sin nombre'}</div>`;
       div.addEventListener('click',()=>openViewer(f, mat));
       el.appendChild(div);
     });
@@ -1874,8 +1899,16 @@ let fichasData = [];
 let fichasViewState = 'list'; // 'list' | 'new' | 'detail'
 let fichasCurrentId = null;
 let fichasFormNinos = [];
+let fichasFormName = '';
 
 function escF(s){ if(!s)return''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+const MED_TYPES = {
+  camisa:   {label:'Camisa',   emoji:'👕', fields:[{k:'largo',l:'Largo'},{k:'cintura',l:'Cintura'},{k:'espalda',l:'Espalda'},{k:'manga',l:'Manga'}]},
+  pantalon: {label:'Pantalón', emoji:'👖', fields:[{k:'cintura',l:'Cintura'},{k:'cadera',l:'Cadera'},{k:'largoPierna',l:'Largo pierna'},{k:'entrepierna',l:'Entrepierna'}]},
+  vestido:  {label:'Vestido',  emoji:'👗', fields:[{k:'largo',l:'Largo'},{k:'cintura',l:'Cintura'},{k:'cadera',l:'Cadera'},{k:'espalda',l:'Espalda'}]},
+  capota:   {label:'Capota',   emoji:'🧢', fields:[{k:'contornoCabeza',l:'Contorno cabeza'},{k:'diametroCabeza',l:'Diámetro cabeza'}]},
+};
 
 function loadFichas(){
   try{ fichasData = JSON.parse(localStorage.getItem(FICHAS_KEY)||'[]'); }
@@ -1888,8 +1921,13 @@ function makeNinoEmpty(){
   return {
     id:'n_'+Date.now()+'_'+Math.random().toString(36).slice(2,6),
     nombre:'', edad:'', producto:'', tela:'', descripcion:'',
-    medidasOpen:false,
-    medidas:{largo:'',cintura:'',cadera:'',espalda:'',contornoCabeza:'',diametroCabeza:''}
+    medidasOpen:{camisa:false,pantalon:false,vestido:false,capota:false},
+    medidas:{
+      camisa:{largo:'',cintura:'',espalda:'',manga:''},
+      pantalon:{cintura:'',cadera:'',largoPierna:'',entrepierna:''},
+      vestido:{largo:'',cintura:'',cadera:'',espalda:''},
+      capota:{contornoCabeza:'',diametroCabeza:''}
+    }
   };
 }
 
@@ -1909,11 +1947,12 @@ function renderFichasList(c){
     const ds = d.toLocaleDateString('es-ES',{day:'2-digit',month:'short',year:'numeric'});
     const nombres = f.ninos.map(n=>n.nombre||'—').join(', ');
     const nc = f.ninos.length;
+    const titulo = f.nombre || `Ficha ${ds}`;
     return `<div class="fp-item" data-fid="${escF(f.id)}">
       <div class="fp-item-info">
-        <div class="fp-item-date">${ds}</div>
-        <div class="fp-item-title">${nc} niño${nc!==1?'s':''}: ${escF(nombres)}</div>
-        <div class="fp-item-meta">Ver detalles →</div>
+        <div class="fp-item-date">${ds} · ${nc} niño${nc!==1?'s':''}</div>
+        <div class="fp-item-title">${escF(titulo)}</div>
+        <div class="fp-item-meta">${escF(nombres)}</div>
       </div>
       <span class="fp-item-arrow">›</span>
     </div>`;
@@ -1929,6 +1968,7 @@ function renderFichasList(c){
   c.querySelector('#fpNewBtn').addEventListener('click',()=>{
     fichasViewState='new';
     fichasFormNinos=[makeNinoEmpty()];
+    fichasFormName='';
     renderFichaForm(c);
   });
   c.querySelectorAll('.fp-item').forEach(el=>{
@@ -1942,55 +1982,60 @@ function renderFichasList(c){
 
 function renderFichaForm(c){
   const ninos = fichasFormNinos;
-  const MED_FIELDS = [
-    {key:'largo',label:'Largo'},
-    {key:'cintura',label:'Cintura'},
-    {key:'cadera',label:'Cadera'},
-    {key:'espalda',label:'Espalda'},
-    {key:'contornoCabeza',label:'Contorno cabeza'},
-    {key:'diametroCabeza',label:'Diámetro cabeza'},
-  ];
 
-  const ninosHtml = ninos.map((n,i)=>`
-    <div class="nino-card" data-ni="${i}">
-      <div class="nino-card-hdr">
-        <span class="nino-card-label">Niño ${i+1}</span>
-        <button class="nino-remove-btn" data-rm="${i}" title="Eliminar">✕</button>
-      </div>
-      <div class="nino-card-body">
-        <div class="f2-row">
-          <div><label class="f2-lbl">Nombre</label>
-            <input class="f2-inp fn-nombre" data-i="${i}" placeholder="Nombre" value="${escF(n.nombre)}"></div>
-          <div><label class="f2-lbl">Edad</label>
-            <input class="f2-inp fn-edad" data-i="${i}" placeholder="Ej: 3 años" value="${escF(n.edad)}"></div>
-        </div>
-        <div class="f2-row">
-          <div><label class="f2-lbl">Producto</label>
-            <input class="f2-inp fn-producto" data-i="${i}" placeholder="Tipo de prenda" value="${escF(n.producto)}"></div>
-          <div><label class="f2-lbl">Tela</label>
-            <input class="f2-inp fn-tela" data-i="${i}" placeholder="Nombre de la tela" value="${escF(n.tela)}"></div>
-        </div>
-        <div><label class="f2-lbl">Descripción</label>
-          <textarea class="f2-textarea fn-descripcion" data-i="${i}" placeholder="Notas, detalles del pedido…">${escF(n.descripcion)}</textarea>
-        </div>
-        <div>
-          <button class="medidas-toggle-btn${n.medidasOpen?' open':''}" data-tm="${i}">
-            📏 ${n.medidasOpen?'Ocultar medidas':'Añadir medidas'}
+  const ninoHtml = (n,i)=>{
+    const typeBtns = Object.entries(MED_TYPES).map(([tkey,tval])=>{
+      const isOpen = n.medidasOpen[tkey];
+      const fields = tval.fields;
+      const hasData = fields.some(f=>n.medidas[tkey]?.[f.k]);
+      return `
+        <div class="mtype-block">
+          <button class="mtype-toggle-btn${isOpen?' open':''}${hasData?' has-data':''}" data-mt="${i}" data-mtype="${tkey}">
+            ${tval.emoji} ${tval.label}${hasData?' ✓':''}
           </button>
-          <div class="medidas-section${n.medidasOpen?' open':''}">
+          <div class="mtype-section${isOpen?' open':''}">
             <div class="medidas-grid2">
-              ${MED_FIELDS.map(f=>`
-                <div><label class="f2-lbl">${f.label}</label>
+              ${fields.map(f=>`
+                <div><label class="f2-lbl">${f.l}</label>
                   <div class="medidas-inp-wrap">
-                    <input type="number" class="f2-inp fn-${f.key}" data-i="${i}" placeholder="0" min="0" step="0.5" value="${escF(n.medidas[f.key])}">
+                    <input type="number" class="f2-inp fmn" data-i="${i}" data-mt="${tkey}" data-mk="${f.k}" placeholder="0" min="0" step="0.5" value="${escF(n.medidas[tkey]?.[f.k]||'')}">
                     <span class="medidas-unit">cm</span>
                   </div>
                 </div>`).join('')}
             </div>
           </div>
+        </div>`;
+    }).join('');
+
+    return `
+      <div class="nino-card" data-ni="${i}">
+        <div class="nino-card-hdr">
+          <span class="nino-card-label">Niño ${i+1}</span>
+          <button class="nino-remove-btn" data-rm="${i}" title="Eliminar">✕</button>
         </div>
-      </div>
-    </div>`).join('');
+        <div class="nino-card-body">
+          <div class="f2-row">
+            <div><label class="f2-lbl">Nombre</label>
+              <input class="f2-inp fn-nombre" data-i="${i}" placeholder="Nombre del niño" value="${escF(n.nombre)}"></div>
+            <div><label class="f2-lbl">Edad</label>
+              <input class="f2-inp fn-edad" data-i="${i}" placeholder="Ej: 3 años" value="${escF(n.edad)}"></div>
+          </div>
+          <div class="f2-row">
+            <div><label class="f2-lbl">Producto</label>
+              <input class="f2-inp fn-producto" data-i="${i}" placeholder="Tipo de prenda" value="${escF(n.producto)}"></div>
+            <div><label class="f2-lbl">Tela</label>
+              <input class="f2-inp fn-tela" data-i="${i}" placeholder="Nombre de la tela" value="${escF(n.tela)}"></div>
+          </div>
+          <div><label class="f2-lbl">Descripción</label>
+            <textarea class="f2-textarea fn-descripcion" data-i="${i}" placeholder="Notas, detalles del pedido…">${escF(n.descripcion)}</textarea>
+          </div>
+          <div>
+            <div class="f2-lbl" style="margin-bottom:.4rem;">Medidas por producto</div>
+            <div class="mtype-list">${typeBtns}</div>
+          </div>
+        </div>
+      </div>`;
+  };
 
   c.innerHTML = `
     <div class="ficha-view">
@@ -1998,7 +2043,11 @@ function renderFichaForm(c){
         <button class="ficha-back-btn" id="fichaBack">← Volver a fichas</button>
         <div class="ficha-view-title">Nueva ficha de pedido</div>
       </div>
-      ${ninosHtml}
+      <div>
+        <label class="f2-lbl">Nombre de la ficha</label>
+        <input class="f2-inp" id="fichaNameInp" placeholder="Ej: Pedido primavera Lucía" value="${escF(fichasFormName)}">
+      </div>
+      ${ninos.map((n,i)=>ninoHtml(n,i)).join('')}
       <button class="add-nino-btn" id="addNinoBtn">+ Añadir niño</button>
       <div class="ficha-form-actions">
         <button class="ficha-cancel-btn" id="fichaCancel">Cancelar</button>
@@ -2006,23 +2055,33 @@ function renderFichaForm(c){
       </div>
     </div>`;
 
-  // Sync input → fichasFormNinos on every keystroke
-  const MED_KEYS = new Set(['largo','cintura','cadera','espalda','contornoCabeza','diametroCabeza']);
-  c.querySelectorAll('.f2-inp,.f2-textarea').forEach(el=>{
+  // Sync ficha name
+  c.querySelector('#fichaNameInp').addEventListener('input',e=>fichasFormName=e.target.value);
+
+  // Sync child text/textarea inputs
+  c.querySelectorAll('.fn-nombre,.fn-edad,.fn-producto,.fn-tela,.fn-descripcion').forEach(el=>{
     el.addEventListener('input',()=>{
-      const idx = parseInt(el.dataset.i);
-      const cls = [...el.classList].find(k=>k.startsWith('fn-'))?.replace('fn-','');
-      if(cls===undefined||isNaN(idx)) return;
-      if(MED_KEYS.has(cls)) ninos[idx].medidas[cls]=el.value;
-      else ninos[idx][cls]=el.value;
+      const idx=parseInt(el.dataset.i);
+      const key=[...el.classList].find(k=>k.startsWith('fn-'))?.replace('fn-','');
+      if(key&&!isNaN(idx)) ninos[idx][key]=el.value;
     });
   });
 
-  // Toggle medidas section
-  c.querySelectorAll('[data-tm]').forEach(btn=>{
+  // Sync measurement inputs
+  c.querySelectorAll('.fmn').forEach(el=>{
+    el.addEventListener('input',()=>{
+      const idx=parseInt(el.dataset.i);
+      const mt=el.dataset.mt, mk=el.dataset.mk;
+      if(!isNaN(idx)&&mt&&mk) ninos[idx].medidas[mt][mk]=el.value;
+    });
+  });
+
+  // Toggle measurement type section
+  c.querySelectorAll('[data-mt][data-mtype]').forEach(btn=>{
     btn.addEventListener('click',()=>{
-      const idx=parseInt(btn.dataset.tm);
-      ninos[idx].medidasOpen=!ninos[idx].medidasOpen;
+      const idx=parseInt(btn.dataset.mt);
+      const mtype=btn.dataset.mtype;
+      ninos[idx].medidasOpen[mtype]=!ninos[idx].medidasOpen[mtype];
       renderFichaForm(c);
     });
   });
@@ -2048,10 +2107,16 @@ function renderFichaForm(c){
     const ficha = {
       id:'f_'+Date.now(),
       createdAt:new Date().toISOString(),
+      nombre: fichasFormName.trim(),
       ninos: fichasFormNinos.map(n=>({
         id:n.id, nombre:n.nombre, edad:n.edad,
         producto:n.producto, tela:n.tela, descripcion:n.descripcion,
-        medidas:{...n.medidas}
+        medidas:{
+          camisa:{...n.medidas.camisa},
+          pantalon:{...n.medidas.pantalon},
+          vestido:{...n.medidas.vestido},
+          capota:{...n.medidas.capota}
+        }
       }))
     };
     fichasData.push(ficha);
@@ -2076,46 +2141,55 @@ function renderFichaDetail(c, fichaId){
   if(!ficha){ fichasViewState='list'; renderFichasList(c); return; }
 
   const d = new Date(ficha.createdAt);
-  const ds = d.toLocaleDateString('es-ES',{weekday:'long',day:'2-digit',month:'long',year:'numeric'});
-  const MED_LABELS = {largo:'Largo',cintura:'Cintura',cadera:'Cadera',espalda:'Espalda',contornoCabeza:'Contorno cabeza',diametroCabeza:'Diámetro cabeza'};
+  const ds = d.toLocaleDateString('es-ES',{day:'2-digit',month:'long',year:'numeric'});
+  const titulo = ficha.nombre || `Ficha ${ds}`;
 
-  const ninosHtml = ficha.ninos.map(n=>{
-    const anyMed = Object.values(n.medidas||{}).some(v=>v!==''&&v!=null);
+  const ninoCard = (n,i)=>{
+    const colors=['#4a7058','#6b4c7a','#3a5c8a','#8b5e3c'];
+    const col = colors[i%colors.length];
+    const medHtml = Object.entries(MED_TYPES).map(([tkey,tval])=>{
+      const mdata = n.medidas?.[tkey]||{};
+      const filled = tval.fields.filter(f=>mdata[f.k]&&mdata[f.k]!=='');
+      if(!filled.length) return '';
+      return `
+        <div class="fd-med-block">
+          <div class="fd-med-type-hdr">${tval.emoji} ${tval.label}</div>
+          <div class="fd-medidas-grid">
+            ${filled.map(f=>`
+              <div class="fd-medida-item">
+                <span class="fd-medida-key">${f.l}</span>
+                <span class="fd-medida-val">${mdata[f.k]} cm</span>
+              </div>`).join('')}
+          </div>
+        </div>`;
+    }).filter(Boolean).join('');
+
     return `
-      <div class="ficha-detail-nino">
+      <div class="ficha-detail-nino" style="border-top:3px solid ${col};">
         <div class="ficha-detail-nino-hdr">
-          <div class="ficha-detail-nino-name">${escF(n.nombre||'—')}</div>
-          <div class="ficha-detail-nino-edad">${escF(n.edad||'—')}</div>
+          <div class="ficha-detail-nino-name" style="color:${col};">${escF(n.nombre||'—')}</div>
+          ${n.edad?`<div class="ficha-detail-nino-edad">${escF(n.edad)}</div>`:''}
         </div>
         <div class="ficha-detail-nino-body">
           ${n.producto||n.tela?`
             <div class="fd-2col">
-              ${n.producto?`<div class="fd-row"><span class="fd-key">Producto</span><span class="fd-val">${escF(n.producto)}</span></div>`:''}
-              ${n.tela?`<div class="fd-row"><span class="fd-key">Tela</span><span class="fd-val">${escF(n.tela)}</span></div>`:''}
+              ${n.producto?`<div><span class="f2-lbl">Producto</span><div class="fd-chip">${escF(n.producto)}</div></div>`:''}
+              ${n.tela?`<div><span class="f2-lbl">Tela</span><div class="fd-chip">${escF(n.tela)}</div></div>`:''}
             </div>`:''}
-          ${n.descripcion?`<div><span class="f2-lbl" style="margin-bottom:.3rem;">Descripción</span><div class="fd-desc">${escF(n.descripcion)}</div></div>`:''}
-          ${anyMed?`<div>
-            <span class="f2-lbl" style="margin-bottom:.4rem;">Medidas</span>
-            <div class="fd-medidas-grid">
-              ${Object.entries(MED_LABELS).map(([k,lbl])=>`
-                <div class="fd-medida-item">
-                  <span class="fd-medida-key">${lbl}</span>
-                  <span class="fd-medida-val${!n.medidas[k]?' empty':''}">${n.medidas[k]?n.medidas[k]+' cm':'—'}</span>
-                </div>`).join('')}
-            </div>
-          </div>`:''}
+          ${n.descripcion?`<div><span class="f2-lbl">Descripción</span><div class="fd-desc">${escF(n.descripcion)}</div></div>`:''}
+          ${medHtml?`<div><span class="f2-lbl" style="margin-bottom:.5rem;">Medidas</span>${medHtml}</div>`:''}
         </div>
       </div>`;
-  }).join('');
+  };
 
   c.innerHTML = `
     <div class="ficha-view">
-      <div>
-        <button class="ficha-back-btn" id="fichaDetailBack">← Volver a fichas</button>
-        <div class="ficha-view-title">${ficha.ninos.length} niño${ficha.ninos.length!==1?'s':''}</div>
-        <div class="ficha-view-date">${ds}</div>
+      <div class="fd-header-block">
+        <button class="ficha-back-btn" id="fichaDetailBack">← Todas las fichas</button>
+        <div class="fd-titulo">${escF(titulo)}</div>
+        <div class="fd-fecha-badge">${ds} · ${ficha.ninos.length} niño${ficha.ninos.length!==1?'s':''}</div>
       </div>
-      ${ninosHtml}
+      ${ficha.ninos.map((n,i)=>ninoCard(n,i)).join('')}
       <div class="ficha-detail-actions">
         <button class="ficha-del-btn" id="fichaDelBtn">Eliminar ficha</button>
       </div>
@@ -2141,11 +2215,10 @@ function renderMedidasTab(){
   const c = document.getElementById('tab-medidas-inner');
   if(!c) return;
   loadFichas();
-  const MED_LABELS = {largo:'Largo',cintura:'Cintura',cadera:'Cadera',espalda:'Espalda',contornoCabeza:'Contorno cabeza',diametroCabeza:'Diámetro cabeza'};
   const all = [];
   fichasData.forEach(f=>{
     const ds = new Date(f.createdAt).toLocaleDateString('es-ES',{day:'2-digit',month:'short',year:'numeric'});
-    f.ninos.forEach(n=>all.push({...n, fichaDate:ds}));
+    f.ninos.forEach(n=>all.push({...n, fichaDate:ds, fichaNombre:f.nombre||''}));
   });
   if(!all.length){
     c.innerHTML='<div class="mn-empty">No hay medidas todavía.<br>Crea fichas de pedido para ver las medidas aquí.</div>';
@@ -2153,22 +2226,30 @@ function renderMedidasTab(){
   }
   c.innerHTML=`<div class="mn-list">
     ${all.map(n=>{
-      const anyMed = Object.values(n.medidas||{}).some(v=>v!==''&&v!=null);
+      const medBlocks = Object.entries(MED_TYPES).map(([tkey,tval])=>{
+        const mdata = n.medidas?.[tkey]||{};
+        const filled = tval.fields.filter(f=>mdata[f.k]&&mdata[f.k]!=='');
+        if(!filled.length) return '';
+        return `
+          <div class="mn-type-block">
+            <div class="mn-type-hdr">${tval.emoji} ${tval.label}</div>
+            <div class="mn-card-body">
+              ${filled.map(f=>`
+                <div class="mn-item">
+                  <span class="mn-item-key">${f.l}</span>
+                  <span class="mn-item-val">${mdata[f.k]} cm</span>
+                </div>`).join('')}
+            </div>
+          </div>`;
+      }).filter(Boolean).join('');
+
       return `<div class="mn-card">
         <div class="mn-card-hdr">
           <div class="mn-card-name">${escF(n.nombre||'—')}</div>
           <div class="mn-card-meta">${escF(n.edad||'')}</div>
         </div>
-        ${anyMed
-          ?`<div class="mn-card-body">
-              ${Object.entries(MED_LABELS).map(([k,lbl])=>`
-                <div class="mn-item">
-                  <span class="mn-item-key">${lbl}</span>
-                  <span class="mn-item-val${!n.medidas?.[k]?' empty':''}">${n.medidas?.[k]?n.medidas[k]+' cm':'—'}</span>
-                </div>`).join('')}
-            </div>`
-          :'<div class="mn-no-medidas">Sin medidas registradas</div>'}
-        <div class="mn-card-source">Ficha del ${n.fichaDate}</div>
+        ${medBlocks||'<div class="mn-no-medidas">Sin medidas registradas</div>'}
+        <div class="mn-card-source">${n.fichaNombre?escF(n.fichaNombre)+' · ':''} ${n.fichaDate}</div>
       </div>`;
     }).join('')}
   </div>`;
