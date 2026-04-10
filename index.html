@@ -280,6 +280,99 @@ header{height:var(--header-h);padding:0 1.2rem;display:flex;align-items:center;j
 .loading-bar-wrap{height:5px;background:var(--border);border-radius:5px;overflow:hidden;}
 .loading-bar{height:5px;background:var(--accent);border-radius:5px;transition:width .2s;}
 .loading-txt{font-size:.65rem;color:var(--muted);margin-top:.5rem;}
+
+/* ── FICHAS PEDIDOS ── */
+.fp-toolbar{padding:.7rem 1rem;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);}
+.fp-count{font-size:.56rem;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);}
+.fp-new-btn{display:inline-flex;align-items:center;gap:.35rem;padding:.44rem .82rem;background:var(--dark);color:var(--cream);border:none;border-radius:6px;cursor:pointer;font-family:'Barlow',sans-serif;font-size:.66rem;font-weight:500;letter-spacing:.1em;text-transform:uppercase;transition:background .2s;}
+.fp-new-btn:hover{background:var(--warm);}
+.fp-empty{text-align:center;padding:2.5rem 1rem;color:var(--muted);font-family:'Cormorant Garamond',serif;font-style:italic;font-size:.95rem;}
+.fp-list{display:flex;flex-direction:column;}
+.fp-item{padding:.62rem 1rem;border-bottom:1px solid var(--border);cursor:pointer;transition:background .12s;display:flex;align-items:center;gap:.5rem;}
+.fp-item:last-child{border-bottom:none;}
+.fp-item:hover{background:var(--light-warm);}
+.fp-item-info{flex:1;min-width:0;}
+.fp-item-date{font-size:.5rem;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);}
+.fp-item-title{font-family:'Cormorant Garamond',serif;font-size:.98rem;color:var(--dark);margin:.1rem 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.fp-item-meta{font-size:.6rem;color:var(--warm);}
+.fp-item-arrow{color:var(--border);font-size:.9rem;flex-shrink:0;}
+
+/* Ficha form / detail shell */
+.ficha-view{padding:1rem;display:flex;flex-direction:column;gap:.85rem;}
+.ficha-back-btn{display:inline-flex;align-items:center;gap:.3rem;background:none;border:none;cursor:pointer;color:var(--muted);font-size:.62rem;font-family:'Barlow',sans-serif;padding:.25rem 0;letter-spacing:.06em;text-transform:uppercase;margin-bottom:.1rem;}
+.ficha-back-btn:hover{color:var(--dark);}
+.ficha-view-title{font-family:'Cormorant Garamond',serif;font-size:1.1rem;color:var(--dark);font-weight:400;}
+.ficha-view-date{font-size:.52rem;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);margin-top:.1rem;}
+
+/* Child cards (form) */
+.nino-card{background:#fff;border:1px solid var(--border);border-radius:8px;overflow:hidden;}
+.nino-card-hdr{padding:.5rem .85rem;background:var(--dark);display:flex;align-items:center;justify-content:space-between;}
+.nino-card-label{font-size:.5rem;letter-spacing:.2em;text-transform:uppercase;color:var(--accent);}
+.nino-remove-btn{background:none;border:none;color:#8a7a6a;cursor:pointer;font-size:.78rem;padding:.1rem .28rem;line-height:1;transition:color .15s;}
+.nino-remove-btn:hover{color:#d07060;}
+.nino-card-body{padding:.8rem;display:flex;flex-direction:column;gap:.6rem;}
+.f2-row{display:grid;grid-template-columns:1fr 1fr;gap:.55rem;}
+.f2-lbl{font-size:.48rem;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);font-weight:500;display:block;margin-bottom:.2rem;}
+.f2-inp{width:100%;padding:.42rem .58rem;border:1.5px solid var(--border);border-radius:5px;background:var(--cream);color:var(--dark);font-family:'Barlow',sans-serif;font-size:.82rem;transition:border-color .2s;}
+.f2-inp:focus{outline:none;border-color:var(--accent);}
+.f2-textarea{width:100%;padding:.42rem .58rem;border:1.5px solid var(--border);border-radius:5px;background:var(--cream);color:var(--dark);font-family:'Barlow',sans-serif;font-size:.82rem;resize:vertical;min-height:68px;transition:border-color .2s;line-height:1.45;}
+.f2-textarea:focus{outline:none;border-color:var(--accent);}
+
+/* Measurements toggle */
+.medidas-toggle-btn{display:inline-flex;align-items:center;gap:.3rem;background:none;border:1.5px solid var(--border);border-radius:5px;cursor:pointer;color:var(--warm);font-size:.6rem;font-family:'Barlow',sans-serif;padding:.33rem .68rem;letter-spacing:.05em;transition:all .15s;}
+.medidas-toggle-btn:hover{border-color:var(--accent);color:var(--accent);}
+.medidas-toggle-btn.open{background:var(--light-warm);border-color:var(--accent);color:var(--dark);font-weight:500;}
+.medidas-section{display:none;flex-direction:column;gap:.5rem;padding:.65rem .7rem;background:var(--light-warm);border-radius:6px;margin-top:.2rem;}
+.medidas-section.open{display:flex;}
+.medidas-grid2{display:grid;grid-template-columns:1fr 1fr;gap:.5rem;}
+.medidas-inp-wrap{position:relative;}
+.medidas-inp-wrap .f2-inp{padding-right:2.4rem;}
+.medidas-unit{position:absolute;right:.65rem;top:50%;transform:translateY(-50%);font-size:.62rem;color:var(--muted);pointer-events:none;font-weight:500;}
+
+/* Add child button */
+.add-nino-btn{display:flex;align-items:center;justify-content:center;gap:.4rem;width:100%;padding:.5rem;background:none;border:2px dashed var(--border);border-radius:7px;cursor:pointer;color:var(--warm);font-size:.65rem;font-family:'Barlow',sans-serif;letter-spacing:.06em;transition:all .15s;}
+.add-nino-btn:hover{border-color:var(--accent);color:var(--accent);}
+
+/* Form action buttons */
+.ficha-form-actions{display:flex;gap:.5rem;}
+.ficha-save-btn{flex:2;padding:.56rem;background:var(--dark);color:var(--cream);border:none;border-radius:6px;cursor:pointer;font-family:'Barlow',sans-serif;font-size:.7rem;font-weight:500;letter-spacing:.1em;text-transform:uppercase;transition:background .2s;}
+.ficha-save-btn:hover{background:var(--warm);}
+.ficha-cancel-btn{flex:1;padding:.54rem;background:none;border:1.5px solid var(--border);border-radius:6px;cursor:pointer;color:var(--muted);font-family:'Barlow',sans-serif;font-size:.68rem;}
+
+/* Ficha detail (read-only) */
+.ficha-detail-nino{background:#fff;border:1px solid var(--border);border-radius:8px;overflow:hidden;}
+.ficha-detail-nino-hdr{padding:.52rem .9rem;border-bottom:1px solid var(--border);background:var(--light-warm);display:flex;align-items:center;justify-content:space-between;}
+.ficha-detail-nino-name{font-family:'Cormorant Garamond',serif;font-size:1.02rem;color:var(--dark);}
+.ficha-detail-nino-edad{font-size:.58rem;color:var(--muted);background:var(--cream);padding:.1rem .38rem;border-radius:20px;border:1px solid var(--border);}
+.ficha-detail-nino-body{padding:.8rem;display:flex;flex-direction:column;gap:.52rem;}
+.fd-2col{display:grid;grid-template-columns:1fr 1fr;gap:.55rem;}
+.fd-row{display:flex;align-items:baseline;gap:.5rem;}
+.fd-key{font-size:.48rem;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);font-weight:500;min-width:4.5rem;flex-shrink:0;}
+.fd-val{font-size:.82rem;color:var(--dark);}
+.fd-desc{font-size:.78rem;color:var(--muted);font-style:italic;line-height:1.55;padding:.42rem .6rem;background:var(--cream);border-radius:5px;border:1px solid var(--border);}
+.fd-medidas-grid{display:grid;grid-template-columns:1fr 1fr;gap:.42rem .7rem;}
+.fd-medida-item{display:flex;flex-direction:column;gap:.05rem;}
+.fd-medida-key{font-size:.46rem;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);}
+.fd-medida-val{font-size:.82rem;font-weight:500;color:var(--dark);}
+.fd-medida-val.empty{color:var(--border);font-weight:400;font-style:italic;}
+.ficha-detail-actions{display:flex;justify-content:flex-end;padding-top:.2rem;border-top:1px solid var(--border);}
+.ficha-del-btn{padding:.44rem .85rem;background:none;border:1px solid #e0c0c0;border-radius:6px;cursor:pointer;color:#b04040;font-size:.62rem;font-family:'Barlow',sans-serif;transition:all .14s;}
+.ficha-del-btn:hover{background:#b04040;color:#fff;border-color:#b04040;}
+
+/* ── MEDIDAS NIÑOS ── */
+.mn-empty{text-align:center;padding:2.5rem 1rem;color:var(--muted);font-family:'Cormorant Garamond',serif;font-style:italic;font-size:.95rem;}
+.mn-list{display:flex;flex-direction:column;gap:.65rem;padding:1rem;}
+.mn-card{background:#fff;border:1px solid var(--border);border-radius:8px;overflow:hidden;}
+.mn-card-hdr{padding:.52rem .9rem;border-bottom:1px solid var(--border);background:var(--light-warm);display:flex;align-items:center;justify-content:space-between;}
+.mn-card-name{font-family:'Cormorant Garamond',serif;font-size:1rem;color:var(--dark);}
+.mn-card-meta{font-size:.58rem;color:var(--muted);}
+.mn-card-body{display:grid;grid-template-columns:1fr 1fr;padding:.65rem .9rem;gap:.45rem .7rem;}
+.mn-item{display:flex;flex-direction:column;gap:.05rem;}
+.mn-item-key{font-size:.46rem;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);}
+.mn-item-val{font-size:.82rem;font-weight:500;color:var(--dark);}
+.mn-item-val.empty{color:var(--border);font-weight:400;font-style:italic;}
+.mn-card-source{font-size:.5rem;color:var(--muted);padding:.2rem .9rem .52rem;font-style:italic;}
+.mn-no-medidas{font-size:.72rem;color:var(--muted);padding:.6rem .9rem;font-style:italic;}
 </style>
 </head>
 <body>
@@ -318,6 +411,8 @@ header{height:var(--header-h);padding:0 1.2rem;display:flex;align-items:center;j
   <div class="admin-tabs">
     <button class="admin-tab active" data-tab="subir">📥 Subir telas</button>
     <button class="admin-tab" data-tab="gestionar">🗂 Gestionar</button>
+    <button class="admin-tab" data-tab="fichas">📋 Fichas</button>
+    <button class="admin-tab" data-tab="medidas">📏 Medidas</button>
   </div>
 
   <!-- TAB SUBIR -->
@@ -393,6 +488,21 @@ header{height:var(--header-h);padding:0 1.2rem;display:flex;align-items:center;j
         <div class="admin-card-hdr"><div class="admin-card-title" id="adminListTitle">Telas — 0</div></div>
         <div class="admin-fabric-list" id="adminFabricList"><div class="admin-empty">Cargando…</div></div>
       </div>
+    </div>
+  </div>
+
+  <!-- TAB FICHAS PEDIDOS -->
+  <div class="tab-body" id="tab-fichas">
+    <div class="admin-card" style="margin:1rem;overflow:visible;">
+      <div id="tab-fichas-inner"></div>
+    </div>
+  </div>
+
+  <!-- TAB MEDIDAS NIÑOS -->
+  <div class="tab-body" id="tab-medidas">
+    <div class="admin-card" style="margin:1rem;overflow:visible;">
+      <div class="admin-card-hdr"><div class="admin-card-title">Medidas niños</div></div>
+      <div id="tab-medidas-inner"></div>
     </div>
   </div>
 </div>
@@ -801,6 +911,13 @@ document.querySelectorAll('.admin-tab').forEach(tab=>{
     if(tab.dataset.tab==='gestionar'){
       if(!FABRICS.length) loadFabrics().then(()=>renderAdminList());
       else renderAdminList();
+    }
+    if(tab.dataset.tab==='fichas'){
+      fichasViewState='list';
+      renderFichasTab();
+    }
+    if(tab.dataset.tab==='medidas'){
+      renderMedidasTab();
     }
   });
 });
@@ -1750,6 +1867,312 @@ _cropCanvas.addEventListener('pointermove',e=>{
   _drawCrop();
 });
 _cropCanvas.addEventListener('pointerup',()=>{ _cropDragging=false; });
+
+// ── FICHAS PEDIDOS ──
+const FICHAS_KEY = 'nonna_fichas';
+let fichasData = [];
+let fichasViewState = 'list'; // 'list' | 'new' | 'detail'
+let fichasCurrentId = null;
+let fichasFormNinos = [];
+
+function escF(s){ if(!s)return''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function loadFichas(){
+  try{ fichasData = JSON.parse(localStorage.getItem(FICHAS_KEY)||'[]'); }
+  catch(e){ fichasData=[]; }
+}
+function saveFichasData(){
+  localStorage.setItem(FICHAS_KEY, JSON.stringify(fichasData));
+}
+function makeNinoEmpty(){
+  return {
+    id:'n_'+Date.now()+'_'+Math.random().toString(36).slice(2,6),
+    nombre:'', edad:'', producto:'', tela:'', descripcion:'',
+    medidasOpen:false,
+    medidas:{largo:'',cintura:'',cadera:'',espalda:'',contornoCabeza:'',diametroCabeza:''}
+  };
+}
+
+function renderFichasTab(){
+  const c = document.getElementById('tab-fichas-inner');
+  if(!c) return;
+  loadFichas();
+  if(fichasViewState==='list') renderFichasList(c);
+  else if(fichasViewState==='new') renderFichaForm(c);
+  else if(fichasViewState==='detail') renderFichaDetail(c, fichasCurrentId);
+}
+
+function renderFichasList(c){
+  const total = fichasData.length;
+  const rows = fichasData.slice().reverse().map(f=>{
+    const d = new Date(f.createdAt);
+    const ds = d.toLocaleDateString('es-ES',{day:'2-digit',month:'short',year:'numeric'});
+    const nombres = f.ninos.map(n=>n.nombre||'—').join(', ');
+    const nc = f.ninos.length;
+    return `<div class="fp-item" data-fid="${escF(f.id)}">
+      <div class="fp-item-info">
+        <div class="fp-item-date">${ds}</div>
+        <div class="fp-item-title">${nc} niño${nc!==1?'s':''}: ${escF(nombres)}</div>
+        <div class="fp-item-meta">Ver detalles →</div>
+      </div>
+      <span class="fp-item-arrow">›</span>
+    </div>`;
+  }).join('');
+  c.innerHTML = `
+    <div class="fp-toolbar">
+      <span class="fp-count">${total} ficha${total!==1?'s':''} guardada${total!==1?'s':''}</span>
+      <button class="fp-new-btn" id="fpNewBtn">+ Nueva ficha</button>
+    </div>
+    ${total===0 ? '<div class="fp-empty">No hay fichas todavía.<br>Pulsa "Nueva ficha" para empezar.</div>'
+                : `<div class="fp-list">${rows}</div>`}
+  `;
+  c.querySelector('#fpNewBtn').addEventListener('click',()=>{
+    fichasViewState='new';
+    fichasFormNinos=[makeNinoEmpty()];
+    renderFichaForm(c);
+  });
+  c.querySelectorAll('.fp-item').forEach(el=>{
+    el.addEventListener('click',()=>{
+      fichasCurrentId=el.dataset.fid;
+      fichasViewState='detail';
+      renderFichaDetail(c, fichasCurrentId);
+    });
+  });
+}
+
+function renderFichaForm(c){
+  const ninos = fichasFormNinos;
+  const MED_FIELDS = [
+    {key:'largo',label:'Largo'},
+    {key:'cintura',label:'Cintura'},
+    {key:'cadera',label:'Cadera'},
+    {key:'espalda',label:'Espalda'},
+    {key:'contornoCabeza',label:'Contorno cabeza'},
+    {key:'diametroCabeza',label:'Diámetro cabeza'},
+  ];
+
+  const ninosHtml = ninos.map((n,i)=>`
+    <div class="nino-card" data-ni="${i}">
+      <div class="nino-card-hdr">
+        <span class="nino-card-label">Niño ${i+1}</span>
+        <button class="nino-remove-btn" data-rm="${i}" title="Eliminar">✕</button>
+      </div>
+      <div class="nino-card-body">
+        <div class="f2-row">
+          <div><label class="f2-lbl">Nombre</label>
+            <input class="f2-inp fn-nombre" data-i="${i}" placeholder="Nombre" value="${escF(n.nombre)}"></div>
+          <div><label class="f2-lbl">Edad</label>
+            <input class="f2-inp fn-edad" data-i="${i}" placeholder="Ej: 3 años" value="${escF(n.edad)}"></div>
+        </div>
+        <div class="f2-row">
+          <div><label class="f2-lbl">Producto</label>
+            <input class="f2-inp fn-producto" data-i="${i}" placeholder="Tipo de prenda" value="${escF(n.producto)}"></div>
+          <div><label class="f2-lbl">Tela</label>
+            <input class="f2-inp fn-tela" data-i="${i}" placeholder="Nombre de la tela" value="${escF(n.tela)}"></div>
+        </div>
+        <div><label class="f2-lbl">Descripción</label>
+          <textarea class="f2-textarea fn-descripcion" data-i="${i}" placeholder="Notas, detalles del pedido…">${escF(n.descripcion)}</textarea>
+        </div>
+        <div>
+          <button class="medidas-toggle-btn${n.medidasOpen?' open':''}" data-tm="${i}">
+            📏 ${n.medidasOpen?'Ocultar medidas':'Añadir medidas'}
+          </button>
+          <div class="medidas-section${n.medidasOpen?' open':''}">
+            <div class="medidas-grid2">
+              ${MED_FIELDS.map(f=>`
+                <div><label class="f2-lbl">${f.label}</label>
+                  <div class="medidas-inp-wrap">
+                    <input type="number" class="f2-inp fn-${f.key}" data-i="${i}" placeholder="0" min="0" step="0.5" value="${escF(n.medidas[f.key])}">
+                    <span class="medidas-unit">cm</span>
+                  </div>
+                </div>`).join('')}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>`).join('');
+
+  c.innerHTML = `
+    <div class="ficha-view">
+      <div>
+        <button class="ficha-back-btn" id="fichaBack">← Volver a fichas</button>
+        <div class="ficha-view-title">Nueva ficha de pedido</div>
+      </div>
+      ${ninosHtml}
+      <button class="add-nino-btn" id="addNinoBtn">+ Añadir niño</button>
+      <div class="ficha-form-actions">
+        <button class="ficha-cancel-btn" id="fichaCancel">Cancelar</button>
+        <button class="ficha-save-btn" id="fichaSave">Guardar ficha</button>
+      </div>
+    </div>`;
+
+  // Sync input → fichasFormNinos on every keystroke
+  const MED_KEYS = new Set(['largo','cintura','cadera','espalda','contornoCabeza','diametroCabeza']);
+  c.querySelectorAll('.f2-inp,.f2-textarea').forEach(el=>{
+    el.addEventListener('input',()=>{
+      const idx = parseInt(el.dataset.i);
+      const cls = [...el.classList].find(k=>k.startsWith('fn-'))?.replace('fn-','');
+      if(cls===undefined||isNaN(idx)) return;
+      if(MED_KEYS.has(cls)) ninos[idx].medidas[cls]=el.value;
+      else ninos[idx][cls]=el.value;
+    });
+  });
+
+  // Toggle medidas section
+  c.querySelectorAll('[data-tm]').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      const idx=parseInt(btn.dataset.tm);
+      ninos[idx].medidasOpen=!ninos[idx].medidasOpen;
+      renderFichaForm(c);
+    });
+  });
+
+  // Remove child
+  c.querySelectorAll('[data-rm]').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      const idx=parseInt(btn.dataset.rm);
+      if(fichasFormNinos.length===1){toast('Debe haber al menos un niño');return;}
+      fichasFormNinos.splice(idx,1);
+      renderFichaForm(c);
+    });
+  });
+
+  // Add child
+  c.querySelector('#addNinoBtn').addEventListener('click',()=>{
+    fichasFormNinos.push(makeNinoEmpty());
+    renderFichaForm(c);
+  });
+
+  // Save ficha
+  c.querySelector('#fichaSave').addEventListener('click',()=>{
+    const ficha = {
+      id:'f_'+Date.now(),
+      createdAt:new Date().toISOString(),
+      ninos: fichasFormNinos.map(n=>({
+        id:n.id, nombre:n.nombre, edad:n.edad,
+        producto:n.producto, tela:n.tela, descripcion:n.descripcion,
+        medidas:{...n.medidas}
+      }))
+    };
+    fichasData.push(ficha);
+    saveFichasData();
+    fichasViewState='list';
+    toast('Ficha guardada ✓');
+    renderFichasList(c);
+    renderMedidasTab();
+  });
+
+  // Back / Cancel
+  ['fichaBack','fichaCancel'].forEach(id=>{
+    c.querySelector('#'+id)?.addEventListener('click',()=>{
+      fichasViewState='list';
+      renderFichasList(c);
+    });
+  });
+}
+
+function renderFichaDetail(c, fichaId){
+  const ficha = fichasData.find(f=>f.id===fichaId);
+  if(!ficha){ fichasViewState='list'; renderFichasList(c); return; }
+
+  const d = new Date(ficha.createdAt);
+  const ds = d.toLocaleDateString('es-ES',{weekday:'long',day:'2-digit',month:'long',year:'numeric'});
+  const MED_LABELS = {largo:'Largo',cintura:'Cintura',cadera:'Cadera',espalda:'Espalda',contornoCabeza:'Contorno cabeza',diametroCabeza:'Diámetro cabeza'};
+
+  const ninosHtml = ficha.ninos.map(n=>{
+    const anyMed = Object.values(n.medidas||{}).some(v=>v!==''&&v!=null);
+    return `
+      <div class="ficha-detail-nino">
+        <div class="ficha-detail-nino-hdr">
+          <div class="ficha-detail-nino-name">${escF(n.nombre||'—')}</div>
+          <div class="ficha-detail-nino-edad">${escF(n.edad||'—')}</div>
+        </div>
+        <div class="ficha-detail-nino-body">
+          ${n.producto||n.tela?`
+            <div class="fd-2col">
+              ${n.producto?`<div class="fd-row"><span class="fd-key">Producto</span><span class="fd-val">${escF(n.producto)}</span></div>`:''}
+              ${n.tela?`<div class="fd-row"><span class="fd-key">Tela</span><span class="fd-val">${escF(n.tela)}</span></div>`:''}
+            </div>`:''}
+          ${n.descripcion?`<div><span class="f2-lbl" style="margin-bottom:.3rem;">Descripción</span><div class="fd-desc">${escF(n.descripcion)}</div></div>`:''}
+          ${anyMed?`<div>
+            <span class="f2-lbl" style="margin-bottom:.4rem;">Medidas</span>
+            <div class="fd-medidas-grid">
+              ${Object.entries(MED_LABELS).map(([k,lbl])=>`
+                <div class="fd-medida-item">
+                  <span class="fd-medida-key">${lbl}</span>
+                  <span class="fd-medida-val${!n.medidas[k]?' empty':''}">${n.medidas[k]?n.medidas[k]+' cm':'—'}</span>
+                </div>`).join('')}
+            </div>
+          </div>`:''}
+        </div>
+      </div>`;
+  }).join('');
+
+  c.innerHTML = `
+    <div class="ficha-view">
+      <div>
+        <button class="ficha-back-btn" id="fichaDetailBack">← Volver a fichas</button>
+        <div class="ficha-view-title">${ficha.ninos.length} niño${ficha.ninos.length!==1?'s':''}</div>
+        <div class="ficha-view-date">${ds}</div>
+      </div>
+      ${ninosHtml}
+      <div class="ficha-detail-actions">
+        <button class="ficha-del-btn" id="fichaDelBtn">Eliminar ficha</button>
+      </div>
+    </div>`;
+
+  c.querySelector('#fichaDetailBack').addEventListener('click',()=>{
+    fichasViewState='list';
+    renderFichasList(c);
+  });
+  c.querySelector('#fichaDelBtn').addEventListener('click',()=>{
+    if(!confirm('¿Eliminar esta ficha? No se puede deshacer.')) return;
+    fichasData=fichasData.filter(f=>f.id!==fichaId);
+    saveFichasData();
+    fichasViewState='list';
+    toast('Ficha eliminada');
+    renderFichasList(c);
+    renderMedidasTab();
+  });
+}
+
+// ── MEDIDAS NIÑOS ──
+function renderMedidasTab(){
+  const c = document.getElementById('tab-medidas-inner');
+  if(!c) return;
+  loadFichas();
+  const MED_LABELS = {largo:'Largo',cintura:'Cintura',cadera:'Cadera',espalda:'Espalda',contornoCabeza:'Contorno cabeza',diametroCabeza:'Diámetro cabeza'};
+  const all = [];
+  fichasData.forEach(f=>{
+    const ds = new Date(f.createdAt).toLocaleDateString('es-ES',{day:'2-digit',month:'short',year:'numeric'});
+    f.ninos.forEach(n=>all.push({...n, fichaDate:ds}));
+  });
+  if(!all.length){
+    c.innerHTML='<div class="mn-empty">No hay medidas todavía.<br>Crea fichas de pedido para ver las medidas aquí.</div>';
+    return;
+  }
+  c.innerHTML=`<div class="mn-list">
+    ${all.map(n=>{
+      const anyMed = Object.values(n.medidas||{}).some(v=>v!==''&&v!=null);
+      return `<div class="mn-card">
+        <div class="mn-card-hdr">
+          <div class="mn-card-name">${escF(n.nombre||'—')}</div>
+          <div class="mn-card-meta">${escF(n.edad||'')}</div>
+        </div>
+        ${anyMed
+          ?`<div class="mn-card-body">
+              ${Object.entries(MED_LABELS).map(([k,lbl])=>`
+                <div class="mn-item">
+                  <span class="mn-item-key">${lbl}</span>
+                  <span class="mn-item-val${!n.medidas?.[k]?' empty':''}">${n.medidas?.[k]?n.medidas[k]+' cm':'—'}</span>
+                </div>`).join('')}
+            </div>`
+          :'<div class="mn-no-medidas">Sin medidas registradas</div>'}
+        <div class="mn-card-source">Ficha del ${n.fichaDate}</div>
+      </div>`;
+    }).join('')}
+  </div>`;
+}
 
 document.getElementById('cropCancel').addEventListener('click',()=>{
   document.getElementById('cropOverlay').classList.add('hidden');
