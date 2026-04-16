@@ -7,6 +7,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=Barlow:wght@300;400;500&family=Josefin+Sans:wght@300;400;600&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+script{display:none!important;}
 :root{
   --cream:#f5f0e8;--dark:#1a1612;--warm:#8b7355;--accent:#c8a96e;
   --light-warm:#ede5d8;--muted:#7a6e62;--border:#d4c9b8;--header-h:56px;
@@ -378,11 +379,11 @@ header{height:var(--header-h);padding:0 1.2rem;display:flex;align-items:center;j
 .fp-item-contact{font-family:'Cormorant Garamond',serif;font-size:.88rem;color:var(--muted);font-style:italic;margin-top:.28rem;display:flex;flex-wrap:wrap;gap:.3rem .8rem;}
 .fp-item-fecha{font-family:'Cormorant Garamond',serif;font-size:.85rem;color:var(--warm);font-style:italic;margin-top:.2rem;}
 .fp-item-bottom{display:flex;align-items:center;gap:.55rem;margin-top:.7rem;padding-top:.6rem;border-top:1px solid rgba(212,201,184,.3);}
-.fp-circle{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Cormorant Garamond',serif;font-size:.95rem;font-weight:600;flex-shrink:0;}
+.fp-circle{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Cormorant Garamond',serif;font-size:1.15rem;font-weight:700;flex-shrink:0;}
 .fp-circle-nina{background:rgba(180,100,140,.12);color:#b4648c;border:1.5px solid rgba(180,100,140,.3);}
 .fp-circle-nino{background:rgba(58,92,138,.12);color:#3a5c8a;border:1.5px solid rgba(58,92,138,.3);}
 .fp-circle-label{font-family:'Cormorant Garamond',serif;font-size:.8rem;font-style:italic;color:var(--muted);}
-.fp-total-badge{margin-left:auto;font-family:'Cormorant Garamond',serif;font-size:.85rem;font-style:italic;color:var(--muted);}
+.fp-total-badge{margin-left:auto;font-family:'Cormorant Garamond',serif;font-size:1.1rem;font-style:italic;color:var(--dark);font-weight:600;}
 /* Wizard form */
 .ficha-wizard-step{display:flex;flex-direction:column;gap:1.4rem;}
 .ficha-wizard-hdr{display:flex;flex-direction:column;gap:.25rem;}
@@ -540,6 +541,21 @@ input[type="date"].ficha-big-inp{font-size:1.15rem;padding:.88rem 1rem;}
 .specs-textarea{width:100%;padding:.5rem .65rem;border:1.5px solid rgba(212,201,184,.65);border-radius:7px;background:rgba(255,255,255,.62);color:var(--dark);font-family:'Cormorant Garamond',serif;font-size:.95rem;resize:vertical;min-height:60px;line-height:1.55;transition:all .2s;margin-top:.35rem;}
 .specs-textarea:focus{outline:none;border-color:var(--accent);background:rgba(255,255,255,.92);}
 .fd-specs{font-family:'Cormorant Garamond',serif;font-size:.88rem;font-style:italic;color:var(--muted);line-height:1.6;padding:.45rem .65rem;background:rgba(255,255,255,.55);border-radius:6px;border:1px solid rgba(212,201,184,.4);margin-top:.4rem;}
+
+/* ── ASOCIAR PEDIDO MODAL ── */
+.asoc-overlay{position:fixed;inset:0;z-index:700;background:rgba(26,22,18,.72);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;padding:1.5rem;}
+.asoc-overlay.hidden{display:none;}
+.asoc-card{background:var(--cream);border:1px solid var(--border);border-radius:12px;width:100%;max-width:360px;padding:1.8rem 1.8rem 1.5rem;box-shadow:0 12px 40px rgba(0,0,0,.25);}
+.asoc-title{font-family:'Cormorant Garamond',serif;font-size:1.4rem;font-weight:400;color:var(--dark);margin-bottom:.25rem;}
+.asoc-sub{font-family:'Cormorant Garamond',serif;font-size:.9rem;font-style:italic;color:var(--muted);margin-bottom:1.4rem;}
+.asoc-field{display:flex;flex-direction:column;gap:.38rem;margin-bottom:1.1rem;}
+.asoc-lbl{font-family:'Cormorant Garamond',serif;font-size:.88rem;font-style:italic;color:var(--muted);}
+.asoc-inp{width:100%;padding:.82rem 1rem;border:1.5px solid rgba(212,201,184,.7);border-radius:8px;background:#fff;color:var(--dark);font-family:'Cormorant Garamond',serif;font-size:1.2rem;letter-spacing:.06em;transition:all .2s;}
+.asoc-inp:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(200,169,110,.12);}
+.asoc-actions{display:flex;flex-direction:column;gap:.5rem;}
+.asoc-confirm-btn{width:100%;padding:.78rem;background:var(--warm);color:#fff;border:none;border-radius:8px;cursor:pointer;font-family:'Cormorant Garamond',serif;font-size:1.05rem;font-style:italic;letter-spacing:.04em;transition:background .2s;display:flex;align-items:center;justify-content:center;gap:.5rem;}
+.asoc-confirm-btn:hover{background:var(--accent);}
+.asoc-cancel-btn{width:100%;padding:.5rem;background:none;border:none;cursor:pointer;color:var(--muted);font-size:.85rem;font-family:'Cormorant Garamond',serif;}
 
 /* ── FILTER TOGGLE (mobile only) ── */
 .filter-toggle-btn{display:none;}
@@ -821,6 +837,22 @@ input[type="date"].ficha-big-inp{font-size:1.15rem;padding:.88rem 1rem;}
 </div>
 
 <div class="toast" id="toast"></div>
+
+<!-- ASOCIAR PEDIDO MODAL -->
+<div id="asocModal" class="asoc-overlay hidden">
+  <div class="asoc-card">
+    <div class="asoc-title">Asociar a pedido</div>
+    <div class="asoc-sub" id="asocModalSub">Introduce el número de pedido de WooCommerce</div>
+    <div class="asoc-field">
+      <label class="asoc-lbl">Nº de pedido</label>
+      <input class="asoc-inp" id="asocNumInp" placeholder="Ej: 1042" autocomplete="off">
+    </div>
+    <div class="asoc-actions">
+      <button class="asoc-confirm-btn" id="asocConfirmBtn">📨 Asociar y enviar</button>
+      <button class="asoc-cancel-btn" id="asocCancelBtn">Cancelar</button>
+    </div>
+  </div>
+</div>
 
 <script>
 const SB_URL = 'https://tqkjfzziopjwjdhrrnuf.supabase.co';
@@ -2346,6 +2378,7 @@ function makeNinoEmpty(sexo=null){
   return {
     id:'n_'+Date.now()+'_'+Math.random().toString(36).slice(2,6),
     nombre:'', edad:'', talla:'', sexo:sexo,
+    productoOpen: false, modelo:'', tela:'', descripcion:'',
     medidasOpen: false,
     medidas:{ contornoPecho:'', largo:'', contornoCintura:'', pantalon:'' }
   };
@@ -2387,7 +2420,7 @@ function renderFichasList(c){
         ${numNinas?`<div class="fp-circle fp-circle-nina">${numNinas}</div><span class="fp-circle-label" style="color:#b4648c;">niña${numNinas!==1?'s':''}</span>`:''}
         ${numNinas&&numNinos?'<span style="color:var(--border);font-size:.8rem;">·</span>':''}
         ${numNinos?`<div class="fp-circle fp-circle-nino">${numNinos}</div><span class="fp-circle-label" style="color:#3a5c8a;">niño${numNinos!==1?'s':''}</span>`:''}
-        ${totalN?`<span class="fp-total-badge">${totalN} en total</span>`:'<span class="fp-total-badge" style="font-size:.8rem;">Sin niños añadidos</span>'}
+        ${totalN?`<span class="fp-total-badge">${totalN} en total</span>`:'<span class="fp-total-badge" style="font-size:.85rem;color:var(--muted);font-weight:400;">Sin niños añadidos</span>'}
       </div>
     </div>`;
   }).join('');
@@ -2460,10 +2493,9 @@ function renderFichaFormStep1(c){
         </div>
       </div>
       <div class="ficha-big-field">
-        <label class="ficha-big-lbl">Nº de pedido</label>
-        <input class="ficha-big-inp" id="fichaPedidoInp" placeholder="Ej: PED-2025-001" value="${escF(fichasFormNumeroPedido)}">
+        <label class="ficha-big-lbl">Nº de pedido <span style="font-size:.78rem;font-weight:400;color:var(--muted);font-style:italic;">(opcional — se puede asociar después)</span></label>
+        <input class="ficha-big-inp" id="fichaPedidoInp" placeholder="Ej: 1042" value="${escF(fichasFormNumeroPedido)}" autocomplete="off">
       </div>
-
       <button class="ficha-next-btn" id="fichaNxtBtn">Siguiente → Añadir niños 👶</button>
     </div>`;
 
@@ -2548,6 +2580,25 @@ function renderFichaFormStep2(c){
           <div><label class="f2-lbl">Talla habitual</label>
             <input class="f2-inp fn-talla" data-i="${i}" placeholder="Ej: 4T, 6 años, 116 cm…" value="${escF(n.talla||'')}"></div>
           <div>
+            <button class="medidas-toggle-btn${n.productoOpen?' open':''}" data-popen="${i}" style="font-size:.95rem;padding:.55rem .9rem;${!n.productoOpen&&!(n.modelo||n.tela||n.descripcion)?'border-color:rgba(107,76,122,.45);color:#6b4c7a;background:rgba(107,76,122,.07);':''}">
+              ${n.productoOpen?'🎨 Ocultar producto':'🎨 Producto'}${(n.modelo||n.tela||n.descripcion)?' ✓':''}
+            </button>
+            <div class="medidas-section${n.productoOpen?' open':''}">
+              <div>
+                <label class="f2-lbl">Modelo</label>
+                <input class="f2-inp fn-modelo" data-i="${i}" placeholder="Ej: Vestido comunión clásico" value="${escF(n.modelo||'')}">
+              </div>
+              <div>
+                <label class="f2-lbl">Tela</label>
+                <input class="f2-inp fn-tela" data-i="${i}" placeholder="Ej: Lino crudo, Velvetón blanco…" value="${escF(n.tela||'')}">
+              </div>
+              <div>
+                <label class="f2-lbl">Descripción</label>
+                <textarea class="f2-textarea fn-descripcion" data-i="${i}" placeholder="Detalles del modelo, acabados, bordados…" rows="3">${escF(n.descripcion||'')}</textarea>
+              </div>
+            </div>
+          </div>
+          <div>
             <button class="medidas-toggle-btn${n.medidasOpen?' open':''}" data-mopen="${i}" style="font-size:.95rem;padding:.55rem .9rem;${!n.medidasOpen&&!hasMedData?'border-color:rgba(139,115,85,.5);color:var(--warm);background:rgba(200,169,110,.08);':''}">
               ${n.medidasOpen?'📐 Ocultar medidas':'📏 Añadir medidas'}${hasMedData?' ✓':''}
             </button>
@@ -2564,7 +2615,7 @@ function renderFichaFormStep2(c){
       ${numNinas?`<div class="fp-circle fp-circle-nina">${numNinas}</div><span style="font-family:'Cormorant Garamond',serif;font-size:.88rem;font-style:italic;color:#b4648c;">niña${numNinas!==1?'s':''}</span>`:''}
       ${numNinas&&numNinos?'<span style="color:var(--border);">·</span>':''}
       ${numNinos?`<div class="fp-circle fp-circle-nino">${numNinos}</div><span style="font-family:'Cormorant Garamond',serif;font-size:.88rem;font-style:italic;color:#3a5c8a;">niño${numNinos!==1?'s':''}</span>`:''}
-      <span style="margin-left:auto;font-family:'Cormorant Garamond',serif;font-size:.85rem;font-style:italic;color:var(--muted);">${totalN} en total</span>
+      <span style="margin-left:auto;font-family:'Cormorant Garamond',serif;font-size:1.2rem;font-weight:700;color:var(--dark);">${totalN} en total</span>
     </div>` : '';
 
   c.innerHTML = `
@@ -2604,7 +2655,7 @@ function renderFichaFormStep2(c){
   });
 
   // Sync campos
-  c.querySelectorAll('.fn-nombre,.fn-edad,.fn-talla').forEach(el=>{
+  c.querySelectorAll('.fn-nombre,.fn-edad,.fn-talla,.fn-modelo,.fn-tela,.fn-descripcion').forEach(el=>{
     el.addEventListener('input',()=>{
       const idx=parseInt(el.dataset.i);
       const key=[...el.classList].find(k=>k.startsWith('fn-'))?.replace('fn-','');
@@ -2618,6 +2669,15 @@ function renderFichaFormStep2(c){
       const idx=parseInt(el.dataset.i);
       const mk=el.dataset.mk;
       if(!isNaN(idx)&&mk){ if(!ninos[idx].medidas) ninos[idx].medidas={}; ninos[idx].medidas[mk]=el.value; }
+    });
+  });
+
+  // Toggle producto
+  c.querySelectorAll('[data-popen]').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      const idx=parseInt(btn.dataset.popen);
+      ninos[idx].productoOpen=!ninos[idx].productoOpen;
+      renderFichaFormStep2(c);
     });
   });
 
@@ -2661,6 +2721,7 @@ function renderFichaFormStep2(c){
       pedidoRealizado: isEdit ? existing.pedidoRealizado : false,
       ninos: fichasFormNinos.filter(n=>n.sexo!==null).map(n=>({
         id:n.id, nombre:n.nombre, edad:n.edad, talla:n.talla||'', sexo:n.sexo,
+        modelo:n.modelo||'', tela:n.tela||'', descripcion:n.descripcion||'',
         medidas:{...n.medidas}
       }))
     };
@@ -2684,8 +2745,72 @@ function renderFichaFormStep2(c){
   });
 }
 
-function downloadFichaPDF(ficha, titulo, fechaEvStr){
+// ── ASOCIAR PEDIDO MODAL ──
+const NONNA_EMAIL = 'info@atelierlanonna.com';
+// n8n webhook — producción (activar el workflow en n8n y configurar credenciales SMTP antes de usar)
+const N8N_WEBHOOK_URL = 'https://nuriahorma.app.n8n.cloud/webhook/lanonna-ficha';
+
+function openAsocModal(ficha, titulo, fechaEvStr, c){
+  const modal = document.getElementById('asocModal');
+  const inp   = document.getElementById('asocNumInp');
+  const sub   = document.getElementById('asocModalSub');
+  sub.textContent = `Cliente: ${ficha.nombre || titulo}`;
+  inp.value = ficha.numeroPedido || '';
+  modal.classList.remove('hidden');
+  inp.focus();
+
+  const doConfirm = async () => {
+    const num = inp.value.trim();
+    if(!num){ toast('Introduce el número de pedido'); return; }
+    const btn = document.getElementById('asocConfirmBtn');
+    btn.disabled = true; btn.textContent = 'Enviando…';
+    try {
+      // 1. Guardar el número de pedido en Supabase
+      ficha.numeroPedido = num;
+      await sbPatch(`/rest/v1/fichas?id=eq.${encodeURIComponent(ficha.id)}`, {numero_pedido: num});
+
+      // 2. Generar el HTML completo de la ficha (sin abrir ventana)
+      const safeName = (ficha.nombre||'cliente').replace(/[^a-zA-Z0-9áéíóúüñÁÉÍÓÚÜÑ \-]/g,'').trim();
+      const filename = `${num} - ${safeName}`;
+      const htmlPage = await downloadFichaPDF(ficha, titulo, fechaEvStr, filename, true);
+
+      // 3. Enviar al webhook de n8n → email automático a La Nonna
+      const res = await fetch(N8N_WEBHOOK_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          nombre: ficha.nombre || titulo,
+          numeroPedido: num,
+          htmlContent: htmlPage
+        })
+      });
+      if(!res.ok) throw new Error(`Webhook error ${res.status}`);
+
+      modal.classList.add('hidden');
+      toast('✓ Email enviado a La Nonna');
+      renderFichaDetail(c, ficha.id);
+    } catch(e) {
+      toast('Error al enviar: ' + e.message);
+    } finally {
+      btn.disabled = false; btn.textContent = '📎 Asociar y enviar';
+    }
+  };
+
+  document.getElementById('asocConfirmBtn').onclick = doConfirm;
+  inp.onkeydown = e => { if(e.key==='Enter') doConfirm(); };
+  document.getElementById('asocCancelBtn').onclick = () => modal.classList.add('hidden');
+  modal.onclick = e => { if(e.target===modal) modal.classList.add('hidden'); };
+}
+
+async function downloadFichaPDF(ficha, titulo, fechaEvStr, filenameOverride, htmlOnly){
   const esc = s => (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  // Fetch logo as embedded data URL so it works in the about:blank window
+  let logoDataUrl = '';
+  try {
+    const logoRes = await fetch(window.location.origin + (window.location.pathname.replace(/\/[^/]*$/, '') || '') + '/nonna.png');
+    const logoBlob = await logoRes.blob();
+    logoDataUrl = await new Promise(r => { const fr = new FileReader(); fr.onload = () => r(fr.result); fr.readAsDataURL(logoBlob); });
+  } catch(e) {}
   const numNinas = ficha.ninos.filter(n=>n.sexo==='nina').length;
   const numNinos = ficha.ninos.filter(n=>n.sexo==='nino').length;
   const totalN = numNinas + numNinos;
@@ -2710,13 +2835,18 @@ function downloadFichaPDF(ficha, titulo, fechaEvStr){
       });
       medsHtml = rows.join('');
     }
+    const productoHtml = (n.modelo||n.tela||n.descripcion) ? (
+      (n.modelo||n.tela ? `<div class="prod-row">${n.modelo?`<span><span class="prod-lbl">Modelo:</span><span class="prod-chip">${esc(n.modelo)}</span></span>`:''} ${n.tela?`<span><span class="prod-lbl">Tela:</span><span class="prod-chip">${esc(n.tela)}</span></span>`:''}</div>`:'') +
+      (n.descripcion ? `<div class="desc-box">${esc(n.descripcion)}</div>` : '')
+    ) : '';
     return `
       <div class="nino-block" style="border-left:3px solid ${col};">
         <div class="nino-hdr">
           <span class="nino-name" style="color:${col};">${esc(n.nombre||'—')}</span>
-          <span class="nino-sex" style="color:${col};background:${isNina?'rgba(107,76,122,.1)':'rgba(58,92,138,.1)'};border:1px solid ${isNina?'rgba(107,76,122,.3)':'rgba(58,92,138,.3)'};">${sexLabel}</span>
-          ${n.edad?`<span class="nino-edad">${esc(n.edad)} años</span>`:''}
+          <span class="nino-sex" style="color:${col};background:${isNina?'rgba(107,76,122,.15)':'rgba(58,92,138,.15)'};border:1.5px solid ${isNina?'rgba(107,76,122,.5)':'rgba(58,92,138,.5)'};">${sexLabel}</span>
+          ${n.edad?`<span class="nino-edad">${esc(n.edad)}</span>`:''}
         </div>
+        ${productoHtml}
         <table class="med-table">
           ${n.talla?`<tr><td class="med-k">Talla habitual</td><td class="med-v">${esc(n.talla)}</td></tr>`:''}
           ${medsHtml||`<tr><td colspan="2" class="no-med">Sin medidas registradas</td></tr>`}
@@ -2732,37 +2862,40 @@ function downloadFichaPDF(ficha, titulo, fechaEvStr){
     '.brand{font-size:1.9rem;font-weight:300;letter-spacing:.14em;color:#8b7355;}',
     '.brand em{font-style:italic;font-weight:400;color:#c8a96e;}',
     '.brand-sub{font-size:.72rem;letter-spacing:.18em;text-transform:uppercase;color:#b0a080;margin-top:.1em;}',
-    '.print-date{font-size:.72rem;color:#9a8f82;letter-spacing:.04em;text-align:right;}',
+    '.print-date{font-size:.72rem;color:#5a4e42;letter-spacing:.04em;text-align:right;}',
     '.ficha-title{font-size:1.55rem;font-weight:400;letter-spacing:.04em;margin-bottom:.25em;}',
-    '.num-pedido{font-size:.85rem;letter-spacing:.08em;color:#c8a96e;font-weight:500;margin-bottom:.15em;}',
-    '.fecha-badge{font-size:.9rem;font-style:italic;color:#8b7355;margin-bottom:.8em;}',
+    '.num-pedido{font-size:.85rem;letter-spacing:.08em;color:#c8a96e;font-weight:600;margin-bottom:.15em;}',
+    '.fecha-badge{font-size:.9rem;font-style:italic;color:#5a3f20;margin-bottom:.8em;}',
     '.section{margin-top:.9em;}',
-    '.section-title{font-size:.68rem;text-transform:uppercase;letter-spacing:.1em;color:#9a8f82;border-bottom:1px solid #e8e0d4;padding-bottom:.2em;margin-bottom:.5em;}',
+    '.section-title{font-size:.7rem;text-transform:uppercase;letter-spacing:.1em;color:#4a3f34;font-weight:700;border-bottom:2px solid #c8a96e;padding-bottom:.25em;margin-bottom:.55em;}',
     '.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:.3em .8em;}',
-    '.info-lbl{font-size:.68rem;text-transform:uppercase;letter-spacing:.08em;color:#9a8f82;display:block;margin-bottom:.08em;}',
-    '.info-val{font-size:.95rem;color:#1a1612;}',
-    '.totals{display:flex;align-items:center;gap:.6em;margin-top:.7em;padding:.5em .7em;background:#f5f0e8;border-radius:6px;font-size:.88rem;}',
-    '.circle{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.82rem;font-weight:600;flex-shrink:0;}',
-    '.circle-nina{background:rgba(180,100,140,.15);color:#b4648c;border:1.5px solid rgba(180,100,140,.3);}',
-    '.circle-nino{background:rgba(58,92,138,.15);color:#3a5c8a;border:1.5px solid rgba(58,92,138,.3);}',
-    '.nino-block{padding:.65em .8em;margin-bottom:.55em;border-radius:5px;background:#fcfaf7;border:1px solid #ede5d8;}',
-    '.nino-hdr{display:flex;align-items:center;gap:.5em;margin-bottom:.4em;}',
-    '.nino-name{font-size:1rem;font-weight:500;}',
-    '.nino-sex{font-size:.72rem;padding:.1em .45em;border-radius:20px;}',
-    '.nino-edad{font-size:.78rem;color:#9a8f82;font-style:italic;}',
+    '.info-lbl{font-size:.68rem;text-transform:uppercase;letter-spacing:.08em;color:#4a3f34;font-weight:600;display:block;margin-bottom:.08em;}',
+    '.info-val{font-size:1rem;color:#1a1612;font-weight:400;}',
+    '.totals{display:flex;align-items:center;gap:.6em;margin-top:.7em;padding:.5em .7em;background:#f5f0e8;border-radius:6px;font-size:.92rem;border:1px solid #d4c9b8;}',
+    '.circle{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.88rem;font-weight:700;flex-shrink:0;}',
+    '.circle-nina{background:rgba(180,100,140,.2);color:#8a3060;border:2px solid rgba(180,100,140,.5);}',
+    '.circle-nino{background:rgba(58,92,138,.2);color:#1a3c6a;border:2px solid rgba(58,92,138,.5);}',
+    '.nino-block{padding:.75em .9em;margin-bottom:.65em;border-radius:6px;background:#fcfaf7;border:1px solid #d4c9b8;border-left-width:3px;}',
+    '.nino-hdr{display:flex;align-items:center;gap:.5em;margin-bottom:.5em;}',
+    '.nino-name{font-size:1.05rem;font-weight:600;}',
+    '.nino-sex{font-size:.72rem;padding:.12em .5em;border-radius:20px;font-weight:500;}',
+    '.nino-edad{font-size:.8rem;color:#4a3f34;font-style:italic;font-weight:500;}',
     '.med-table{width:100%;border-collapse:collapse;}',
-    '.med-k{font-size:.75rem;text-transform:uppercase;letter-spacing:.06em;color:#9a8f82;padding:.15em 0;width:58%;}',
-    '.med-v{font-size:.95rem;font-weight:500;color:#1a1612;text-align:right;}',
-    '.no-med{font-size:.82rem;font-style:italic;color:#b0a898;text-align:center;padding:.3em 0;}',
+    '.med-k{font-size:.78rem;text-transform:uppercase;letter-spacing:.06em;color:#4a3f34;font-weight:600;padding:.2em 0;width:58%;}',
+    '.med-v{font-size:1rem;font-weight:600;color:#1a1612;text-align:right;}',
+    '.no-med{font-size:.82rem;font-style:italic;color:#7a6e62;text-align:center;padding:.3em 0;}',
+    '.prod-row{display:flex;gap:.5em;flex-wrap:wrap;margin-bottom:.35em;}',
+    '.prod-chip{font-size:.82rem;padding:.18em .55em;border-radius:4px;background:#f0ebe0;border:1px solid #d4c9b8;color:#1a1612;font-weight:500;}',
+    '.prod-lbl{font-size:.68rem;text-transform:uppercase;letter-spacing:.08em;color:#4a3f34;font-weight:600;margin-right:.2em;}',
+    '.desc-box{font-size:.88rem;font-style:italic;color:#3a3028;padding:.35em .55em;background:#f5f0e8;border-left:2px solid #c8a96e;margin-bottom:.35em;}',
     '@media print{body{padding:.8cm 1.1cm;} @page{margin:.8cm 1.1cm;size:A4 portrait;}}'
   ].join('\n');
 
   const bodyHTML =
     '<div class="letterhead">' +
-      '<div>' +
-        '<div class="brand">Atelier <em>la Nonna</em></div>' +
-        '<div class="brand-sub">Trajes a medida · sastrería artesanal</div>' +
-      '</div>' +
+      (logoDataUrl
+        ? `<img src="${logoDataUrl}" alt="Atelier La Nonna" style="height:54px;width:auto;display:block;">`
+        : '<div><div class="brand">Atelier <em>la Nonna</em></div></div>') +
       '<div class="print-date">Impreso: ' + new Date().toLocaleDateString('es-ES',{day:'2-digit',month:'long',year:'numeric'}) + '</div>' +
     '</div>' +
     '<div>' +
@@ -2785,11 +2918,16 @@ function downloadFichaPDF(ficha, titulo, fechaEvStr){
         '<div style="margin-top:.65em;">' + ninoRows + '</div>' +
       '</div>' : '');
 
+  // Si htmlOnly=true, devolver el HTML completo sin abrir ventana (para enviar por email)
+  if(htmlOnly){
+    return `<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"><title>${(filenameOverride||('Ficha - '+titulo)).replace(/</g,'&lt;')}<\/title><style>${pdfCSS}<\/style><\/head><body>${bodyHTML}<\/body><\/html>`;
+  }
+
   const w = window.open('about:blank','_blank','width=800,height=900');
   if(!w){ alert('Activa ventanas emergentes para este sitio y vuelve a intentarlo.'); return; }
   const d = w.document;
   const meta = d.createElement('meta'); meta.setAttribute('charset','utf-8'); d.head.appendChild(meta);
-  d.title = 'Ficha - ' + titulo;
+  d.title = filenameOverride || ('Ficha - ' + titulo);
   const styleEl = d.createElement('style'); styleEl.textContent = pdfCSS; d.head.appendChild(styleEl);
   d.body.innerHTML = bodyHTML;
   w.focus();
@@ -2859,8 +2997,8 @@ function renderFichaDetail(c, fichaId){
         </div>
         <div class="ficha-detail-nino-body">
           ${n.talla?`<div class="fd-row"><span class="fd-key">Talla</span><span class="fd-val">${escF(n.talla)}</span></div>`:''}
-          ${n.producto||n.tela?`<div class="fd-2col">
-            ${n.producto?`<div><span class="f2-lbl">Producto</span><div class="fd-chip">${escF(n.producto)}</div></div>`:''}
+          ${(n.modelo||n.tela)?`<div class="fd-2col">
+            ${n.modelo?`<div><span class="f2-lbl">Modelo</span><div class="fd-chip">${escF(n.modelo)}</div></div>`:''}
             ${n.tela?`<div><span class="f2-lbl">Tela</span><div class="fd-chip">${escF(n.tela)}</div></div>`:''}
           </div>`:''}
           ${n.descripcion?`<div><span class="f2-lbl">Descripción</span><div class="fd-desc">${escF(n.descripcion)}</div></div>`:''}
@@ -2884,7 +3022,12 @@ function renderFichaDetail(c, fichaId){
             <button class="ficha-back-btn" id="fichaEditBtn" style="color:var(--warm);border:1px solid rgba(139,115,85,.3);padding:.2rem .7rem;border-radius:20px;background:rgba(200,169,110,.08);">✏️ Editar</button>
           </div>
         </div>
-        ${ficha.numeroPedido?`<div class="fd-num-pedido">Pedido ${escF(ficha.numeroPedido)}</div>`:''}
+        ${ficha.numeroPedido
+          ? `<div style="display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;">
+               <div class="fd-num-pedido">Pedido ${escF(ficha.numeroPedido)}</div>
+               <button class="ficha-back-btn" id="fichaAsocBtn" style="color:var(--accent);border:1px solid rgba(200,169,110,.45);padding:.18rem .65rem;border-radius:20px;background:rgba(200,169,110,.09);">✏️ Cambiar</button>
+             </div>`
+          : `<button class="ficha-back-btn" id="fichaAsocBtn" style="color:var(--warm);border:1.5px solid rgba(139,115,85,.4);padding:.3rem .8rem;border-radius:20px;background:rgba(200,169,110,.1);font-size:.92rem;margin-bottom:.3rem;">📨 Asociar a nº de pedido y enviar email</button>`}
         <div class="fd-titulo">${escF(titulo)}</div>
         ${fechaEvStr?`<div class="fd-fecha-badge">🗓 ${fechaEvStr}</div>`:''}
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:.55rem .9rem;margin-top:.75rem;">
@@ -2901,7 +3044,7 @@ function renderFichaDetail(c, fichaId){
           ${numNinas?`<div class="fp-circle fp-circle-nina">${numNinas}</div><span style="font-family:'Cormorant Garamond',serif;font-size:.9rem;font-style:italic;color:#b4648c;">niña${numNinas!==1?'s':''}</span>`:''}
           ${numNinas&&numNinosC?'<span style="color:var(--border);">·</span>':''}
           ${numNinosC?`<div class="fp-circle fp-circle-nino">${numNinosC}</div><span style="font-family:'Cormorant Garamond',serif;font-size:.9rem;font-style:italic;color:#3a5c8a;">niño${numNinosC!==1?'s':''}</span>`:''}
-          <span style="margin-left:auto;font-family:'Cormorant Garamond',serif;font-size:.88rem;font-style:italic;color:var(--muted);">${totalN} en total</span>
+          <span style="margin-left:auto;font-family:'Cormorant Garamond',serif;font-size:1.25rem;font-weight:700;color:var(--dark);">${totalN} en total</span>
         </div>`:''}
       </div>
       ${ficha.ninos.length
@@ -2932,6 +3075,10 @@ function renderFichaDetail(c, fichaId){
       edad: n.edad||'',
       talla: n.talla||'',
       sexo: n.sexo||null,
+      productoOpen: !!(n.modelo||n.tela||n.descripcion),
+      modelo: n.modelo||'',
+      tela: n.tela||'',
+      descripcion: n.descripcion||'',
       medidasOpen: false,
       medidas: {...(n.medidas||{})}
     }));
@@ -2941,6 +3088,10 @@ function renderFichaDetail(c, fichaId){
 
   c.querySelector('#fichaPdfBtn').addEventListener('click',()=>{
     downloadFichaPDF(ficha, titulo, fechaEvStr);
+  });
+
+  c.querySelector('#fichaAsocBtn').addEventListener('click',()=>{
+    openAsocModal(ficha, titulo, fechaEvStr, c);
   });
 
   c.querySelector('#fichaDelBtn').addEventListener('click',async()=>{
