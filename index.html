@@ -609,6 +609,7 @@ input[type="date"].ficha-big-inp{font-size:1.15rem;padding:.88rem 1rem;}
   .viewer-nav-btn{width:34px;height:34px;font-size:1.2rem;}
 }
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
 <body>
 <div id="bgParallax"></div>
@@ -2636,9 +2637,11 @@ function renderFichaFormStep2(c){
       ${ninos.map((n,i)=>ninoHtml(n,i)).join('')}
       <button class="add-nino-btn" id="addNinoBtn">👶 Añadir niño o niña</button>
 
-      <div class="ficha-form-actions">
+      <div class="ficha-form-actions" style="flex-wrap:wrap;gap:.5rem;">
         <button class="ficha-cancel-btn" id="fichaCancel">Cancelar</button>
-        <button class="ficha-save-btn" id="fichaSave">💾 Guardar ficha</button>
+        <button class="ficha-back-btn" id="fichaPrevPdf" style="color:#6b4c7a;border:1px solid rgba(107,76,122,.3);padding:.35rem .8rem;border-radius:20px;background:rgba(107,76,122,.07);font-size:.88rem;">👁 Ver PDF</button>
+        <button class="ficha-save-btn" id="fichaSave">💾 Guardar</button>
+        <button class="ficha-save-btn" id="fichaSaveEnviar" style="background:linear-gradient(135deg,#8b7355,#c8a96e);color:#fff;border:none;min-width:9rem;">📨 Guardar y enviar</button>
       </div>
     </div>`;
 
@@ -2704,13 +2707,11 @@ function renderFichaFormStep2(c){
     renderFichaFormStep2(c);
   });
 
-  // Guardar / Actualizar
-  c.querySelector('#fichaSave').addEventListener('click',async()=>{
-    const saveBtn=c.querySelector('#fichaSave');
-    saveBtn.disabled=true; saveBtn.textContent='Guardando…';
+  // Helper: construye el objeto ficha desde el estado del formulario
+  function buildFichaFromForm() {
     const isEdit = !!fichasEditId;
     const existing = isEdit ? fichasData.find(f=>f.id===fichasEditId) : null;
-    const ficha = {
+    return {
       id: isEdit ? fichasEditId : 'f_'+Date.now(),
       createdAt: isEdit ? existing.createdAt : new Date().toISOString(),
       nombre: fichasFormName.trim(),
@@ -2725,6 +2726,32 @@ function renderFichaFormStep2(c){
         medidas:{...n.medidas}
       }))
     };
+  }
+
+  // Helper: títulos de la ficha
+  function getFichaTitulos(ficha) {
+    const d = new Date(ficha.createdAt);
+    const ds = d.toLocaleDateString('es-ES',{day:'2-digit',month:'long',year:'numeric'});
+    const titulo = ficha.nombre || `Ficha ${ds}`;
+    const fechaEvStr = ficha.fechaEvento
+      ? new Date(ficha.fechaEvento+'T12:00:00').toLocaleDateString('es-ES',{weekday:'long',day:'2-digit',month:'long',year:'numeric'})
+      : '';
+    return { titulo, fechaEvStr };
+  }
+
+  // Ver PDF (previsualizar sin guardar)
+  c.querySelector('#fichaPrevPdf').addEventListener('click', async () => {
+    const ficha = buildFichaFromForm();
+    const { titulo, fechaEvStr } = getFichaTitulos(ficha);
+    downloadFichaPDF(ficha, titulo, fechaEvStr);
+  });
+
+  // Guardar / Actualizar
+  c.querySelector('#fichaSave').addEventListener('click',async()=>{
+    const saveBtn=c.querySelector('#fichaSave');
+    saveBtn.disabled=true; saveBtn.textContent='Guardando…';
+    const isEdit = !!fichasEditId;
+    const ficha = buildFichaFromForm();
     try{
       await sbSaveFicha(ficha);
       if(isEdit){
@@ -2739,8 +2766,41 @@ function renderFichaFormStep2(c){
       renderFichasList(c);
       renderMedidasTab();
     } catch(e){
-      saveBtn.disabled=false; saveBtn.textContent='💾 Guardar ficha';
+      saveBtn.disabled=false; saveBtn.textContent='💾 Guardar';
       toast('Error al guardar: '+e.message);
+    }
+  });
+
+  // Guardar y enviar email + subir PDF a Drive
+  c.querySelector('#fichaSaveEnviar').addEventListener('click', async () => {
+    const sendBtn = c.querySelector('#fichaSaveEnviar');
+    const saveBtn = c.querySelector('#fichaSave');
+    sendBtn.disabled = true; saveBtn.disabled = true;
+    sendBtn.textContent = 'Guardando…';
+    const isEdit = !!fichasEditId;
+    const ficha = buildFichaFromForm();
+    try {
+      await sbSaveFicha(ficha);
+      if (isEdit) {
+        const idx = fichasData.findIndex(f=>f.id===fichasEditId);
+        if (idx>=0) fichasData[idx] = ficha;
+      } else {
+        fichasData.push(ficha);
+      }
+      sendBtn.textContent = 'Generando PDF…';
+      const { titulo, fechaEvStr } = getFichaTitulos(ficha);
+      sendBtn.textContent = 'Enviando…';
+      await sendFichaEmail(ficha, titulo, fechaEvStr, isEdit);
+      fichasEditId = null;
+      fichasViewState = 'list';
+      toast(isEdit ? '✓ Modificación enviada y ficha actualizada' : '✓ Ficha guardada y email enviado');
+      renderFichasList(c);
+      renderMedidasTab();
+    } catch(e) {
+      sendBtn.disabled = false; saveBtn.disabled = false;
+      sendBtn.textContent = '📨 Guardar y enviar';
+      saveBtn.textContent = '💾 Guardar';
+      toast('Error: ' + e.message);
     }
   });
 }
@@ -2749,6 +2809,66 @@ function renderFichaFormStep2(c){
 const NONNA_EMAIL = 'info@atelierlanonna.com';
 // n8n webhook — producción (activar el workflow en n8n y configurar credenciales SMTP antes de usar)
 const N8N_WEBHOOK_URL = 'https://nuriahorma.app.n8n.cloud/webhook/lanonna-ficha';
+
+const MESES_ES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+function getDriveFolderName(date) {
+  const d = date || new Date();
+  return MESES_ES[d.getMonth()] + ' ' + d.getFullYear();
+}
+
+async function generatePDFBase64(ficha, titulo, fechaEvStr, filename) {
+  const fullHtml = await downloadFichaPDF(ficha, titulo, fechaEvStr, filename, true);
+  // Extraer CSS
+  const styleMatch = fullHtml.match(/<style>([\s\S]*?)<\/style>/i);
+  const cssText = styleMatch ? styleMatch[1] : '';
+  // Extraer body
+  const bodyMatch = fullHtml.match(/<body>([\s\S]*?)<\/body>/i);
+  const bodyHtml = bodyMatch ? bodyMatch[1] : '';
+
+  const wrapper = document.createElement('div');
+  wrapper.style.cssText = 'position:fixed;left:-9999px;top:0;width:794px;background:white;';
+  const styleEl = document.createElement('style');
+  styleEl.textContent = cssText;
+  wrapper.appendChild(styleEl);
+  const content = document.createElement('div');
+  content.innerHTML = bodyHtml;
+  wrapper.appendChild(content);
+  document.body.appendChild(wrapper);
+
+  try {
+    const dataUri = await html2pdf().set({
+      margin: 0,
+      filename: filename + '.pdf',
+      html2canvas: { scale: 2, useCORS: true, logging: false },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    }).from(content).outputPdf('datauristring');
+    return dataUri.split(',')[1];
+  } finally {
+    document.body.removeChild(wrapper);
+  }
+}
+
+async function sendFichaEmail(ficha, titulo, fechaEvStr, isModification) {
+  const num = ficha.numeroPedido;
+  const safeName = (ficha.nombre||'cliente').replace(/[^a-zA-Z0-9áéíóúüñÁÉÍÓÚÜÑ \-]/g,'').trim();
+  const prefix = isModification ? 'Modificación PDF cita' : 'PDF cita';
+  const filename = `${prefix} - ${safeName} - pedido ${num}`;
+  const driveFolder = getDriveFolderName();
+  const pdfBase64 = await generatePDFBase64(ficha, titulo, fechaEvStr, filename);
+  const res = await fetch(N8N_WEBHOOK_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      nombre: ficha.nombre || titulo,
+      numeroPedido: num,
+      filename: filename,
+      pdfBase64: pdfBase64,
+      isModification: !!isModification,
+      driveFolder: driveFolder
+    })
+  });
+  if (!res.ok) throw new Error(`Webhook error ${res.status}`);
+}
 
 function openAsocModal(ficha, titulo, fechaEvStr, c){
   const modal = document.getElementById('asocModal');
@@ -2763,28 +2883,18 @@ function openAsocModal(ficha, titulo, fechaEvStr, c){
     const num = inp.value.trim();
     if(!num){ toast('Introduce el número de pedido'); return; }
     const btn = document.getElementById('asocConfirmBtn');
-    btn.disabled = true; btn.textContent = 'Enviando…';
+    btn.disabled = true; btn.textContent = 'Guardando…';
     try {
-      // 1. Guardar el número de pedido en Supabase
+      // 1. Determinar si es modificación (ya tenía pedido asociado antes)
+      const isModification = !!ficha.numeroPedido && ficha.numeroPedido !== num;
+
+      // 2. Guardar el número de pedido en Supabase
       ficha.numeroPedido = num;
       await sbPatch(`/rest/v1/fichas?id=eq.${encodeURIComponent(ficha.id)}`, {numero_pedido: num});
 
-      // 2. Generar el HTML completo de la ficha (sin abrir ventana)
-      const safeName = (ficha.nombre||'cliente').replace(/[^a-zA-Z0-9áéíóúüñÁÉÍÓÚÜÑ \-]/g,'').trim();
-      const filename = `${num} - ${safeName}`;
-      const htmlPage = await downloadFichaPDF(ficha, titulo, fechaEvStr, filename, true);
-
-      // 3. Enviar al webhook de n8n → email automático a La Nonna
-      const res = await fetch(N8N_WEBHOOK_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          nombre: ficha.nombre || titulo,
-          numeroPedido: num,
-          htmlContent: htmlPage
-        })
-      });
-      if(!res.ok) throw new Error(`Webhook error ${res.status}`);
+      // 3. Generar PDF y enviar al webhook de n8n → email + Drive
+      btn.textContent = 'Generando PDF…';
+      await sendFichaEmail(ficha, titulo, fechaEvStr, isModification);
 
       modal.classList.add('hidden');
       toast('✓ Email enviado a La Nonna');
