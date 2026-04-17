@@ -1708,7 +1708,7 @@ function thumbUrl(url){
 
 async function loadFabricsMeta(){
   try{
-    FABRICS_META = await sbGet('/rest/v1/fabrics?select=code,material,pattern,group,visible,name&order=created_at.asc');
+    FABRICS_META = await sbGet('/rest/v1/fabrics?select=code,material,pattern,group,visible,name,image_url&order=created_at.asc');
   }catch(e){console.error('Error cargando meta:',e);}
 }
 
@@ -1716,7 +1716,7 @@ async function loadFabricsMeta(){
 async function loadFabrics(){
   try{
     FABRICS = await sbGet('/rest/v1/fabrics?select=*&order=created_at.asc');
-    FABRICS_META = FABRICS.map(f=>({code:f.code,material:f.material,pattern:f.pattern,group:f.group,visible:f.visible,name:f.name}));
+    FABRICS_META = FABRICS.map(f=>({code:f.code,material:f.material,pattern:f.pattern,group:f.group,visible:f.visible,name:f.name,image_url:f.image_url}));
   }catch(e){console.error('Error cargando telas:',e);}
 }
 
@@ -1756,32 +1756,18 @@ function getFiltered(){
   });
 }
 
+// All three functions now read from in-memory FABRICS_META — zero Supabase queries
 async function loadSectionPage(mat){
   const allInMat=getFilteredByMat(mat);
   const totalPages=Math.max(1,Math.ceil(allInMat.length/PAGE_SIZE));
   if((S.pages[mat]||0)>=totalPages)S.pages[mat]=totalPages-1;
   if((S.pages[mat]||0)<0)S.pages[mat]=0;
   const pg=S.pages[mat]||0;
-  const pageCodes=allInMat.slice(pg*PAGE_SIZE,(pg+1)*PAGE_SIZE).map(f=>f.code);
-  if(!pageCodes.length){FABRICS_BY_MAT[mat]=[];return;}
-  try{
-    const items=await sbGet(`/rest/v1/fabrics?select=code,name,material,pattern,group,visible,image_url&code=in.(${pageCodes.join(',')})`);
-    const om=new Map(pageCodes.map((c,i)=>[c,i]));
-    items.sort((a,b)=>(om.get(a.code)??999)-(om.get(b.code)??999));
-    FABRICS_BY_MAT[mat]=items;
-  }catch(e){console.error('Error cargando sección',mat,e);FABRICS_BY_MAT[mat]=[];}
+  FABRICS_BY_MAT[mat]=allInMat.slice(pg*PAGE_SIZE,(pg+1)*PAGE_SIZE);
 }
 
 async function loadAllItemsForMat(mat){
-  const allInMat=getFilteredByMat(mat);
-  const pageCodes=allInMat.map(f=>f.code);
-  if(!pageCodes.length){FABRICS_BY_MAT[mat]=[];return;}
-  try{
-    const items=await sbGet(`/rest/v1/fabrics?select=code,name,material,pattern,group,visible,image_url&code=in.(${pageCodes.join(',')})`);
-    const om=new Map(pageCodes.map((c,i)=>[c,i]));
-    items.sort((a,b)=>(om.get(a.code)??999)-(om.get(b.code)??999));
-    FABRICS_BY_MAT[mat]=items;
-  }catch(e){console.error('Error cargando todos los elementos de',mat,e);FABRICS_BY_MAT[mat]=[];}
+  FABRICS_BY_MAT[mat]=getFilteredByMat(mat);
 }
 
 async function loadAllSectionPages(){
@@ -1790,16 +1776,8 @@ async function loadAllSectionPages(){
 
 async function loadFlatAll(){
   if(FABRICS_FLAT_loaded) return;
-  const allMeta=getFiltered();
-  const allCodes=allMeta.map(f=>f.code);
-  if(!allCodes.length){FABRICS_FLAT=[];FABRICS_FLAT_loaded=true;return;}
-  try{
-    const items=await sbGet(`/rest/v1/fabrics?select=code,name,material,pattern,group,visible,image_url&code=in.(${allCodes.join(',')})`);
-    const om=new Map(allMeta.map((f,i)=>[f.code,i]));
-    items.sort((a,b)=>(om.get(a.code)??999)-(om.get(b.code)??999));
-    FABRICS_FLAT=items;
-    FABRICS_FLAT_loaded=true;
-  }catch(e){console.error('Error loadFlatAll:',e);FABRICS_FLAT=[];}
+  FABRICS_FLAT=getFiltered();
+  FABRICS_FLAT_loaded=true;
 }
 
 function rebuildSelects(){
@@ -2309,6 +2287,7 @@ _cropCanvas.addEventListener('pointerup',()=>{ _cropDragging=false; });
 
 // ── FICHAS PEDIDOS ──
 let fichasData = [];
+let fichasLoaded = false; // true once fetched — prevents re-fetch on tab switch
 let fichasViewState = 'list'; // 'list' | 'new' | 'detail'
 let fichasCurrentId = null;
 let fichasFormNinos = [];
@@ -2319,6 +2298,7 @@ let fichasFormTelefono = '';
 let fichasFormEmail = '';
 let fichasFormNumeroPedido = '';
 let fichasEditId = null; // null = nueva ficha, string = editando ficha existente
+let fichasNewId = null;  // ID pre-generado para fichas nuevas (para storage de fotos)
 
 function escF(s){ if(!s)return''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
@@ -2329,7 +2309,8 @@ const MED_TYPES = {
   capota:   {label:'Capota',   emoji:'🧢', fields:[{k:'contornoCabeza',l:'Contorno cabeza'},{k:'diametroCabeza',l:'Diámetro cabeza'}]},
 };
 
-async function loadFichas(){
+async function loadFichas(force=false){
+  if(fichasLoaded && !force) return; // use in-memory cache on tab switches
   try{
     const rows = await sbGet('/rest/v1/fichas?select=*&order=created_at.asc');
     fichasData = rows.map(r=>({
@@ -2343,6 +2324,7 @@ async function loadFichas(){
       pedidoRealizado: r.pedido_realizado||false,
       ninos: r.ninos||[]
     }));
+    fichasLoaded = true;
   } catch(e){
     console.error('Error cargando fichas:', e);
     fichasData=[];
@@ -2381,8 +2363,40 @@ function makeNinoEmpty(sexo=null){
     nombre:'', edad:'', talla:'', sexo:sexo,
     productoOpen: false, modelo:'', tela:'', descripcion:'',
     medidasOpen: false,
-    medidas:{ contornoPecho:'', largo:'', contornoCintura:'', pantalon:'' }
+    medidas:{ contornoPecho:'', largo:'', contornoCintura:'', pantalon:'' },
+    fotoOpen: false, fotos: []
   };
+}
+
+// ── Helpers fotos niños ──
+async function resizeImageForUpload(blob, maxPx=800, quality=0.75) {
+  return new Promise(resolve => {
+    const img = new Image();
+    const objUrl = URL.createObjectURL(blob);
+    img.onload = () => {
+      URL.revokeObjectURL(objUrl);
+      const scale = Math.min(1, maxPx / Math.max(img.width, img.height));
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.round(img.width * scale);
+      canvas.height = Math.round(img.height * scale);
+      canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+      canvas.toBlob(b => resolve(b), 'image/jpeg', quality);
+    };
+    img.onerror = () => { URL.revokeObjectURL(objUrl); resolve(blob); };
+    img.src = objUrl;
+  });
+}
+async function uploadNinoFoto(blob, fichaId) {
+  const resized = await resizeImageForUpload(blob);
+  const path = `fichas/${fichaId}/${Date.now()}-${Math.random().toString(36).slice(2,5)}.jpg`;
+  return await uploadPhoto(resized, path);
+}
+async function fetchAsDataUrl(url) {
+  try {
+    const res = await fetch(url);
+    const blob = await res.blob();
+    return await new Promise(r => { const rd = new FileReader(); rd.onload = () => r(rd.result); rd.readAsDataURL(blob); });
+  } catch(e) { return ''; }
 }
 
 async function renderFichasTab(){
@@ -2392,7 +2406,7 @@ async function renderFichasTab(){
   await loadFichas();
   if(fichasViewState==='list') renderFichasList(c);
   else if(fichasViewState==='new') renderFichaForm(c);
-  else if(fichasViewState==='detail') renderFichaDetail(c, fichasCurrentId);
+  else if(fichasViewState==='detail'){ renderFichasList(c); renderFichaDetail(c, fichasCurrentId); }
 }
 
 function renderFichasList(c){
@@ -2607,6 +2621,24 @@ function renderFichaFormStep2(c){
               <div class="medidas-grid2">${medHtml}</div>
             </div>
           </div>
+          <div>
+            <button class="medidas-toggle-btn${n.fotoOpen?' open':''}" data-fopen="${i}" style="font-size:.95rem;padding:.55rem .9rem;${!n.fotoOpen&&!(n.fotos&&n.fotos.length)?'border-color:rgba(80,120,80,.45);color:#3a6e3a;background:rgba(80,120,80,.07);':''}">
+              ${n.fotoOpen?'📷 Ocultar fotos':'📷 Fotos'}${(n.fotos&&n.fotos.length)?' ✓ ('+n.fotos.length+')':''}
+            </button>
+            <div class="medidas-section${n.fotoOpen?' open':''}" style="gap:.5rem;">
+              <div class="nino-fotos-preview" data-fprev="${i}" style="display:flex;flex-wrap:wrap;gap:.4rem;margin-bottom:.3rem;">
+                ${(n.fotos||[]).map((url,j)=>`
+                  <div style="position:relative;">
+                    <img src="${url}" style="width:64px;height:64px;object-fit:cover;border-radius:6px;border:1px solid rgba(0,0,0,.12);">
+                    <button class="nino-foto-del" data-dfi="${i}" data-dfj="${j}" style="position:absolute;top:-5px;right:-5px;background:#c00;color:#fff;border:none;border-radius:50%;width:18px;height:18px;font-size:10px;cursor:pointer;line-height:1;padding:0;">✕</button>
+                  </div>`).join('')}
+              </div>
+              <label style="display:inline-flex;align-items:center;gap:.4rem;cursor:pointer;padding:.4rem .8rem;border-radius:20px;border:1.5px dashed rgba(80,120,80,.5);color:#3a6e3a;font-size:.88rem;font-family:'Cormorant Garamond',serif;">
+                <span class="nino-foto-lbl" data-flbl="${i}">📷 Añadir foto</span>
+                <input type="file" accept="image/*" class="nino-foto-inp" data-fni="${i}" style="display:none;" multiple>
+              </label>
+            </div>
+          </div>
         </div>
       </div>`;
   };
@@ -2639,7 +2671,6 @@ function renderFichaFormStep2(c){
 
       <div class="ficha-form-actions" style="flex-wrap:wrap;gap:.5rem;">
         <button class="ficha-cancel-btn" id="fichaCancel">Cancelar</button>
-        <button class="ficha-back-btn" id="fichaPrevPdf" style="color:#6b4c7a;border:1px solid rgba(107,76,122,.3);padding:.35rem .8rem;border-radius:20px;background:rgba(107,76,122,.07);font-size:.88rem;">👁 Ver PDF</button>
         <button class="ficha-save-btn" id="fichaSave">💾 Guardar</button>
         <button class="ficha-save-btn" id="fichaSaveEnviar" style="background:linear-gradient(135deg,#8b7355,#c8a96e);color:#fff;border:none;min-width:9rem;">📨 Guardar y enviar</button>
       </div>
@@ -2693,6 +2724,49 @@ function renderFichaFormStep2(c){
     });
   });
 
+  // Toggle fotos
+  c.querySelectorAll('[data-fopen]').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      const idx=parseInt(btn.dataset.fopen);
+      ninos[idx].fotoOpen=!ninos[idx].fotoOpen;
+      renderFichaFormStep2(c);
+    });
+  });
+
+  // Upload fotos
+  c.querySelectorAll('.nino-foto-inp').forEach(inp=>{
+    inp.addEventListener('change', async () => {
+      const idx = parseInt(inp.dataset.fni);
+      const lbl = c.querySelector(`[data-flbl="${idx}"]`);
+      if(!inp.files?.length) return;
+      if(lbl) lbl.textContent = 'Subiendo…';
+      // Use same fichaId as buildFichaFromForm so photos land in the right folder
+      const fichaId = fichasEditId || (fichasNewId || (fichasNewId = 'f_' + Date.now()));
+      try {
+        for(const file of Array.from(inp.files)){
+          const url = await uploadNinoFoto(file, fichaId);
+          if(!ninos[idx].fotos) ninos[idx].fotos = [];
+          ninos[idx].fotos.push(url);
+        }
+        renderFichaFormStep2(c);
+      } catch(e) {
+        toast('Error subiendo foto: ' + e.message, true);
+        if(lbl) lbl.textContent = '📷 Añadir foto';
+      }
+      inp.value = '';
+    });
+  });
+
+  // Borrar foto individual
+  c.querySelectorAll('.nino-foto-del').forEach(btn=>{
+    btn.addEventListener('click', async () => {
+      const fi = parseInt(btn.dataset.dfi);
+      const fj = parseInt(btn.dataset.dfj);
+      ninos[fi].fotos.splice(fj, 1);
+      renderFichaFormStep2(c);
+    });
+  });
+
   // Eliminar
   c.querySelectorAll('[data-rm]').forEach(btn=>{
     btn.addEventListener('click',()=>{
@@ -2712,7 +2786,7 @@ function renderFichaFormStep2(c){
     const isEdit = !!fichasEditId;
     const existing = isEdit ? fichasData.find(f=>f.id===fichasEditId) : null;
     return {
-      id: isEdit ? fichasEditId : 'f_'+Date.now(),
+      id: isEdit ? fichasEditId : (fichasNewId || (fichasNewId = 'f_'+Date.now())),
       createdAt: isEdit ? existing.createdAt : new Date().toISOString(),
       nombre: fichasFormName.trim(),
       fechaEvento: fichasFormFecha,
@@ -2723,7 +2797,8 @@ function renderFichaFormStep2(c){
       ninos: fichasFormNinos.filter(n=>n.sexo!==null).map(n=>({
         id:n.id, nombre:n.nombre, edad:n.edad, talla:n.talla||'', sexo:n.sexo,
         modelo:n.modelo||'', tela:n.tela||'', descripcion:n.descripcion||'',
-        medidas:{...n.medidas}
+        medidas:{...n.medidas},
+        fotos:[...(n.fotos||[])]
       }))
     };
   }
@@ -2738,13 +2813,6 @@ function renderFichaFormStep2(c){
       : '';
     return { titulo, fechaEvStr };
   }
-
-  // Ver PDF (previsualizar sin guardar)
-  c.querySelector('#fichaPrevPdf').addEventListener('click', async () => {
-    const ficha = buildFichaFromForm();
-    const { titulo, fechaEvStr } = getFichaTitulos(ficha);
-    downloadFichaPDF(ficha, titulo, fechaEvStr);
-  });
 
   // Guardar / Actualizar
   c.querySelector('#fichaSave').addEventListener('click',async()=>{
@@ -2779,6 +2847,8 @@ function renderFichaFormStep2(c){
     sendBtn.textContent = 'Guardando…';
     const isEdit = !!fichasEditId;
     const ficha = buildFichaFromForm();
+    const oldFicha = isEdit ? fichasData.find(f=>f.id===fichasEditId) : null;
+    const cambios = computeCambios(oldFicha, ficha);
     try {
       await sbSaveFicha(ficha);
       if (isEdit) {
@@ -2790,7 +2860,7 @@ function renderFichaFormStep2(c){
       sendBtn.textContent = 'Generando PDF…';
       const { titulo, fechaEvStr } = getFichaTitulos(ficha);
       sendBtn.textContent = 'Enviando…';
-      await sendFichaEmail(ficha, titulo, fechaEvStr, isEdit);
+      await sendFichaEmail(ficha, titulo, fechaEvStr, isEdit, cambios);
       fichasEditId = null;
       fichasViewState = 'list';
       toast(isEdit ? '✓ Modificación enviada y ficha actualizada' : '✓ Ficha guardada y email enviado');
@@ -2818,41 +2888,86 @@ function getDriveFolderName(date) {
 
 async function generatePDFBase64(ficha, titulo, fechaEvStr, filename) {
   const fullHtml = await downloadFichaPDF(ficha, titulo, fechaEvStr, filename, true);
-  // Extraer CSS
   const styleMatch = fullHtml.match(/<style>([\s\S]*?)<\/style>/i);
-  const cssText = styleMatch ? styleMatch[1] : '';
-  // Extraer body
-  const bodyMatch = fullHtml.match(/<body>([\s\S]*?)<\/body>/i);
-  const bodyHtml = bodyMatch ? bodyMatch[1] : '';
+  const bodyMatch  = fullHtml.match(/<body>([\s\S]*?)<\/body>/i);
+  const bodyHtml   = bodyMatch ? bodyMatch[1] : '';
 
-  const wrapper = document.createElement('div');
-  wrapper.style.cssText = 'position:fixed;left:-9999px;top:0;width:794px;background:white;';
-  const styleEl = document.createElement('style');
-  styleEl.textContent = cssText;
-  wrapper.appendChild(styleEl);
-  const content = document.createElement('div');
-  content.innerHTML = bodyHtml;
-  wrapper.appendChild(content);
-  document.body.appendChild(wrapper);
+  // Quitar @import (provoca que html2canvas espere carga de red y se cuelgue).
+  // Renombrar 'body' → '.pdf-scope' para no contaminar la página principal.
+  const cssText = (styleMatch ? styleMatch[1] : '')
+    .replace(/@import[^;]+;/gi, '')
+    .replace(/\bbody\b\s*\{/g, '.pdf-scope {');
+
+  // Pasar HTML como string a html2pdf — él mismo crea el contenedor y lo posiciona.
+  // Es más fiable que posicionar un div manualmente.
+  const htmlContent = `<style>${cssText}</style>` +
+    `<div class="pdf-scope" style="padding:68px 76px;font-family:'Cormorant Garamond',Georgia,serif;font-size:13pt;color:#1a1612;background:white;width:794px;">` +
+    bodyHtml + `</div>`;
 
   try {
     const dataUri = await html2pdf().set({
       margin: 0,
       filename: filename + '.pdf',
-      html2canvas: { scale: 2, useCORS: true, logging: false },
+      html2canvas: { scale: 1.5, useCORS: false, logging: false },
       jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-    }).from(content).outputPdf('datauristring');
+    }).from(htmlContent, 'string').outputPdf('datauristring');
     return dataUri.split(',')[1];
-  } finally {
-    document.body.removeChild(wrapper);
+  } catch(e) {
+    throw new Error('Error generando PDF: ' + e.message);
   }
 }
 
-async function sendFichaEmail(ficha, titulo, fechaEvStr, isModification) {
+function computeCambios(oldFicha, newFicha) {
+  if (!oldFicha) return '';
+  const parts = [];
+
+  // Pedido
+  if (!oldFicha.numeroPedido && newFicha.numeroPedido)
+    parts.push(`nº de pedido añadido (${newFicha.numeroPedido})`);
+  else if (oldFicha.numeroPedido && oldFicha.numeroPedido !== newFicha.numeroPedido && newFicha.numeroPedido)
+    parts.push(`nº de pedido actualizado (${newFicha.numeroPedido})`);
+
+  // Datos generales
+  if (oldFicha.nombre !== newFicha.nombre) parts.push('nombre actualizado');
+  if (oldFicha.fechaEvento !== newFicha.fechaEvento) parts.push('fecha del evento actualizada');
+  if ((!oldFicha.telefono && newFicha.telefono) || (oldFicha.telefono && oldFicha.telefono !== newFicha.telefono))
+    parts.push('teléfono actualizado');
+  if ((!oldFicha.email && newFicha.email) || (oldFicha.email && oldFicha.email !== newFicha.email))
+    parts.push('email actualizado');
+
+  // Niños
+  const oldN = oldFicha.ninos || [];
+  const newN = newFicha.ninos || [];
+  newN.forEach(n => {
+    const old = oldN.find(o => o.id === n.id);
+    if (!old) {
+      parts.push(`niño/a añadido: ${n.nombre || 'sin nombre'}`);
+    } else {
+      const sub = [];
+      if ((old.nombre||'') !== (n.nombre||'')) sub.push('nombre');
+      if ((old.edad||'') !== (n.edad||'')) sub.push('edad');
+      if ((old.talla||'') !== (n.talla||'')) sub.push('talla');
+      if ((old.modelo||'') !== (n.modelo||'')) sub.push('modelo');
+      if ((old.tela||'') !== (n.tela||'')) sub.push('tela');
+      if ((old.descripcion||'') !== (n.descripcion||'')) sub.push('descripción');
+      if (JSON.stringify(old.medidas||{}) !== JSON.stringify(n.medidas||{})) sub.push('medidas');
+      if (sub.length) parts.push(`${n.nombre||'niño/a'}: ${sub.join(', ')} actualizado/s`);
+    }
+  });
+  oldN.forEach(o => {
+    if (!newN.find(n => n.id === o.id)) parts.push(`niño/a eliminado: ${o.nombre||'sin nombre'}`);
+  });
+
+  return parts.join(' · ');
+}
+
+async function sendFichaEmail(ficha, titulo, fechaEvStr, isModification, cambios='') {
   const num = ficha.numeroPedido;
   const safeName = (ficha.nombre||'cliente').replace(/[^a-zA-Z0-9áéíóúüñÁÉÍÓÚÜÑ \-]/g,'').trim();
-  const prefix = isModification ? 'Modificación PDF cita' : 'PDF cita';
-  const filename = `${prefix} - ${safeName} - pedido ${num}`;
+  // Filename: "Nombre - dd-mm-yyyy - pedido X" (no prefix, no "Modificación")
+  const fechaPart = ficha.fechaEvento ? ' - ' + ficha.fechaEvento.split('-').reverse().join('-') : '';
+  const numPart   = num ? ' - pedido ' + num : '';
+  const filename  = `${safeName}${fechaPart}${numPart}`;
   const driveFolder = getDriveFolderName();
   const pdfBase64 = await generatePDFBase64(ficha, titulo, fechaEvStr, filename);
   const res = await fetch(N8N_WEBHOOK_URL, {
@@ -2862,9 +2977,12 @@ async function sendFichaEmail(ficha, titulo, fechaEvStr, isModification) {
       nombre: ficha.nombre || titulo,
       numeroPedido: num,
       filename: filename,
+      fichaId: ficha.id || '',
       pdfBase64: pdfBase64,
       isModification: !!isModification,
-      driveFolder: driveFolder
+      driveFolder: driveFolder,
+      fechaEvento: ficha.fechaEvento ? ficha.fechaEvento.split('-').reverse().join('/') : '',
+      cambios: cambios || ''
     })
   });
   if (!res.ok) throw new Error(`Webhook error ${res.status}`);
@@ -2887,6 +3005,9 @@ function openAsocModal(ficha, titulo, fechaEvStr, c){
     try {
       // 1. Determinar si es modificación (ya tenía pedido asociado antes)
       const isModification = !!ficha.numeroPedido && ficha.numeroPedido !== num;
+      const cambiosAsoc = isModification
+        ? `nº de pedido actualizado (${ficha.numeroPedido} → ${num})`
+        : `nº de pedido añadido (${num})`;
 
       // 2. Guardar el número de pedido en Supabase
       ficha.numeroPedido = num;
@@ -2894,7 +3015,7 @@ function openAsocModal(ficha, titulo, fechaEvStr, c){
 
       // 3. Generar PDF y enviar al webhook de n8n → email + Drive
       btn.textContent = 'Generando PDF…';
-      await sendFichaEmail(ficha, titulo, fechaEvStr, isModification);
+      await sendFichaEmail(ficha, titulo, fechaEvStr, isModification, cambiosAsoc);
 
       modal.classList.add('hidden');
       toast('✓ Email enviado a La Nonna');
@@ -2998,10 +3119,15 @@ async function downloadFichaPDF(ficha, titulo, fechaEvStr, filenameOverride, htm
     '.prod-chip{font-size:.82rem;padding:.18em .55em;border-radius:4px;background:#f0ebe0;border:1px solid #d4c9b8;color:#1a1612;font-weight:500;}',
     '.prod-lbl{font-size:.68rem;text-transform:uppercase;letter-spacing:.08em;color:#4a3f34;font-weight:600;margin-right:.2em;}',
     '.desc-box{font-size:.88rem;font-style:italic;color:#3a3028;padding:.35em .55em;background:#f5f0e8;border-left:2px solid #c8a96e;margin-bottom:.35em;}',
-    '@media print{body{padding:.8cm 1.1cm;} @page{margin:.8cm 1.1cm;size:A4 portrait;}}'
+    '@media print{body{padding:.8cm 1.1cm;} @page{margin:.8cm 1.1cm;size:A4 portrait;}}',
+    '.fotos-page{page-break-before:always;margin-top:1.5em;}',
+    '.fotos-nino{margin-bottom:1.2em;}',
+    '.fotos-nino-name{font-size:1.05rem;font-weight:600;color:#1a1612;border-bottom:1.5px solid #c8a96e;padding-bottom:.2em;margin-bottom:.5em;}',
+    '.fotos-grid{display:flex;flex-wrap:wrap;gap:.5em;}',
+    '.fotos-grid img{width:48%;max-width:230px;height:auto;max-height:260px;object-fit:cover;border-radius:6px;border:1px solid #d4c9b8;}'
   ].join('\n');
 
-  const bodyHTML =
+  let bodyHTML =
     '<div class="letterhead">' +
       (logoDataUrl
         ? `<img src="${logoDataUrl}" alt="Atelier La Nonna" style="height:54px;width:auto;display:block;">`
@@ -3027,6 +3153,22 @@ async function downloadFichaPDF(ficha, titulo, fechaEvStr, filenameOverride, htm
         '</div>' +
         '<div style="margin-top:.65em;">' + ninoRows + '</div>' +
       '</div>' : '');
+
+  // Sección de fotos (pre-fetch como data URLs para que html2pdf las embeba)
+  const ninosConFotos = ficha.ninos.filter(n=>n.fotos&&n.fotos.length);
+  if(ninosConFotos.length){
+    let fotosHtml = '<div class="fotos-page"><div class="section-title">Fotos</div>';
+    for(const n of ninosConFotos){
+      fotosHtml += `<div class="fotos-nino"><div class="fotos-nino-name">${esc(n.nombre||'—')}</div><div class="fotos-grid">`;
+      for(const url of n.fotos){
+        const dataUrl = await fetchAsDataUrl(url);
+        if(dataUrl) fotosHtml += `<img src="${dataUrl}" alt="">`;
+      }
+      fotosHtml += '</div></div>';
+    }
+    fotosHtml += '</div>';
+    bodyHTML += fotosHtml;
+  }
 
   // Si htmlOnly=true, devolver el HTML completo sin abrir ventana (para enviar por email)
   if(htmlOnly){
@@ -3122,56 +3264,73 @@ function renderFichaDetail(c, fichaId){
   const numNinosC = ficha.ninos.filter(n=>n.sexo==='nino').length;
   const totalN = numNinas + numNinosC;
 
-  c.innerHTML = `
-    <div class="ficha-view">
-      <div class="fd-header-block">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.2rem;">
-          <button class="ficha-back-btn" id="fichaDetailBack">← Todas las fichas</button>
-          <div style="display:flex;gap:.45rem;">
-            <button class="ficha-back-btn" id="fichaPdfBtn" style="color:#6b4c7a;border:1px solid rgba(107,76,122,.3);padding:.2rem .7rem;border-radius:20px;background:rgba(107,76,122,.07);">📄 PDF</button>
-            <button class="ficha-back-btn" id="fichaEditBtn" style="color:var(--warm);border:1px solid rgba(139,115,85,.3);padding:.2rem .7rem;border-radius:20px;background:rgba(200,169,110,.08);">✏️ Editar</button>
+  // Remove any existing detail modal
+  document.getElementById('fichaDetailModal')?.remove();
+
+  const modal = document.createElement('div');
+  modal.id = 'fichaDetailModal';
+  modal.style.cssText = 'position:fixed;inset:0;z-index:1000;display:flex;align-items:flex-start;justify-content:center;background:rgba(30,20,10,.45);backdrop-filter:blur(2px);padding:1rem;overflow-y:auto;';
+
+  modal.innerHTML = `
+    <div style="background:var(--cream,#fdf8f0);border-radius:16px;width:100%;max-width:680px;box-shadow:0 8px 40px rgba(0,0,0,.22);margin:auto;position:relative;">
+      <div class="ficha-view" style="padding:1.25rem 1.25rem 1rem;">
+        <div class="fd-header-block">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.2rem;">
+            <button id="fichaDetailClose" style="background:none;border:none;cursor:pointer;font-size:1.3rem;line-height:1;color:var(--muted);padding:.2rem .4rem;border-radius:8px;" title="Cerrar">✕</button>
+            <div style="display:flex;gap:.45rem;flex-wrap:wrap;">
+              <button class="ficha-back-btn" id="fichaPdfBtn" style="color:#6b4c7a;border:1px solid rgba(107,76,122,.3);padding:.2rem .7rem;border-radius:20px;background:rgba(107,76,122,.07);">📄 PDF</button>
+              <button class="ficha-back-btn" id="fichaEditBtn" style="color:var(--warm);border:1px solid rgba(139,115,85,.3);padding:.2rem .7rem;border-radius:20px;background:rgba(200,169,110,.08);">✏️ Editar</button>
+            </div>
           </div>
-        </div>
-        ${ficha.numeroPedido
-          ? `<div style="display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;">
-               <div class="fd-num-pedido">Pedido ${escF(ficha.numeroPedido)}</div>
-               <button class="ficha-back-btn" id="fichaAsocBtn" style="color:var(--accent);border:1px solid rgba(200,169,110,.45);padding:.18rem .65rem;border-radius:20px;background:rgba(200,169,110,.09);">✏️ Cambiar</button>
-             </div>`
-          : `<button class="ficha-back-btn" id="fichaAsocBtn" style="color:var(--warm);border:1.5px solid rgba(139,115,85,.4);padding:.3rem .8rem;border-radius:20px;background:rgba(200,169,110,.1);font-size:.92rem;margin-bottom:.3rem;">📨 Asociar a nº de pedido y enviar email</button>`}
-        <div class="fd-titulo">${escF(titulo)}</div>
-        ${fechaEvStr?`<div class="fd-fecha-badge">🗓 ${fechaEvStr}</div>`:''}
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.55rem .9rem;margin-top:.75rem;">
-          ${ficha.telefono?`<div>
-            <span style="font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:.1rem;">Teléfono</span>
-            <span style="font-family:'Cormorant Garamond',serif;color:var(--dark);font-size:1rem;">${escF(ficha.telefono)}</span>
+          ${ficha.numeroPedido
+            ? `<div style="display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;">
+                 <div class="fd-num-pedido">Pedido ${escF(ficha.numeroPedido)}</div>
+                 <button class="ficha-back-btn" id="fichaAsocBtn" style="color:var(--accent);border:1px solid rgba(200,169,110,.45);padding:.18rem .65rem;border-radius:20px;background:rgba(200,169,110,.09);">✏️ Cambiar</button>
+               </div>`
+            : `<button class="ficha-back-btn" id="fichaAsocBtn" style="color:var(--warm);border:1.5px solid rgba(139,115,85,.4);padding:.3rem .8rem;border-radius:20px;background:rgba(200,169,110,.1);font-size:.92rem;margin-bottom:.3rem;">📨 Asociar a nº de pedido y enviar email</button>`}
+          <div class="fd-titulo">${escF(titulo)}</div>
+          ${fechaEvStr?`<div class="fd-fecha-badge">🗓 ${fechaEvStr}</div>`:''}
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:.55rem .9rem;margin-top:.75rem;">
+            ${ficha.telefono?`<div>
+              <span style="font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:.1rem;">Teléfono</span>
+              <span style="font-family:'Cormorant Garamond',serif;color:var(--dark);font-size:1rem;">${escF(ficha.telefono)}</span>
+            </div>`:''}
+            ${ficha.email?`<div>
+              <span style="font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:.1rem;">Email</span>
+              <span style="font-family:'Cormorant Garamond',serif;color:var(--dark);font-size:.92rem;word-break:break-all;">${escF(ficha.email)}</span>
+            </div>`:''}
+          </div>
+          ${totalN?`<div style="display:flex;align-items:center;gap:.55rem;margin-top:.65rem;padding-top:.6rem;border-top:1px solid rgba(212,201,184,.4);">
+            ${numNinas?`<div class="fp-circle fp-circle-nina">${numNinas}</div><span style="font-family:'Cormorant Garamond',serif;font-size:.9rem;font-style:italic;color:#b4648c;">niña${numNinas!==1?'s':''}</span>`:''}
+            ${numNinas&&numNinosC?'<span style="color:var(--border);">·</span>':''}
+            ${numNinosC?`<div class="fp-circle fp-circle-nino">${numNinosC}</div><span style="font-family:'Cormorant Garamond',serif;font-size:.9rem;font-style:italic;color:#3a5c8a;">niño${numNinosC!==1?'s':''}</span>`:''}
+            <span style="margin-left:auto;font-family:'Cormorant Garamond',serif;font-size:1.25rem;font-weight:700;color:var(--dark);">${totalN} en total</span>
           </div>`:''}
-          ${ficha.email?`<div>
-            <span style="font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:.1rem;">Email</span>
-            <span style="font-family:'Cormorant Garamond',serif;color:var(--dark);font-size:.92rem;word-break:break-all;">${escF(ficha.email)}</span>
-          </div>`:''}
         </div>
-        ${totalN?`<div style="display:flex;align-items:center;gap:.55rem;margin-top:.65rem;padding-top:.6rem;border-top:1px solid rgba(212,201,184,.4);">
-          ${numNinas?`<div class="fp-circle fp-circle-nina">${numNinas}</div><span style="font-family:'Cormorant Garamond',serif;font-size:.9rem;font-style:italic;color:#b4648c;">niña${numNinas!==1?'s':''}</span>`:''}
-          ${numNinas&&numNinosC?'<span style="color:var(--border);">·</span>':''}
-          ${numNinosC?`<div class="fp-circle fp-circle-nino">${numNinosC}</div><span style="font-family:'Cormorant Garamond',serif;font-size:.9rem;font-style:italic;color:#3a5c8a;">niño${numNinosC!==1?'s':''}</span>`:''}
-          <span style="margin-left:auto;font-family:'Cormorant Garamond',serif;font-size:1.25rem;font-weight:700;color:var(--dark);">${totalN} en total</span>
-        </div>`:''}
-      </div>
-      ${ficha.ninos.length
-        ? ficha.ninos.map((n,i)=>ninoCard(n,i)).join('')
-        : `<div style="text-align:center;padding:1.5rem;font-family:'Cormorant Garamond',serif;font-style:italic;color:var(--muted);">Sin niños añadidos · pulsa Editar para añadir</div>`}
-      <div class="ficha-detail-actions" style="justify-content:space-between;">
-        <button class="ficha-del-btn" id="fichaDelBtn">Eliminar ficha</button>
+        ${ficha.ninos.length
+          ? ficha.ninos.map((n,i)=>ninoCard(n,i)).join('')
+          : `<div style="text-align:center;padding:1.5rem;font-family:'Cormorant Garamond',serif;font-style:italic;color:var(--muted);">Sin niños añadidos · pulsa Editar para añadir</div>`}
+        <div class="ficha-detail-actions" style="justify-content:space-between;">
+          <button class="ficha-del-btn" id="fichaDelBtn">Eliminar ficha</button>
+          <button class="ficha-save-btn" id="fichaDetailEnviarBtn" style="background:linear-gradient(135deg,#8b7355,#c8a96e);color:#fff;border:none;padding:.4rem 1.1rem;border-radius:20px;font-size:.9rem;">📨 Enviar email</button>
+        </div>
       </div>
     </div>`;
 
-  c.querySelector('#fichaDetailBack').addEventListener('click',()=>{
-    fichasViewState='list';
-    renderFichasList(c);
-  });
+  document.body.appendChild(modal);
 
-  c.querySelector('#fichaEditBtn').addEventListener('click',()=>{
-    // Cargar datos de la ficha en el formulario
+  const closeModal = () => {
+    modal.remove();
+    fichasViewState = 'list';
+  };
+
+  // Close on backdrop click (outside the white panel)
+  modal.addEventListener('click', e => { if(e.target === modal) closeModal(); });
+
+  modal.querySelector('#fichaDetailClose').addEventListener('click', closeModal);
+
+  modal.querySelector('#fichaEditBtn').addEventListener('click',()=>{
+    modal.remove();
     fichasEditId = fichaId;
     fichasFormStep = 1;
     fichasFormName = ficha.nombre||'';
@@ -3190,27 +3349,46 @@ function renderFichaDetail(c, fichaId){
       tela: n.tela||'',
       descripcion: n.descripcion||'',
       medidasOpen: false,
-      medidas: {...(n.medidas||{})}
+      medidas: {...(n.medidas||{})},
+      fotoOpen: !!(n.fotos&&n.fotos.length),
+      fotos: [...(n.fotos||[])]
     }));
     fichasViewState='new';
     renderFichaFormStep1(c);
   });
 
-  c.querySelector('#fichaPdfBtn').addEventListener('click',()=>{
+  modal.querySelector('#fichaPdfBtn').addEventListener('click',()=>{
     downloadFichaPDF(ficha, titulo, fechaEvStr);
   });
 
-  c.querySelector('#fichaAsocBtn').addEventListener('click',()=>{
+  modal.querySelector('#fichaDetailEnviarBtn').addEventListener('click', async () => {
+    const btn = modal.querySelector('#fichaDetailEnviarBtn');
+    btn.disabled = true;
+    btn.textContent = 'Generando PDF…';
+    try {
+      const isModification = !!ficha.numeroPedido;
+      await sendFichaEmail(ficha, titulo, fechaEvStr, isModification);
+      toast('✓ Email enviado a La Nonna');
+    } catch(e) {
+      toast('Error al enviar: ' + e.message, true);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = '📨 Enviar';
+    }
+  });
+
+  modal.querySelector('#fichaAsocBtn').addEventListener('click',()=>{
     openAsocModal(ficha, titulo, fechaEvStr, c);
   });
 
-  c.querySelector('#fichaDelBtn').addEventListener('click',async()=>{
+  modal.querySelector('#fichaDelBtn').addEventListener('click',async()=>{
     if(!confirm('¿Eliminar esta ficha? No se puede deshacer.')) return;
-    const delBtn = c.querySelector('#fichaDelBtn');
+    const delBtn = modal.querySelector('#fichaDelBtn');
     delBtn.disabled=true; delBtn.textContent='Eliminando…';
     try{
       await sbDeleteFicha(fichaId);
       fichasData=fichasData.filter(f=>f.id!==fichaId);
+      modal.remove();
       fichasViewState='list';
       toast('Ficha eliminada');
       renderFichasList(c);
