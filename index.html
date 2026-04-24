@@ -1154,6 +1154,13 @@ function toast(msg) {
   t.textContent=msg; t.classList.add('show');
   clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove('show'),3000);
 }
+function showBlockingError(msg) {
+  const text = String(msg || 'Ha ocurrido un error');
+  toast(text);
+  setTimeout(() => {
+    try { alert(text); } catch(_) {}
+  }, 50);
+}
 function showLoading(title,txt,pct) {
   document.getElementById('loadingTitle').textContent=title||'Cargando…';
   document.getElementById('loadingTxt').textContent=txt||'';
@@ -3551,7 +3558,8 @@ function openAsocModal(ficha, titulo, fechaEvStr, c){
       toast('✓ Email enviado a La Nonna');
       renderFichaDetail(c, ficha.id);
     } catch(e) {
-      toast('Error al enviar: ' + e.message);
+      modal.classList.add('hidden');
+      showBlockingError('Error al enviar: ' + e.message);
     } finally {
       btn.disabled = false; btn.textContent = '📎 Asociar y enviar';
     }
@@ -3959,7 +3967,8 @@ function renderFichaDetail(c, fichaId){
       await sendFichaEmail(ficha, titulo, fechaEvStr, isModification);
       toast('✓ Email enviado a La Nonna');
     } catch(e) {
-      toast('Error al enviar: ' + e.message, true);
+      modal.remove();
+      showBlockingError('Error al enviar: ' + e.message);
     } finally {
       btn.disabled = false;
       btn.textContent = '📨 Enviar';
