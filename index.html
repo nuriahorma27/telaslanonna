@@ -3333,9 +3333,31 @@ async function waitForPdfNodeAssets(node, timeoutMs=12000){
   }))), timeoutMs, 'Tiempo agotado al cargar imágenes del PDF');
 }
 async function renderNodeToPdfBlob(node, filename, lightMode=false){
-  if(typeof html2canvas === 'undefined') throw new Error('html2canvas no está disponible');
+  const hasHtml2Canvas = typeof html2canvas !== 'undefined';
   const JsPdfCtor = window.jspdf?.jsPDF || window.jsPDF;
-  if(!JsPdfCtor) throw new Error('jsPDF no está disponible');
+  const hasJsPdf = !!JsPdfCtor;
+  if(!hasHtml2Canvas || !hasJsPdf){
+    if(typeof html2pdf === 'undefined') throw new Error('html2pdf no está disponible');
+    await waitForPdfNodeAssets(node, 12000);
+    return await withTimeout(
+      html2pdf().set({
+        margin: 0,
+        filename: filename + '.pdf',
+        image: { type: 'jpeg', quality: lightMode ? 0.72 : 0.86 },
+        html2canvas: {
+          scale: isLikelyMobilePdfDevice() ? 0.56 : (lightMode ? 0.82 : 1.05),
+          useCORS: false,
+          logging: false,
+          backgroundColor: '#ffffff',
+          imageTimeout: 12000,
+          removeContainer: true
+        },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait', compress: true }
+      }).from(node).outputPdf('blob'),
+      lightMode ? 25000 : 35000,
+      'Tiempo agotado al generar el PDF'
+    );
+  }
   await waitForPdfNodeAssets(node, 12000);
   const mobileLite = isLikelyMobilePdfDevice();
   const canvas = await withTimeout(
