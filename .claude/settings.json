@@ -4,7 +4,10 @@
       "mcp__claude_ai_n8n__create_workflow_from_code",
       "mcp__claude_ai_n8n__get_workflow_details",
       "mcp__claude_ai_n8n__update_workflow",
-      "mcp__claude_ai_n8n__publish_workflow"
+      "mcp__claude_ai_n8n__publish_workflow",
+      "Bash(python3 -c ' *)",
+      "Bash(git commit -m ' *)",
+      "Bash(curl -s 'https://tqkjfzziopjwjdhrrnuf.supabase.co/rest/v1/fichas?select=*&limit=1' -H 'apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRxa2pmenppb3Bqd2pkaHJybnVmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyMDY2NjksImV4cCI6MjA4OTc4MjY2OX0.KXUEIZlmBznqnPsDvRmPfuB_AbJ8_mRPJ4HyuBMSjDA' -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRxa2pmenppb3Bqd2pkaHJybnVmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyMDY2NjksImV4cCI6MjA4OTc4MjY2OX0.KXUEIZlmBznqnPsDvRmPfuB_AbJ8_mRPJ4HyuBMSjDA')"
     ]
   }
 }
