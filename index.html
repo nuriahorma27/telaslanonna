@@ -2473,11 +2473,11 @@ function renderFichasList(c){
     </div>`;
   };
 
-  // Group fichas by event month (most recent first), sin fecha at end
+  // Group fichas by event month (earliest first), sin fecha at end
   const MESES_LABEL = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
   const NO_DATE_KEY = 'sin-fecha';
   const groups = {};
-  fichasData.slice().reverse().forEach(f => {
+  fichasData.forEach(f => {
     const key = f.fechaEvento ? f.fechaEvento.slice(0,7) : NO_DATE_KEY;
     if(!groups[key]) groups[key] = { fichas:[], label:'' };
     groups[key].fichas.push(f);
@@ -2485,18 +2485,24 @@ function renderFichasList(c){
   for(const key of Object.keys(groups)){
     if(key === NO_DATE_KEY){ groups[key].label = 'Sin fecha de evento'; }
     else { const [y,m]=key.split('-'); groups[key].label = MESES_LABEL[parseInt(m)-1]+' '+y; }
+    // Sort fichas within month ascending by fechaEvento
+    groups[key].fichas.sort((a,b)=>{
+      if(!a.fechaEvento) return 1; if(!b.fechaEvento) return -1;
+      return a.fechaEvento.localeCompare(b.fechaEvento);
+    });
   }
   const sortedKeys = Object.keys(groups).sort((a,b)=>{
-    if(a===NO_DATE_KEY) return 1; if(b===NO_DATE_KEY) return -1; return b.localeCompare(a);
+    if(a===NO_DATE_KEY) return 1; if(b===NO_DATE_KEY) return -1; return a.localeCompare(b);
   });
 
   const groupsHtml = sortedKeys.map(key=>{
     const g = groups[key];
     const isOpen = fichasOpenGroups.has(key);
+    const totalNinos = g.fichas.reduce((sum,f)=>sum+(f.ninos||[]).length,0);
     return `<div class="fp-month-group" data-gkey="${key}">
       <button class="fp-month-hdr${isOpen?' open':''}" data-gkey="${key}">
         <span class="fp-month-label">${g.label}</span>
-        <span class="fp-month-count">${g.fichas.length} ficha${g.fichas.length!==1?'s':''}</span>
+        <span class="fp-month-count">${g.fichas.length} ficha${g.fichas.length!==1?'s':''}${totalNinos?` · ${totalNinos} niño${totalNinos!==1?'s':''}`:''}</span>
         <span class="fp-month-chevron">▸</span>
       </button>
       <div class="fp-month-body" style="${isOpen?'':'display:none;'}">
@@ -2918,7 +2924,6 @@ function renderFichaFormStep3(c){
       <div class="ficha-form-actions" style="flex-wrap:wrap;gap:.5rem;margin-top:.5rem;">
         <button class="ficha-cancel-btn" id="fichaCancelS3">Cancelar</button>
         <button class="ficha-save-btn" id="fichaSave">💾 Guardar</button>
-        <button class="ficha-save-btn" id="fichaSaveEnviar" style="background:linear-gradient(135deg,#8b7355,#c8a96e);color:#fff;border:none;min-width:9rem;">📨 Guardar y enviar</button>
       </div>
     </div>`;
 
@@ -2973,32 +2978,6 @@ function renderFichaFormStep3(c){
     } catch(e){ saveBtn.disabled=false; saveBtn.textContent='💾 Guardar'; toast('Error al guardar: '+e.message); }
   });
 
-  // Guardar y enviar
-  c.querySelector('#fichaSaveEnviar').addEventListener('click',async()=>{
-    const sendBtn=c.querySelector('#fichaSaveEnviar');
-    const saveBtn=c.querySelector('#fichaSave');
-    sendBtn.disabled=true; saveBtn.disabled=true; sendBtn.textContent='Guardando…';
-    const isEdit=!!fichasEditId;
-    const ficha=buildFichaFromForm();
-    const oldFicha=isEdit?fichasData.find(f=>f.id===fichasEditId):null;
-    const cambios=computeCambios(oldFicha,ficha);
-    try{
-      await sbSaveFicha(ficha);
-      if(isEdit){ const idx=fichasData.findIndex(f=>f.id===fichasEditId); if(idx>=0) fichasData[idx]=ficha; }
-      else fichasData.push(ficha);
-      sendBtn.textContent='Generando PDF…';
-      const {titulo,fechaEvStr}=getFichaTitulos(ficha);
-      sendBtn.textContent='Enviando…';
-      await sendFichaEmail(ficha,titulo,fechaEvStr,isEdit,cambios);
-      fichasEditId=null; fichasNewId=null; fichasViewState='list';
-      toast(isEdit?'✓ Modificación enviada':'✓ Ficha guardada y email enviado');
-      renderFichasList(c); renderMedidasTab();
-    } catch(e){
-      sendBtn.disabled=false; saveBtn.disabled=false;
-      sendBtn.textContent='📨 Guardar y enviar'; saveBtn.textContent='💾 Guardar';
-      toast('Error: '+e.message);
-    }
-  });
 }
 
 // ── ASOCIAR PEDIDO MODAL ──
