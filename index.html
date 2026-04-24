@@ -157,6 +157,18 @@ header{height:var(--header-h);padding:0 1.2rem;display:flex;align-items:center;j
 .admin-tab:hover{border-color:var(--accent);color:var(--warm);}
 .admin-tab.active{background:var(--warm);color:white;border-color:var(--warm);}
 
+.fichas-subtabs{display:flex;gap:.7rem;align-items:flex-start;margin-bottom:1.5rem;padding:0;}
+.fichas-subtabs>.fichas-subtab,.fichas-subtab-container{flex:1;min-width:0;}
+.fichas-subtab-container{display:flex;flex-direction:column;gap:0;}
+.fichas-subtab{display:flex;align-items:center;justify-content:center;gap:.5rem;padding:.6rem 1rem;background:linear-gradient(135deg, rgba(200,169,110,0.08) 0%, rgba(200,169,110,0.03) 100%);border:1.5px solid rgba(200,169,110,0.3);border-radius:10px;cursor:pointer;color:var(--muted);font-size:.95rem;font-family:'Cormorant Garamond',serif;font-weight:500;letter-spacing:.02em;white-space:nowrap;transition:all .25s cubic-bezier(0.4, 0, 0.2, 1);position:relative;width:100%;}
+.fichas-subtab:hover{background:linear-gradient(135deg, rgba(200,169,110,0.15) 0%, rgba(200,169,110,0.08) 100%);border-color:rgba(200,169,110,0.5);color:var(--warm);}
+.fichas-subtab.active{background:linear-gradient(135deg, var(--warm) 0%, rgba(200,169,110,0.9) 100%);color:white;border-color:var(--warm);font-weight:600;box-shadow:inset 0 2px 4px rgba(0,0,0,0.1);}
+.fichas-subtab-nested-group{display:flex;flex-direction:column;gap:0;background:rgba(200,169,110,0.05);border-left:2px solid var(--warm);border-right:1.5px solid rgba(200,169,110,0.3);border-bottom:1.5px solid rgba(200,169,110,0.3);border-radius:0 0 10px 10px;overflow:hidden;}
+.fichas-subtab-nested{display:flex;align-items:center;gap:.3rem;padding:.5rem 1.2rem .5rem 1.6rem;background:transparent;border:none;cursor:pointer;color:var(--muted);font-size:.9rem;font-family:'Cormorant Garamond',serif;font-weight:400;letter-spacing:.01em;white-space:nowrap;transition:all .2s;position:relative;}
+.fichas-subtab-nested:hover{background:rgba(200,169,110,0.12);color:var(--warm);padding-left:1.8rem;}
+.fichas-subtab-nested.active{color:var(--warm);font-weight:600;background:rgba(200,169,110,0.15);padding-left:1.8rem;}
+.fichas-subtab-nested.active::before{content:'✓';position:absolute;left:1.2rem;color:var(--warm);font-weight:700;font-size:.85rem;}
+
 .tab-body{display:none;flex-direction:column;flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;height:0;}
 .tab-body.active{display:flex;height:auto;}
 .tab-inner{padding:1.2rem;display:flex;flex-direction:column;gap:1rem;}
@@ -387,12 +399,19 @@ header{height:var(--header-h);padding:0 1.2rem;display:flex;align-items:center;j
 .fp-item{background:#fff;border:1px solid rgba(212,201,184,.55);border-radius:14px;padding:1rem 1.1rem;cursor:pointer;transition:all .2s;box-shadow:0 2px 10px rgba(0,0,0,.06);}
 .fp-item:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.1);border-color:rgba(200,169,110,.4);}
 .fp-item-top{display:flex;align-items:flex-start;justify-content:space-between;gap:.75rem;}
+.fp-item-top-main{display:flex;flex-direction:column;gap:.12rem;min-width:0;flex:1;}
+.fp-item-status{display:flex;align-items:flex-start;gap:.45rem;flex-shrink:0;flex-wrap:wrap;justify-content:flex-end;}
 .fp-item-title{font-family:'Cormorant Garamond',serif;font-size:1.15rem;font-weight:500;color:var(--dark);line-height:1.2;}
 .fp-item-arrow{color:var(--border);font-size:1.1rem;flex-shrink:0;transition:all .2s;margin-top:.1rem;}
 .fp-item:hover .fp-item-arrow{transform:translateX(3px);color:var(--accent);}
 .fp-item-contact{font-family:'Cormorant Garamond',serif;font-size:.88rem;color:var(--muted);font-style:italic;margin-top:.28rem;display:flex;flex-wrap:wrap;gap:.3rem .8rem;}
 .fp-item-fecha{font-family:'Cormorant Garamond',serif;font-size:.85rem;color:var(--warm);font-style:italic;margin-top:.2rem;}
+.fp-item-evento{font-family:'Cormorant Garamond',serif;font-size:.84rem;color:var(--warm);font-style:italic;margin-top:.22rem;display:flex;align-items:center;gap:.35rem;}
 .fp-item-bottom{display:flex;align-items:center;gap:.55rem;margin-top:.7rem;padding-top:.6rem;border-top:1px solid rgba(212,201,184,.3);}
+.fp-measure-badge{display:inline-flex;align-items:center;gap:.3rem;padding:.16rem .55rem;border-radius:999px;font-family:'Cormorant Garamond',serif;font-size:.8rem;font-style:italic;white-space:nowrap;border:1px solid rgba(212,201,184,.45);background:rgba(255,255,255,.72);color:var(--muted);}
+.fp-measure-badge.warning{background:rgba(208,112,96,.1);border-color:rgba(208,112,96,.3);color:#b04040;}
+.fp-measure-badge.complete{background:rgba(74,112,88,.1);border-color:rgba(74,112,88,.3);color:var(--lino);}
+.fp-measure-badge.pending{background:rgba(200,169,110,.1);border-color:rgba(200,169,110,.35);color:var(--warm);}
 .fp-circle{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Cormorant Garamond',serif;font-size:1.15rem;font-weight:700;flex-shrink:0;}
 .fp-circle-nina{background:rgba(180,100,140,.12);color:#b4648c;border:1.5px solid rgba(180,100,140,.3);}
 .fp-circle-nino{background:rgba(58,92,138,.12);color:#3a5c8a;border:1.5px solid rgba(58,92,138,.3);}
@@ -492,6 +511,11 @@ input[type="date"].ficha-big-inp{font-size:1.15rem;padding:.88rem 1rem;}
 .fd-medida-key{font-family:'Cormorant Garamond',serif;font-size:.78rem;font-style:italic;color:var(--muted);}
 .fd-medida-val{font-family:'Cormorant Garamond',serif;font-size:.98rem;color:var(--dark);}
 .fd-medida-val.empty{color:var(--border);font-style:italic;}
+.fd-medidas-toolbar{display:flex;align-items:center;justify-content:space-between;gap:.6rem;flex-wrap:wrap;margin:.8rem 0 .25rem;}
+.fd-medidas-status{display:flex;align-items:center;gap:.45rem;flex-wrap:wrap;}
+.fd-medidas-toggle-btn{padding:.38rem .85rem;background:none;border:1px solid rgba(74,112,88,.3);border-radius:20px;cursor:pointer;color:var(--lino);font-family:'Cormorant Garamond',serif;font-size:.9rem;font-style:italic;transition:all .15s;}
+.fd-medidas-toggle-btn:hover{background:rgba(74,112,88,.08);border-color:rgba(74,112,88,.45);}
+.fd-medidas-toggle-btn.is-active{background:rgba(74,112,88,.12);}
 .ficha-detail-actions{display:flex;justify-content:flex-end;padding-top:.6rem;border-top:1px solid rgba(212,201,184,.35);margin-top:.2rem;}
 .ficha-del-btn{padding:.4rem .9rem;background:none;border:1px solid rgba(176,64,64,.3);border-radius:20px;cursor:pointer;color:#b04040;font-family:'Cormorant Garamond',serif;font-size:.88rem;font-style:italic;transition:all .15s;}
 .ficha-del-btn:hover{background:#b04040;color:#fff;border-color:#b04040;}
@@ -678,14 +702,12 @@ input[type="date"].ficha-big-inp{font-size:1.15rem;padding:.88rem 1rem;}
     </div>
   </div>
   <div class="admin-tabs">
-    <button class="admin-tab active" data-tab="subir">📥 Subir telas</button>
-    <button class="admin-tab" data-tab="gestionar">🗂 Gestionar</button>
+    <button class="admin-tab active" data-tab="telas">🧵 Telas</button>
     <button class="admin-tab" data-tab="fichas">📋 Fichas</button>
-    <button class="admin-tab" data-tab="medidas">📦 Pedidos</button>
   </div>
 
-  <!-- TAB SUBIR -->
-  <div class="tab-body active" id="tab-subir">
+  <!-- TAB TELAS -->
+  <div class="tab-body active" id="tab-telas">
     <div class="tab-inner">
       <div class="admin-card">
         <div class="admin-card-hdr">
@@ -747,12 +769,7 @@ input[type="date"].ficha-big-inp{font-size:1.15rem;padding:.88rem 1rem;}
           </div>
         </div>
       </div>
-    </div>
-  </div>
 
-  <!-- TAB GESTIONAR -->
-  <div class="tab-body" id="tab-gestionar">
-    <div class="tab-inner">
       <div class="admin-card">
         <div class="admin-card-hdr"><div class="admin-card-title" id="adminListTitle">Telas — 0</div></div>
         <div class="admin-fabric-list" id="adminFabricList"><div class="admin-empty">Cargando…</div></div>
@@ -763,17 +780,21 @@ input[type="date"].ficha-big-inp{font-size:1.15rem;padding:.88rem 1rem;}
   <!-- TAB FICHAS PEDIDOS -->
   <div class="tab-body" id="tab-fichas">
     <div class="admin-card" style="margin:1rem;overflow:visible;">
+      <div class="fichas-subtabs">
+        <button class="fichas-subtab active" data-ficha-filter="todas">📋 Todas</button>
+        <div class="fichas-subtab-container">
+          <button class="fichas-subtab" data-ficha-filter="con-pedido">📦 Con pedido</button>
+          <div class="fichas-subtab-nested-group" id="fichas-con-pedido-group" style="display:none;">
+            <button class="fichas-subtab-nested" data-ficha-filter="con-pedido-todos">↳ Todos</button>
+            <button class="fichas-subtab-nested" data-ficha-filter="con-pedido-con-medidas">↳ Con medidas</button>
+            <button class="fichas-subtab-nested" data-ficha-filter="con-pedido-sin-medidas">↳ Sin medidas</button>
+          </div>
+        </div>
+      </div>
       <div id="tab-fichas-inner"></div>
     </div>
   </div>
 
-  <!-- TAB MEDIDAS NIÑOS -->
-  <div class="tab-body" id="tab-medidas">
-    <div class="admin-card" style="margin:1rem;overflow:visible;">
-      <div class="admin-card-hdr"><div class="admin-card-title">Medidas niños</div></div>
-      <div id="tab-medidas-inner"></div>
-    </div>
-  </div>
 </div>
 
 <!-- MUESTRARIO -->
@@ -1234,16 +1255,14 @@ document.querySelectorAll('.admin-tab').forEach(tab=>{
     document.querySelectorAll('.tab-body').forEach(b=>b.classList.remove('active'));
     tab.classList.add('active');
     document.getElementById(`tab-${tab.dataset.tab}`).classList.add('active');
-    if(tab.dataset.tab==='gestionar'){
+    if(tab.dataset.tab==='telas'){
       if(!FABRICS.length) loadFabrics().then(()=>renderAdminList());
       else renderAdminList();
     }
     if(tab.dataset.tab==='fichas'){
       fichasViewState='list';
+      fichasFilter='todas';
       renderFichasTab();
-    }
-    if(tab.dataset.tab==='medidas'){
-      renderMedidasTab();
     }
   });
 });
@@ -1308,8 +1327,8 @@ function showLabCard(){
   card.style.display='';
   document.querySelectorAll('.admin-tab').forEach(t=>t.classList.remove('active'));
   document.querySelectorAll('.tab-body').forEach(b=>b.classList.remove('active'));
-  document.querySelector('[data-tab="subir"]').classList.add('active');
-  document.getElementById('tab-subir').classList.add('active');
+  document.querySelector('[data-tab="telas"]').classList.add('active');
+  document.getElementById('tab-telas').classList.add('active');
   buildLabThumbs();
   showLabFabric(labIdx<pendFnames.length?labIdx:0);
 }
@@ -1477,11 +1496,11 @@ document.getElementById('labConfirmAll').addEventListener('click', async()=>{
   if(errors===0) toast(`¡${done} telas publicadas! 🎉`);
   else toast(`${done} subidas, ${errors} errores`);
 
-  // Auto-switch to gestionar
+  // Auto-switch to telas
   document.querySelectorAll('.admin-tab').forEach(t=>t.classList.remove('active'));
   document.querySelectorAll('.tab-body').forEach(b=>b.classList.remove('active'));
-  document.querySelector('[data-tab="gestionar"]').classList.add('active');
-  document.getElementById('tab-gestionar').classList.add('active');
+  document.querySelector('[data-tab="telas"]').classList.add('active');
+  document.getElementById('tab-telas').classList.add('active');
 });
 
 // ── GESTIONAR ──
@@ -2334,6 +2353,15 @@ let fichasNewId = null;  // ID pre-generado para fichas nuevas (para storage de 
 let fichasFormFotos = []; // fotos genéricas de la ficha (telas y modelos)
 let fichasSearch = '';   // búsqueda por nombre
 let fichasOpenGroups = new Set(); // grupos (año-mes) desplegados
+let fichasFormTipoEvento = '';
+let fichasFilter = 'todas'; // 'todas' | 'con-pedido' | 'con-pedido-todos' | 'con-pedido-sin-medidas' | 'con-pedido-con-medidas'
+const FICHA_FOTOS_ID = '_fotos';
+const FICHA_META_ID = '_meta';
+const EVENTO_OPTIONS = [
+  {value:'arras', label:'Arras'},
+  {value:'comunion', label:'Comunión'},
+  {value:'bautizo', label:'Bautizo'}
+];
 
 function escF(s){ if(!s)return''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
@@ -2343,6 +2371,76 @@ const MED_TYPES = {
   vestido:  {label:'Vestido',  emoji:'👗', fields:[{k:'largo',l:'Largo'},{k:'cintura',l:'Cintura'},{k:'cadera',l:'Cadera'},{k:'espalda',l:'Espalda'}]},
   capota:   {label:'Capota',   emoji:'🧢', fields:[{k:'contornoCabeza',l:'Contorno cabeza'},{k:'diametroCabeza',l:'Diámetro cabeza'}]},
 };
+
+function getFichaStoredItems(rawNinos){
+  return Array.isArray(rawNinos) ? rawNinos : [];
+}
+function getFichaStoredMeta(rawNinos){
+  return getFichaStoredItems(rawNinos).find(n=>n.id===FICHA_META_ID) || {};
+}
+function getFichaStoredFotos(rawNinos){
+  return getFichaStoredItems(rawNinos).find(n=>n.id===FICHA_FOTOS_ID)?.fotos || [];
+}
+function getFichaChildren(rawNinos){
+  return getFichaStoredItems(rawNinos).filter(n=>n.id!==FICHA_FOTOS_ID && n.id!==FICHA_META_ID);
+}
+function serializeFichaNinos(ficha){
+  const items = [];
+  if(ficha.fotos?.length) items.push({id:FICHA_FOTOS_ID, fotos:ficha.fotos});
+  if(ficha.medidasCompletadas || ficha.tipoEvento){
+    items.push({id:FICHA_META_ID, medidasCompletadas:!!ficha.medidasCompletadas, tipoEvento:ficha.tipoEvento||''});
+  }
+  return items.concat(ficha.ninos||[]);
+}
+function getEventoLabel(value){
+  return EVENTO_OPTIONS.find(o=>o.value===value)?.label || '';
+}
+function getEventoIcon(value){
+  return {
+    arras:'💍',
+    comunion:'🕊️',
+    bautizo:'💧'
+  }[value] || '✨';
+}
+function getRequiredMeasureFields(nino){
+  return nino?.sexo === 'nina'
+    ? ['contornoPecho','largo']
+    : ['contornoPecho','largo','contornoCintura','pantalon'];
+}
+function hasLegacyMeasureData(nino){
+  return Object.entries(nino?.medidas||{}).some(([key,val])=>{
+    if(key.startsWith('talla_')) return true;
+    if(val && typeof val === 'object') return Object.values(val).some(v=>v!=='' && v!=null);
+    return false;
+  });
+}
+function childHasAnyMeasures(nino){
+  const required = getRequiredMeasureFields(nino);
+  return required.some(k=>nino?.medidas?.[k]!=='' && nino?.medidas?.[k]!=null) || hasLegacyMeasureData(nino);
+}
+function childHasCompleteMeasures(nino){
+  const required = getRequiredMeasureFields(nino);
+  if(required.every(k=>nino?.medidas?.[k]!=='' && nino?.medidas?.[k]!=null)) return true;
+  return hasLegacyMeasureData(nino);
+}
+function getFichaMeasureState(ficha){
+  const ninos = ficha?.ninos || [];
+  const hasAny = ficha?.medidasCompletadas || ninos.some(childHasAnyMeasures);
+  const allComplete = !!ninos.length && ninos.every(childHasCompleteMeasures);
+  const showWarning = hasAny && !ficha?.medidasCompletadas && !allComplete;
+  return {
+    hasAny,
+    allComplete,
+    showWarning,
+    isCompleted: !!ficha?.medidasCompletadas || allComplete
+  };
+}
+function getFichaMeasureBadge(ficha){
+  const state = getFichaMeasureState(ficha);
+  if(!state.hasAny) return {cls:'pending', text:'Sin medidas'};
+  if(state.showWarning) return {cls:'warning', text:'Faltan medidas'};
+  return {cls:'complete', text:'Con medidas'};
+}
 
 async function loadFichas(force=false){
   if(fichasLoaded && !force) return; // use in-memory cache on tab switches
@@ -2357,8 +2455,10 @@ async function loadFichas(force=false){
       email: r.email||'',
       numeroPedido: r.numero_pedido||'',
       pedidoRealizado: r.pedido_realizado||false,
-      fotos: (r.ninos||[]).find(n=>n.id==='_fotos')?.fotos || [],
-      ninos: (r.ninos||[]).filter(n=>n.id!=='_fotos')
+      tipoEvento: getFichaStoredMeta(r.ninos).tipoEvento || '',
+      medidasCompletadas: !!getFichaStoredMeta(r.ninos).medidasCompletadas,
+      fotos: getFichaStoredFotos(r.ninos),
+      ninos: getFichaChildren(r.ninos)
     }));
     fichasLoaded = true;
   } catch(e){
@@ -2380,7 +2480,7 @@ async function sbSaveFicha(ficha){
       email: ficha.email,
       numero_pedido: ficha.numeroPedido||null,
       pedido_realizado: ficha.pedidoRealizado,
-      ninos: (ficha.fotos?.length ? [{id:'_fotos', fotos:ficha.fotos}] : []).concat(ficha.ninos)
+      ninos: serializeFichaNinos(ficha)
     })
   });
   if(!r.ok) throw new Error(await r.text());
@@ -2392,6 +2492,11 @@ async function sbDeleteFicha(fichaId){
 
 async function sbSetPedidoRealizado(fichaId, value){
   await sbPatch(`/rest/v1/fichas?id=eq.${encodeURIComponent(fichaId)}`, {pedido_realizado: value});
+}
+async function sbSetFichaMedidasCompletadas(ficha, value){
+  await sbPatch(`/rest/v1/fichas?id=eq.${encodeURIComponent(ficha.id)}`, {
+    ninos: serializeFichaNinos({...ficha, medidasCompletadas:value})
+  });
 }
 function makeNinoEmpty(sexo=null){
   return {
@@ -2427,10 +2532,13 @@ async function uploadNinoFoto(blob, fichaId) {
   const path = `fichas/${fichaId}/${Date.now()}-${Math.random().toString(36).slice(2,5)}.jpg`;
   return await uploadPhoto(resized, path);
 }
-async function fetchAsDataUrl(url) {
+async function fetchAsDataUrl(url, options={}) {
   try {
     const res = await fetch(url);
-    const blob = await res.blob();
+    let blob = await res.blob();
+    if(options.maxPx){
+      blob = await resizeImageForUpload(blob, options.maxPx, options.quality ?? 0.72);
+    }
     return await new Promise(r => { const rd = new FileReader(); rd.onload = () => r(rd.result); rd.readAsDataURL(blob); });
   } catch(e) { return ''; }
 }
@@ -2440,40 +2548,132 @@ async function renderFichasTab(){
   if(!c) return;
   c.innerHTML='<div style="padding:2rem;text-align:center;font-family:\'Cormorant Garamond\',serif;font-style:italic;color:var(--muted);">Cargando fichas…</div>';
   await loadFichas();
+  
+  // Setup subtabs
+  const mainSubtabs = document.querySelectorAll('.fichas-subtab:not(.fichas-subtab-nested)');
+  const nestedSubtabs = document.querySelectorAll('.fichas-subtab-nested');
+  const conPedidoGroup = document.getElementById('fichas-con-pedido-group');
+  const conPedidoBtn = document.querySelector('.fichas-subtab[data-ficha-filter="con-pedido"]');
+  
+  // All subtabs (main + nested)
+  const allSubtabs = [...mainSubtabs, ...nestedSubtabs];
+  
+  allSubtabs.forEach(btn => {
+    btn.classList.remove('active');
+    if(btn.dataset.fichaFilter === fichasFilter) {
+      btn.classList.add('active');
+    }
+    btn.addEventListener('click', () => {
+      const filter = btn.dataset.fichaFilter;
+      fichasFilter = filter;
+      
+      // Update active states
+      allSubtabs.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      
+      // Handle con-pedido submenu visibility
+      if(filter === 'todas') {
+        conPedidoGroup.style.display = 'none';
+        conPedidoBtn.classList.remove('active');
+      } else if(filter === 'con-pedido' || filter === 'con-pedido-todos' || filter === 'con-pedido-sin-medidas' || filter === 'con-pedido-con-medidas') {
+        conPedidoGroup.style.display = 'flex';
+        conPedidoBtn.classList.add('active');
+        // If clicking on con-pedido itself (not nested), switch to first nested
+        if(filter === 'con-pedido') {
+          fichasFilter = 'con-pedido-todos';
+          nestedSubtabs[0].classList.add('active');
+          nestedSubtabs[1].classList.remove('active');
+          nestedSubtabs[2].classList.remove('active');
+        }
+      }
+      
+      // Re-render list
+      renderFichasList(c);
+    });
+  });
+  
+  // Initial state
+  if(fichasFilter === 'todas' || !fichasFilter) {
+    conPedidoGroup.style.display = 'none';
+  } else if(fichasFilter === 'con-pedido' || fichasFilter === 'con-pedido-todos' || fichasFilter === 'con-pedido-sin-medidas' || fichasFilter === 'con-pedido-con-medidas') {
+    conPedidoGroup.style.display = 'flex';
+    if(fichasFilter !== 'con-pedido') {
+      conPedidoBtn.classList.add('active');
+    }
+  }
+  
   if(fichasViewState==='list') renderFichasList(c);
   else if(fichasViewState==='new') renderFichaForm(c);
   else if(fichasViewState==='detail'){ renderFichasList(c); renderFichaDetail(c, fichasCurrentId); }
 }
 
-function renderFichasList(c){
-  const total = fichasData.length;
+function getFilteredFichas(){
+  if(fichasFilter === 'todas') return fichasData;
+  
+  return fichasData.filter(f => {
+    if(!f.numeroPedido) return false;
+    
+    if(fichasFilter === 'con-pedido' || fichasFilter === 'con-pedido-todos') return true;
+    
+    const hasMeasures = getFichaMeasureState(f).hasAny;
+    
+    if(fichasFilter === 'con-pedido-sin-medidas') return !hasMeasures;
+    if(fichasFilter === 'con-pedido-con-medidas') return hasMeasures;
+    
+    return true;
+  });
+}
 
-  // Determine current month key
-  const now = new Date();
-  const currentMonthKey = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
-  if(fichasOpenGroups.size === 0) fichasOpenGroups.add(currentMonthKey);
+function getClosestFichaMonthKey(fichas){
+  const withDate = (fichas||[])
+    .filter(f=>f.fechaEvento)
+    .map(f=>{
+      const eventDate = new Date(f.fechaEvento+'T12:00:00');
+      return {
+        key: f.fechaEvento.slice(0,7),
+        diff: Math.abs(eventDate.getTime() - Date.now())
+      };
+    })
+    .sort((a,b)=>a.diff-b.diff);
+  if(withDate.length) return withDate[0].key;
+  return 'sin-fecha';
+}
+
+function renderFichasList(c){
+  const allFichas = fichasData;
+  const filteredFichas = getFilteredFichas();
+  const total = filteredFichas.length;
+
+  const closestMonthKey = getClosestFichaMonthKey(filteredFichas);
+  if(closestMonthKey) fichasOpenGroups.add(closestMonthKey);
 
   // Build item HTML helper
   const renderItem = f => {
     const titulo = f.nombre || 'Ficha sin nombre';
     const fechaEvStr = f.fechaEvento ? new Date(f.fechaEvento+'T12:00:00').toLocaleDateString('es-ES',{day:'2-digit',month:'long',year:'numeric'}) : '';
+    const tipoEventoLabel = getEventoLabel(f.tipoEvento);
     const numNinas = f.ninos.filter(n=>n.sexo==='nina').length;
     const numNinos = f.ninos.filter(n=>n.sexo==='nino').length;
     const totalN = numNinas + numNinos;
+    const measureBadge = f.numeroPedido ? getFichaMeasureBadge(f) : null;
     const contactItems = [
       f.telefono ? `📞 ${escF(f.telefono)}` : '',
       f.email ? `✉ ${escF(f.email)}` : '',
     ].filter(Boolean).join('<span style="margin:0 .2rem;opacity:.4;">·</span>');
     return `<div class="fp-item" data-fid="${escF(f.id)}" data-name="${escF((titulo).toLowerCase())}">
       <div class="fp-item-top">
-        <div style="display:flex;flex-direction:column;gap:.12rem;min-width:0;flex:1;">
+        <div class="fp-item-top-main">
           ${f.numeroPedido?`<div style="font-family:'Cormorant Garamond',serif;font-size:.8rem;letter-spacing:.08em;color:var(--accent);font-weight:500;">Pedido ${escF(f.numeroPedido)}</div>`:''}
           <div class="fp-item-title">${escF(titulo)}</div>
         </div>
-        <span class="fp-item-arrow">›</span>
+        <div class="fp-item-status">
+          ${measureBadge?`<span class="fp-measure-badge ${measureBadge.cls}">${measureBadge.cls==='warning'?'⚠ ':''}${measureBadge.text}</span>`:''}
+          <span class="fp-item-arrow">›</span>
+        </div>
       </div>
       ${contactItems?`<div class="fp-item-contact">${contactItems}</div>`:''}
       ${fechaEvStr?`<div class="fp-item-fecha">🗓 ${fechaEvStr}</div>`:''}
+      ${tipoEventoLabel?`<div class="fp-item-evento">${getEventoIcon(f.tipoEvento)} ${escF(tipoEventoLabel)}</div>`:''}
       <div class="fp-item-bottom">
         ${numNinas?`<div class="fp-circle fp-circle-nina">${numNinas}</div><span class="fp-circle-label" style="color:#b4648c;">niña${numNinas!==1?'s':''}</span>`:''}
         ${numNinas&&numNinos?'<span style="color:var(--border);font-size:.8rem;">·</span>':''}
@@ -2487,7 +2687,7 @@ function renderFichasList(c){
   const MESES_LABEL = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
   const NO_DATE_KEY = 'sin-fecha';
   const groups = {};
-  fichasData.forEach(f => {
+  filteredFichas.forEach(f => {
     const key = f.fechaEvento ? f.fechaEvento.slice(0,7) : NO_DATE_KEY;
     if(!groups[key]) groups[key] = { fichas:[], label:'' };
     groups[key].fichas.push(f);
@@ -2534,7 +2734,7 @@ function renderFichasList(c){
 
   c.querySelector('#fpNewBtn').addEventListener('click',()=>{
     fichasViewState='new'; fichasEditId=null; fichasFormStep=1;
-    fichasFormNinos=[]; fichasFormFotos=[]; fichasFormName=''; fichasFormFecha='';
+    fichasFormNinos=[]; fichasFormFotos=[]; fichasFormName=''; fichasFormFecha=''; fichasFormTipoEvento='';
     fichasFormTelefono=''; fichasFormEmail=''; fichasFormNumeroPedido='';
     renderFichaForm(c);
   });
@@ -2632,6 +2832,13 @@ function renderFichaFormStep1(c){
         <label class="ficha-big-lbl">Fecha del evento</label>
         <input type="date" class="ficha-big-inp" id="fichaFechaInp" value="${escF(fichasFormFecha)}">
       </div>
+      <div class="ficha-big-field">
+        <label class="ficha-big-lbl">Tipo de evento</label>
+        <select class="ficha-big-inp" id="fichaTipoEventoInp">
+          <option value="">Selecciona una opción</option>
+          ${EVENTO_OPTIONS.map(opt=>`<option value="${opt.value}" ${fichasFormTipoEvento===opt.value?'selected':''}>${opt.label}</option>`).join('')}
+        </select>
+      </div>
       <div class="ficha-row2">
         <div class="ficha-big-field">
           <label class="ficha-big-lbl">Teléfono</label>
@@ -2651,6 +2858,7 @@ function renderFichaFormStep1(c){
 
   c.querySelector('#fichaNameInp').addEventListener('input',e=>fichasFormName=e.target.value);
   c.querySelector('#fichaFechaInp').addEventListener('input',e=>fichasFormFecha=e.target.value);
+  c.querySelector('#fichaTipoEventoInp').addEventListener('input',e=>fichasFormTipoEvento=e.target.value);
   c.querySelector('#fichaTelInp').addEventListener('input',e=>fichasFormTelefono=e.target.value);
   c.querySelector('#fichaEmailInp').addEventListener('input',e=>fichasFormEmail=e.target.value);
   c.querySelector('#fichaPedidoInp').addEventListener('input',e=>fichasFormNumeroPedido=e.target.value);
@@ -2679,10 +2887,12 @@ function buildFichaFromForm() {
     createdAt: isEdit ? existing.createdAt : new Date().toISOString(),
     nombre: fichasFormName.trim(),
     fechaEvento: fichasFormFecha,
+    tipoEvento: fichasFormTipoEvento,
     telefono: fichasFormTelefono.trim(),
     email: fichasFormEmail.trim(),
     numeroPedido: fichasFormNumeroPedido.trim(),
     pedidoRealizado: isEdit ? existing.pedidoRealizado : false,
+    medidasCompletadas: isEdit ? !!existing.medidasCompletadas : false,
     fotos: [...fichasFormFotos],
     ninos: fichasFormNinos.filter(n=>n.sexo!==null).map(n=>({
       id:n.id, nombre:n.nombre, edad:n.edad, talla:n.talla||'', sexo:n.sexo,
@@ -2698,7 +2908,8 @@ function getFichaTitulos(ficha) {
   const fechaEvStr = ficha.fechaEvento
     ? new Date(ficha.fechaEvento+'T12:00:00').toLocaleDateString('es-ES',{weekday:'long',day:'2-digit',month:'long',year:'numeric'})
     : '';
-  return { titulo, fechaEvStr };
+  const tipoEventoLabel = getEventoLabel(ficha.tipoEvento);
+  return { titulo, fechaEvStr, tipoEventoLabel };
 }
 
 function renderFichaFormStep2(c){
@@ -2735,7 +2946,7 @@ function renderFichaFormStep2(c){
     const sexLabel = isNina ? '👧 Niña' : '👦 Niño';
     const medFields = isNina
       ? [{k:'contornoPecho',l:'Contorno de pecho'},{k:'largo',l:'Largo'}]
-      : [{k:'contornoPecho',l:'Contorno de pecho'},{k:'contornoCintura',l:'Contorno de cintura'},{k:'pantalon',l:'Largo del pantalón'}];
+      : [{k:'contornoPecho',l:'Contorno de pecho'},{k:'largo',l:'Largo'},{k:'contornoCintura',l:'Contorno de cintura'},{k:'pantalon',l:'Largo del pantalón'}];
     const hasMedData = medFields.some(f=>n.medidas?.[f.k]&&n.medidas[f.k]!=='');
     const medHtml = medFields.map(f=>`
       <div><label class="f2-lbl">${f.l}</label>
@@ -2965,7 +3176,7 @@ function renderFichaFormStep3(c){
       else fichasData.push(ficha);
       fichasEditId=null; fichasNewId=null; fichasViewState='list';
       toast(isEdit?'Ficha actualizada ✓':'Ficha guardada ✓');
-      renderFichasList(c); renderMedidasTab();
+      renderFichasList(c);
     } catch(e){ saveBtn.disabled=false; saveBtn.textContent='💾 Guardar'; toast('Error al guardar: '+e.message); }
   });
 }
@@ -2975,35 +3186,75 @@ const NONNA_EMAIL = 'info@atelierlanonna.com';
 // n8n webhook — producción (activar el workflow en n8n y configurar credenciales SMTP antes de usar)
 const N8N_WEBHOOK_URL = 'https://nuriahorma.app.n8n.cloud/webhook/lanonna-ficha';
 
-async function generatePDFBase64(ficha, titulo, fechaEvStr, filename) {
-  const fullHtml = await downloadFichaPDF(ficha, titulo, fechaEvStr, filename, true);
+async function blobToBase64(blob) {
+  return await new Promise((resolve, reject) => {
+    const rd = new FileReader();
+    rd.onload = () => resolve(String(rd.result).split(',')[1] || '');
+    rd.onerror = () => reject(new Error('No se pudo convertir el PDF a base64'));
+    rd.readAsDataURL(blob);
+  });
+}
+function buildPdfHtmlForEmail(fullHtml){
   const styleMatch = fullHtml.match(/<style>([\s\S]*?)<\/style>/i);
   const bodyMatch  = fullHtml.match(/<body>([\s\S]*?)<\/body>/i);
   const bodyHtml   = bodyMatch ? bodyMatch[1] : '';
-
-  // Quitar @import (provoca que html2canvas espere carga de red y se cuelgue).
-  // Renombrar 'body' → '.pdf-scope' para no contaminar la página principal.
   const cssText = (styleMatch ? styleMatch[1] : '')
     .replace(/@import[^;]+;/gi, '')
     .replace(/\bbody\b\s*\{/g, '.pdf-scope {');
-
-  // Pasar HTML como string a html2pdf — él mismo crea el contenedor y lo posiciona.
-  // Es más fiable que posicionar un div manualmente.
-  const htmlContent = `<style>${cssText}</style>` +
+  return `<style>${cssText}</style>` +
     `<div class="pdf-scope" style="padding:68px 76px;font-family:'Cormorant Garamond',Georgia,serif;font-size:13pt;color:#1a1612;background:white;width:794px;">` +
     bodyHtml + `</div>`;
-
-  try {
-    const dataUri = await html2pdf().set({
-      margin: 0,
-      filename: filename + '.pdf',
-      html2canvas: { scale: 1.5, useCORS: false, logging: false },
-      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-    }).from(htmlContent, 'string').outputPdf('datauristring');
-    return dataUri.split(',')[1];
-  } catch(e) {
-    throw new Error('Error generando PDF: ' + e.message);
+}
+async function renderHtmlToPdfBase64(htmlContent, filename, lightMode=false){
+  if(typeof html2pdf === 'undefined') throw new Error('html2pdf no está disponible');
+  const worker = html2pdf().set({
+    margin: 0,
+    filename: filename + '.pdf',
+    image: { type: 'jpeg', quality: lightMode ? 0.82 : 0.92 },
+    html2canvas: {
+      scale: lightMode ? 1 : 1.35,
+      useCORS: false,
+      logging: false,
+      backgroundColor: '#ffffff'
+    },
+    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait', compress: true }
+  }).from(htmlContent, 'string').toPdf();
+  const pdf = await worker.get('pdf');
+  const blob = pdf.output('blob');
+  return await blobToBase64(blob);
+}
+async function savePdfFromHtml(htmlContent, filename, lightMode=false){
+  if(typeof html2pdf === 'undefined') throw new Error('html2pdf no está disponible');
+  await html2pdf().set({
+    margin: 0,
+    filename: filename + '.pdf',
+    image: { type: 'jpeg', quality: lightMode ? 0.86 : 0.92 },
+    html2canvas: {
+      scale: lightMode ? 1.1 : 1.35,
+      useCORS: false,
+      logging: false,
+      backgroundColor: '#ffffff'
+    },
+    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait', compress: true }
+  }).from(htmlContent, 'string').save();
+}
+async function generatePDFBase64(ficha, titulo, fechaEvStr, filename) {
+  const attempts = [
+    { skipPhotos:false, lightMode:true, photoMaxPx:1100, photoQuality:0.72 },
+    { skipPhotos:false, lightMode:true, photoMaxPx:800, photoQuality:0.58 }
+  ];
+  let lastError = null;
+  for(const attempt of attempts){
+    try{
+      const fullHtml = await downloadFichaPDF(ficha, titulo, fechaEvStr, filename, true, attempt);
+      const htmlContent = buildPdfHtmlForEmail(fullHtml);
+      return await renderHtmlToPdfBase64(htmlContent, filename, attempt.lightMode);
+    } catch(e){
+      lastError = e;
+      console.warn('Fallo generando PDF', attempt, e);
+    }
   }
+  throw new Error('Error generando PDF: ' + (lastError?.message || 'error desconocido'));
 }
 
 function computeCambios(oldFicha, newFicha) {
@@ -3019,10 +3270,13 @@ function computeCambios(oldFicha, newFicha) {
   // Datos generales
   if (oldFicha.nombre !== newFicha.nombre) parts.push('nombre actualizado');
   if (oldFicha.fechaEvento !== newFicha.fechaEvento) parts.push('fecha del evento actualizada');
+  if ((oldFicha.tipoEvento||'') !== (newFicha.tipoEvento||'')) parts.push('tipo de evento actualizado');
   if ((!oldFicha.telefono && newFicha.telefono) || (oldFicha.telefono && oldFicha.telefono !== newFicha.telefono))
     parts.push('teléfono actualizado');
   if ((!oldFicha.email && newFicha.email) || (oldFicha.email && oldFicha.email !== newFicha.email))
     parts.push('email actualizado');
+  if (!!oldFicha.medidasCompletadas !== !!newFicha.medidasCompletadas)
+    parts.push(newFicha.medidasCompletadas ? 'medidas marcadas como completadas' : 'marca de medidas completadas eliminada');
 
   // Niños
   const oldN = oldFicha.ninos || [];
@@ -3122,8 +3376,11 @@ function openAsocModal(ficha, titulo, fechaEvStr, c){
 
 function fmtEdad(e){ if(!e) return ''; return /año/i.test(String(e)) ? e : e + ' años'; }
 
-async function downloadFichaPDF(ficha, titulo, fechaEvStr, filenameOverride, htmlOnly){
+async function downloadFichaPDF(ficha, titulo, fechaEvStr, filenameOverride, htmlOnly, options={}){
   const esc = s => (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const skipPhotos = !!options.skipPhotos;
+  const photoMaxPx = options.photoMaxPx || null;
+  const photoQuality = options.photoQuality ?? 0.72;
   // Fetch logo as embedded data URL so it works in the about:blank window
   let logoDataUrl = '';
   try {
@@ -3141,7 +3398,7 @@ async function downloadFichaPDF(ficha, titulo, fechaEvStr, filenameOverride, htm
     const sexLabel = isNina ? 'Niña' : (n.sexo==='nino' ? 'Niño' : '—');
     const newMedFields = isNina
       ? [{k:'contornoPecho',l:'Contorno de pecho'},{k:'largo',l:'Largo'}]
-      : [{k:'contornoPecho',l:'Contorno de pecho'},{k:'contornoCintura',l:'Contorno de cintura'},{k:'pantalon',l:'Largo del pantalón'}];
+      : [{k:'contornoPecho',l:'Contorno de pecho'},{k:'largo',l:'Largo'},{k:'contornoCintura',l:'Contorno de cintura'},{k:'pantalon',l:'Largo del pantalón'}];
     const hasNewMed = newMedFields.some(f=>n.medidas?.[f.k]&&n.medidas[f.k]!=='');
     let medsHtml = '';
     if(hasNewMed){
@@ -3220,11 +3477,12 @@ async function downloadFichaPDF(ficha, titulo, fechaEvStr, filenameOverride, htm
       (logoDataUrl
         ? `<img src="${logoDataUrl}" alt="Atelier La Nonna" style="height:54px;width:auto;display:block;">`
         : '<div><div class="brand">Atelier <em>la Nonna</em></div></div>') +
-      '<div class="print-date">Impreso: ' + new Date().toLocaleDateString('es-ES',{day:'2-digit',month:'long',year:'numeric'}) + '</div>' +
+      '<div class="print-date">Fecha cita: ' + new Date(ficha.createdAt).toLocaleDateString('es-ES',{day:'2-digit',month:'long',year:'numeric'}) + '</div>' +
     '</div>' +
     '<div>' +
       (ficha.numeroPedido ? '<div class="num-pedido">Pedido ' + esc(ficha.numeroPedido) + '</div>' : '') +
       '<div class="ficha-title">' + esc(titulo) + '</div>' +
+      (ficha.tipoEvento ? '<div class="fecha-badge">Tipo de evento: ' + esc(getEventoLabel(ficha.tipoEvento)) + '</div>' : '') +
       (fechaEvStr ? '<div class="fecha-badge">Evento: ' + esc(fechaEvStr) + '</div>' : '') +
     '</div>' +
     ((ficha.telefono||ficha.email) ?
@@ -3245,10 +3503,10 @@ async function downloadFichaPDF(ficha, titulo, fechaEvStr, filenameOverride, htm
   // Sección de fotos (pre-fetch como data URLs para que html2pdf las embeba)
   const fotosUrls = ficha.fotos?.length ? ficha.fotos
     : ficha.ninos.flatMap(n=>n.fotos||[]); // compatibilidad con datos legacy
-  if(fotosUrls.length){
+  if(!skipPhotos && fotosUrls.length){
     let fotosHtml = '<div class="fotos-page"><div class="section-title">Fotos de telas y modelos</div><div class="fotos-grid">';
     for(const url of fotosUrls){
-      const dataUrl = await fetchAsDataUrl(url);
+      const dataUrl = await fetchAsDataUrl(url, {maxPx: photoMaxPx, quality: photoQuality});
       if(dataUrl) fotosHtml += `<div class="fotos-item"><img src="${dataUrl}" alt=""></div>`;
     }
     fotosHtml += '</div></div>';
@@ -3259,21 +3517,16 @@ async function downloadFichaPDF(ficha, titulo, fechaEvStr, filenameOverride, htm
   if(htmlOnly){
     return `<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"><title>${(filenameOverride||('Ficha - '+titulo)).replace(/</g,'&lt;')}<\/title><style>${pdfCSS}<\/style><\/head><body>${bodyHTML}<\/body><\/html>`;
   }
-
-  const w = window.open('about:blank','_blank','width=800,height=900');
-  if(!w){ alert('Activa ventanas emergentes para este sitio y vuelve a intentarlo.'); return; }
-  const d = w.document;
-  const meta = d.createElement('meta'); meta.setAttribute('charset','utf-8'); d.head.appendChild(meta);
-  d.title = filenameOverride || ('Ficha - ' + titulo);
-  const styleEl = d.createElement('style'); styleEl.textContent = pdfCSS; d.head.appendChild(styleEl);
-  d.body.innerHTML = bodyHTML;
-  w.focus();
-  setTimeout(()=>w.print(), 700);
+  const fullHtml = `<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"><title>${(filenameOverride||('Ficha - '+titulo)).replace(/</g,'&lt;')}<\/title><style>${pdfCSS}<\/style><\/head><body>${bodyHTML}<\/body><\/html>`;
+  const htmlContent = buildPdfHtmlForEmail(fullHtml);
+  await savePdfFromHtml(htmlContent, filenameOverride || ('Ficha - ' + titulo), false);
 }
 
 function renderFichaDetail(c, fichaId){
   const ficha = fichasData.find(f=>f.id===fichaId);
   if(!ficha){ fichasViewState='list'; renderFichasList(c); return; }
+  const measureState = getFichaMeasureState(ficha);
+  const measureBadge = getFichaMeasureBadge(ficha);
 
   const d = new Date(ficha.createdAt);
   const ds = d.toLocaleDateString('es-ES',{day:'2-digit',month:'long',year:'numeric'});
@@ -3281,6 +3534,7 @@ function renderFichaDetail(c, fichaId){
   const fechaEvStr = ficha.fechaEvento
     ? new Date(ficha.fechaEvento+'T12:00:00').toLocaleDateString('es-ES',{weekday:'long',day:'2-digit',month:'long',year:'numeric'})
     : '';
+  const tipoEventoLabel = getEventoLabel(ficha.tipoEvento);
 
   const ninoCard = (n,i)=>{
     const isNina = n.sexo === 'nina';
@@ -3374,6 +3628,7 @@ function renderFichaDetail(c, fichaId){
                </div>`
             : `<button class="ficha-back-btn" id="fichaAsocBtn" style="color:var(--warm);border:1.5px solid rgba(139,115,85,.4);padding:.3rem .8rem;border-radius:20px;background:rgba(200,169,110,.1);font-size:.92rem;margin-bottom:.3rem;">📨 Asociar a nº de pedido y enviar email</button>`}
           <div class="fd-titulo">${escF(titulo)}</div>
+          ${tipoEventoLabel?`<div class="fd-fecha-badge">✨ ${escF(tipoEventoLabel)}</div>`:''}
           ${fechaEvStr?`<div class="fd-fecha-badge">🗓 ${fechaEvStr}</div>`:''}
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:.55rem .9rem;margin-top:.75rem;">
             ${ficha.telefono?`<div>
@@ -3384,6 +3639,15 @@ function renderFichaDetail(c, fichaId){
               <span style="font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:.1rem;">Email</span>
               <span style="font-family:'Cormorant Garamond',serif;color:var(--dark);font-size:.92rem;word-break:break-all;">${escF(ficha.email)}</span>
             </div>`:''}
+          </div>
+          <div class="fd-medidas-toolbar">
+            <div class="fd-medidas-status">
+              <span class="fp-measure-badge ${measureBadge.cls}">${measureBadge.cls==='warning'?'⚠ ':''}${measureBadge.text}</span>
+              ${measureState.showWarning?'<span style="font-family:\'Cormorant Garamond\',serif;font-size:.88rem;font-style:italic;color:#b04040;">Faltan medidas por completar</span>':''}
+            </div>
+            <button class="fd-medidas-toggle-btn${ficha.medidasCompletadas?' is-active':''}" id="fichaMedidasCompleteBtn">
+              ${ficha.medidasCompletadas?'✓ Medidas completadas':'Marcar medidas completadas'}
+            </button>
           </div>
           ${totalN?`<div style="display:flex;align-items:center;gap:.55rem;margin-top:.65rem;padding-top:.6rem;border-top:1px solid rgba(212,201,184,.4);">
             ${numNinas?`<div class="fp-circle fp-circle-nina">${numNinas}</div><span style="font-family:'Cormorant Garamond',serif;font-size:.9rem;font-style:italic;color:#b4648c;">niña${numNinas!==1?'s':''}</span>`:''}
@@ -3420,6 +3684,7 @@ function renderFichaDetail(c, fichaId){
     fichasFormStep = 1;
     fichasFormName = ficha.nombre||'';
     fichasFormFecha = ficha.fechaEvento||'';
+    fichasFormTipoEvento = ficha.tipoEvento||'';
     fichasFormTelefono = ficha.telefono||'';
     fichasFormEmail = ficha.email||'';
     fichasFormNumeroPedido = ficha.numeroPedido||'';
@@ -3446,6 +3711,23 @@ function renderFichaDetail(c, fichaId){
 
   modal.querySelector('#fichaPdfBtn').addEventListener('click',()=>{
     downloadFichaPDF(ficha, titulo, fechaEvStr);
+  });
+
+  modal.querySelector('#fichaMedidasCompleteBtn').addEventListener('click', async () => {
+    const btn = modal.querySelector('#fichaMedidasCompleteBtn');
+    const nextValue = !ficha.medidasCompletadas;
+    btn.disabled = true;
+    ficha.medidasCompletadas = nextValue;
+    try {
+      await sbSetFichaMedidasCompletadas(ficha, nextValue);
+      renderFichasList(c);
+      renderFichaDetail(c, fichaId);
+      toast(nextValue ? 'Medidas marcadas como completadas ✓' : 'Marca de medidas completadas eliminada');
+    } catch(e) {
+      ficha.medidasCompletadas = !nextValue;
+      btn.disabled = false;
+      toast('Error al actualizar medidas: ' + e.message);
+    }
   });
 
   modal.querySelector('#fichaDetailEnviarBtn').addEventListener('click', async () => {
@@ -3479,7 +3761,6 @@ function renderFichaDetail(c, fichaId){
       fichasViewState='list';
       toast('Ficha eliminada');
       renderFichasList(c);
-      renderMedidasTab();
     } catch(e){
       delBtn.disabled=false; delBtn.textContent='Eliminar ficha';
       toast('Error al eliminar: '+e.message);
