@@ -3305,8 +3305,10 @@ function buildPdfHtmlForEmail(fullHtml){
 }
 function isLikelyMobilePdfDevice(){
   const ua = navigator.userAgent || '';
-  const touch = navigator.maxTouchPoints > 0;
-  return /iPhone|iPad|iPod|Android/i.test(ua) || (touch && Math.min(window.innerWidth, window.innerHeight) <= 1024);
+  const touch = navigator.maxTouchPoints > 1;
+  // iOS 13+ iPads report "Macintosh" UA but have touch support
+  const isIOS = /iPhone|iPad|iPod/i.test(ua) || (/Mac/i.test(ua) && touch && typeof document.ontouchend !== 'undefined');
+  return isIOS || /Android/i.test(ua) || (touch && Math.min(window.innerWidth, window.innerHeight) <= 1024);
 }
 function createPdfRenderNode(htmlContent){
   const host = document.createElement('div');
@@ -3414,14 +3416,40 @@ async function savePdfFromHtml(htmlContent, filename, lightMode=false){
   const host = createPdfRenderNode(htmlContent);
   try{
     const blob = await renderNodeToPdfBlob(host, filename, lightMode);
+    const isMobile = isLikelyMobilePdfDevice();
+    // On iOS/iPad, try Web Share API first (lets user save to Files, AirDrop, etc.)
+    if(isMobile && typeof navigator.share === 'function'){
+      const pdfFile = new File([blob], filename + '.pdf', { type: 'application/pdf' });
+      const canShare = typeof navigator.canShare === 'function' ? navigator.canShare({ files: [pdfFile] }) : true;
+      if(canShare){
+        try {
+          await navigator.share({ files: [pdfFile], title: filename });
+          return;
+        } catch(e) {
+          if(e.name === 'AbortError') return; // user cancelled share sheet
+          // fall through to blob URL
+        }
+      }
+    }
     const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = filename + '.pdf';
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    setTimeout(() => URL.revokeObjectURL(url), 15000);
+    if(isMobile){
+      // <a download> is ignored on iOS Safari — open in new tab so the user can use Share > Save to Files
+      const w = window.open(url, '_blank');
+      if(!w){
+        const a = document.createElement('a');
+        a.href = url; a.target = '_blank'; a.rel = 'noopener';
+        document.body.appendChild(a); a.click(); a.remove();
+      }
+      setTimeout(() => URL.revokeObjectURL(url), 60000);
+    } else {
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename + '.pdf';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 15000);
+    }
   } finally {
     host.remove();
   }
@@ -3516,7 +3544,8 @@ async function sendFichaEmail(ficha, titulo, fechaEvStr, isModification, cambios
     cambios: cambios || ''
   };
   const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
-  const timer = controller ? setTimeout(() => controller.abort(), 25000) : null;
+  const fetchTimeoutMs = isLikelyMobilePdfDevice() ? 50000 : 25000;
+  const timer = controller ? setTimeout(() => controller.abort(), fetchTimeoutMs) : null;
   const res = await fetch(N8N_WEBHOOK_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
