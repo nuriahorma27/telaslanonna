@@ -2323,6 +2323,7 @@ let fichasFormEmail = '';
 let fichasFormNumeroPedido = '';
 let fichasEditId = null; // null = nueva ficha, string = editando ficha existente
 let fichasNewId = null;  // ID pre-generado para fichas nuevas (para storage de fotos)
+let fichasFormFotos = []; // fotos genéricas de la ficha (telas y modelos)
 let fichasSearch = '';   // búsqueda por nombre
 let fichasOpenGroups = new Set(); // grupos (año-mes) desplegados
 
@@ -2348,7 +2349,8 @@ async function loadFichas(force=false){
       email: r.email||'',
       numeroPedido: r.numero_pedido||'',
       pedidoRealizado: r.pedido_realizado||false,
-      ninos: r.ninos||[]
+      fotos: (r.ninos||[]).find(n=>n.id==='_fotos')?.fotos || [],
+      ninos: (r.ninos||[]).filter(n=>n.id!=='_fotos')
     }));
     fichasLoaded = true;
   } catch(e){
@@ -2370,7 +2372,7 @@ async function sbSaveFicha(ficha){
       email: ficha.email,
       numero_pedido: ficha.numeroPedido||null,
       pedido_realizado: ficha.pedidoRealizado,
-      ninos: ficha.ninos
+      ninos: (ficha.fotos?.length ? [{id:'_fotos', fotos:ficha.fotos}] : []).concat(ficha.ninos)
     })
   });
   if(!r.ok) throw new Error(await r.text());
@@ -2524,7 +2526,7 @@ function renderFichasList(c){
 
   c.querySelector('#fpNewBtn').addEventListener('click',()=>{
     fichasViewState='new'; fichasEditId=null; fichasFormStep=1;
-    fichasFormNinos=[]; fichasFormName=''; fichasFormFecha='';
+    fichasFormNinos=[]; fichasFormFotos=[]; fichasFormName=''; fichasFormFecha='';
     fichasFormTelefono=''; fichasFormEmail=''; fichasFormNumeroPedido='';
     renderFichaForm(c);
   });
@@ -2673,11 +2675,11 @@ function buildFichaFromForm() {
     email: fichasFormEmail.trim(),
     numeroPedido: fichasFormNumeroPedido.trim(),
     pedidoRealizado: isEdit ? existing.pedidoRealizado : false,
+    fotos: [...fichasFormFotos],
     ninos: fichasFormNinos.filter(n=>n.sexo!==null).map(n=>({
       id:n.id, nombre:n.nombre, edad:n.edad, talla:n.talla||'', sexo:n.sexo,
       modelo:n.modelo||'', tela:n.tela||'', descripcion:n.descripcion||'',
-      medidas:{...n.medidas},
-      fotos:[...(n.fotos||[])]
+      medidas:{...n.medidas}
     }))
   };
 }
@@ -2884,27 +2886,11 @@ function renderFichaFormStep2(c){
 }
 
 function renderFichaFormStep3(c){
-  const ninos = fichasFormNinos.filter(n=>n.sexo!==null);
-
-  const ninoFotoSec = (n,i)=>`
-    <div style="border-top:3px solid ${n.sexo==='nina'?'#b4648c':'#3a5c8a'};border-radius:0 0 8px 8px;background:#fff;margin-bottom:.75rem;overflow:hidden;">
-      <div style="background:${n.sexo==='nina'?'rgba(180,100,140,.07)':'rgba(58,92,138,.07)'};padding:.5rem .85rem;font-family:'Cormorant Garamond',serif;font-size:1rem;font-weight:600;color:${n.sexo==='nina'?'#b4648c':'#3a5c8a'};">
-        ${n.sexo==='nina'?'👧':'👦'} ${escF(n.nombre||'Sin nombre')}
-      </div>
-      <div style="padding:.65rem .85rem;">
-        <div class="nino-fotos-preview" data-fprev="${i}" style="display:flex;flex-wrap:wrap;gap:.4rem;margin-bottom:.5rem;">
-          ${(n.fotos||[]).map((url,j)=>`
-            <div style="position:relative;">
-              <img src="${url}" style="width:72px;height:72px;object-fit:cover;border-radius:6px;border:1px solid rgba(0,0,0,.12);">
-              <button class="nino-foto-del" data-dfi="${i}" data-dfj="${j}" style="position:absolute;top:-5px;right:-5px;background:#c00;color:#fff;border:none;border-radius:50%;width:18px;height:18px;font-size:10px;cursor:pointer;line-height:1;padding:0;">✕</button>
-            </div>`).join('')}
-        </div>
-        <label style="display:inline-flex;align-items:center;gap:.4rem;cursor:pointer;padding:.4rem .8rem;border-radius:20px;border:1.5px dashed rgba(139,115,85,.45);color:var(--warm);font-size:.88rem;font-family:'Cormorant Garamond',serif;">
-          <span class="nino-foto-lbl" data-flbl="${i}">📷 Añadir foto</span>
-          <input type="file" accept="image/*" class="nino-foto-inp" data-fni="${i}" style="display:none;" multiple>
-        </label>
-      </div>
-    </div>`;
+  const fotosHtml = fichasFormFotos.map((url,j)=>`
+    <div style="position:relative;">
+      <img src="${url}" style="width:80px;height:80px;object-fit:cover;border-radius:6px;border:1px solid rgba(0,0,0,.12);">
+      <button class="ficha-foto-del" data-fj="${j}" style="position:absolute;top:-5px;right:-5px;background:#c00;color:#fff;border:none;border-radius:50%;width:18px;height:18px;font-size:10px;cursor:pointer;line-height:1;padding:0;">✕</button>
+    </div>`).join('');
 
   c.innerHTML = `
     <div class="ficha-view" style="padding:1.25rem;max-width:520px;margin:0 auto;">
@@ -2913,15 +2899,17 @@ function renderFichaFormStep3(c){
       </div>
       ${fichaStepperHtml(3)}
       <div class="ficha-wizard-hdr">
-        <div class="ficha-wizard-title">Imágenes</div>
-        <div class="ficha-wizard-sub">Opcional · fotos por niño para incluir en el PDF</div>
+        <div class="ficha-wizard-title">Fotos de telas y modelos</div>
+        <div class="ficha-wizard-sub">Opcional · se incluirán en el PDF</div>
       </div>
-      <div style="margin-top:.9rem;">
-        ${ninos.length
-          ? ninos.map((n,i)=>ninoFotoSec(n,i)).join('')
-          : `<div style="font-family:'Cormorant Garamond',serif;font-style:italic;color:var(--muted);text-align:center;padding:1.5rem 0;">Sin niños añadidos</div>`}
+      <div style="margin-top:.9rem;display:flex;flex-wrap:wrap;gap:.5rem;margin-bottom:.75rem;">
+        ${fotosHtml}
       </div>
-      <div class="ficha-form-actions" style="flex-wrap:wrap;gap:.5rem;margin-top:.5rem;">
+      <label id="fichaFotoLbl" style="display:inline-flex;align-items:center;gap:.4rem;cursor:pointer;padding:.5rem 1rem;border-radius:20px;border:1.5px dashed rgba(139,115,85,.45);color:var(--warm);font-size:.9rem;font-family:'Cormorant Garamond',serif;">
+        <span id="fichaFotoLblTxt">📷 Añadir fotos</span>
+        <input type="file" accept="image/*" id="fichaFotoInp" style="display:none;" multiple>
+      </label>
+      <div class="ficha-form-actions" style="flex-wrap:wrap;gap:.5rem;margin-top:1.25rem;">
         <button class="ficha-cancel-btn" id="fichaCancelS3">Cancelar</button>
         <button class="ficha-save-btn" id="fichaSave">💾 Guardar</button>
       </div>
@@ -2931,33 +2919,28 @@ function renderFichaFormStep3(c){
   c.querySelector('#fichaCancelS3').addEventListener('click',()=>{fichasEditId=null;fichasViewState='list';renderFichasList(c);});
 
   // Upload fotos
-  c.querySelectorAll('.nino-foto-inp').forEach(inp=>{
-    inp.addEventListener('change', async () => {
-      const idx = parseInt(inp.dataset.fni);
-      const lbl = c.querySelector(`[data-flbl="${idx}"]`);
-      if(!inp.files?.length) return;
-      if(lbl) lbl.textContent = 'Subiendo…';
-      const fichaId = fichasEditId || (fichasNewId || (fichasNewId = 'f_' + Date.now()));
-      try {
-        for(const file of Array.from(inp.files)){
-          const url = await uploadNinoFoto(file, fichaId);
-          if(!fichasFormNinos[idx].fotos) fichasFormNinos[idx].fotos = [];
-          fichasFormNinos[idx].fotos.push(url);
-        }
-        renderFichaFormStep3(c);
-      } catch(e) {
-        toast('Error subiendo foto: ' + e.message, true);
-        if(lbl) lbl.textContent = '📷 Añadir foto';
+  c.querySelector('#fichaFotoInp').addEventListener('change', async (e) => {
+    if(!e.target.files?.length) return;
+    const lbl = c.querySelector('#fichaFotoLblTxt');
+    lbl.textContent = 'Subiendo…';
+    const fichaId = fichasEditId || (fichasNewId || (fichasNewId = 'f_' + Date.now()));
+    try {
+      for(const file of Array.from(e.target.files)){
+        const url = await uploadNinoFoto(file, fichaId);
+        fichasFormFotos.push(url);
       }
-      inp.value = '';
-    });
+      renderFichaFormStep3(c);
+    } catch(err) {
+      toast('Error subiendo foto: ' + err.message, true);
+      lbl.textContent = '📷 Añadir fotos';
+    }
+    e.target.value = '';
   });
 
   // Borrar foto
-  c.querySelectorAll('.nino-foto-del').forEach(btn=>{
+  c.querySelectorAll('.ficha-foto-del').forEach(btn=>{
     btn.addEventListener('click',()=>{
-      const fi=parseInt(btn.dataset.dfi), fj=parseInt(btn.dataset.dfj);
-      fichasFormNinos[fi].fotos.splice(fj,1);
+      fichasFormFotos.splice(parseInt(btn.dataset.fj),1);
       renderFichaFormStep3(c);
     });
   });
@@ -2977,7 +2960,6 @@ function renderFichaFormStep3(c){
       renderFichasList(c); renderMedidasTab();
     } catch(e){ saveBtn.disabled=false; saveBtn.textContent='💾 Guardar'; toast('Error al guardar: '+e.message); }
   });
-
 }
 
 // ── ASOCIAR PEDIDO MODAL ──
@@ -3254,18 +3236,15 @@ async function downloadFichaPDF(ficha, titulo, fechaEvStr, filenameOverride, htm
       '</div>' : '');
 
   // Sección de fotos (pre-fetch como data URLs para que html2pdf las embeba)
-  const ninosConFotos = ficha.ninos.filter(n=>n.fotos&&n.fotos.length);
-  if(ninosConFotos.length){
-    let fotosHtml = '<div class="fotos-page"><div class="section-title">Fotos</div>';
-    for(const n of ninosConFotos){
-      fotosHtml += `<div class="fotos-nino"><div class="fotos-nino-name">${esc(n.nombre||'—')}</div><div class="fotos-grid">`;
-      for(const url of n.fotos){
-        const dataUrl = await fetchAsDataUrl(url);
-        if(dataUrl) fotosHtml += `<img src="${dataUrl}" alt="">`;
-      }
-      fotosHtml += '</div></div>';
+  const fotosUrls = ficha.fotos?.length ? ficha.fotos
+    : ficha.ninos.flatMap(n=>n.fotos||[]); // compatibilidad con datos legacy
+  if(fotosUrls.length){
+    let fotosHtml = '<div class="fotos-page"><div class="section-title">Fotos de telas y modelos</div><div class="fotos-grid">';
+    for(const url of fotosUrls){
+      const dataUrl = await fetchAsDataUrl(url);
+      if(dataUrl) fotosHtml += `<img src="${dataUrl}" alt="">`;
     }
-    fotosHtml += '</div>';
+    fotosHtml += '</div></div>';
     bodyHTML += fotosHtml;
   }
 
@@ -3437,6 +3416,10 @@ function renderFichaDetail(c, fichaId){
     fichasFormTelefono = ficha.telefono||'';
     fichasFormEmail = ficha.email||'';
     fichasFormNumeroPedido = ficha.numeroPedido||'';
+    fichasFormFotos = [
+      ...(ficha.fotos||[]),
+      ...ficha.ninos.flatMap(n=>n.fotos||[]) // migrar fotos legacy por niño
+    ];
     fichasFormNinos = ficha.ninos.map(n=>({
       id: n.id,
       nombre: n.nombre||'',
@@ -3448,9 +3431,7 @@ function renderFichaDetail(c, fichaId){
       tela: n.tela||'',
       descripcion: n.descripcion||'',
       medidasOpen: false,
-      medidas: {...(n.medidas||{})},
-      fotoOpen: !!(n.fotos&&n.fotos.length),
-      fotos: [...(n.fotos||[])]
+      medidas: {...(n.medidas||{})}
     }));
     fichasViewState='new';
     renderFichaFormStep1(c);
