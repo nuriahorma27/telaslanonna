@@ -2586,14 +2586,46 @@ async function uploadNinoFoto(blob, fichaId) {
   const path = `fichas/${fichaId}/${Date.now()}-${Math.random().toString(36).slice(2,5)}.jpg`;
   return await uploadPhoto(resized, path);
 }
+function withTimeout(promise, ms, message) {
+  let timer = null;
+  const timeoutPromise = new Promise((_, reject) => {
+    timer = setTimeout(() => reject(new Error(message || 'Operación agotada por tiempo')), ms);
+  });
+  return Promise.race([promise, timeoutPromise]).finally(() => {
+    if (timer) clearTimeout(timer);
+  });
+}
+async function fetchBlobWithTimeout(url, ms=12000) {
+  const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
+  const timer = controller ? setTimeout(() => controller.abort(), ms) : null;
+  try {
+    const res = await fetch(url, controller ? { signal: controller.signal } : undefined);
+    if(!res.ok) throw new Error(`HTTP ${res.status}`);
+    return await res.blob();
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
+}
 async function fetchAsDataUrl(url, options={}) {
   try {
-    const res = await fetch(url);
-    let blob = await res.blob();
+    let blob = await fetchBlobWithTimeout(url, options.timeoutMs || 12000);
     if(options.maxPx){
-      blob = await resizeImageForUpload(blob, options.maxPx, options.quality ?? 0.72);
+      blob = await withTimeout(
+        resizeImageForUpload(blob, options.maxPx, options.quality ?? 0.72),
+        options.resizeTimeoutMs || 12000,
+        'Tiempo agotado al redimensionar la imagen'
+      );
     }
-    return await new Promise(r => { const rd = new FileReader(); rd.onload = () => r(rd.result); rd.readAsDataURL(blob); });
+    return await withTimeout(
+      new Promise((resolve, reject) => {
+        const rd = new FileReader();
+        rd.onload = () => resolve(rd.result);
+        rd.onerror = () => reject(new Error('No se pudo leer la imagen'));
+        rd.readAsDataURL(blob);
+      }),
+      options.readTimeoutMs || 8000,
+      'Tiempo agotado al convertir la imagen'
+    );
   } catch(e) { return ''; }
 }
 
@@ -3275,13 +3307,13 @@ async function renderHtmlToPdfBase64(htmlContent, filename, lightMode=false){
     },
     jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait', compress: true }
   }).from(htmlContent, 'string').toPdf();
-  const pdf = await worker.get('pdf');
+  const pdf = await withTimeout(worker.get('pdf'), lightMode ? 20000 : 30000, 'Tiempo agotado al generar el PDF');
   const blob = pdf.output('blob');
-  return await blobToBase64(blob);
+  return await withTimeout(blobToBase64(blob), 8000, 'Tiempo agotado al convertir el PDF');
 }
 async function savePdfFromHtml(htmlContent, filename, lightMode=false){
   if(typeof html2pdf === 'undefined') throw new Error('html2pdf no está disponible');
-  await html2pdf().set({
+  await withTimeout(html2pdf().set({
     margin: 0,
     filename: filename + '.pdf',
     image: { type: 'jpeg', quality: lightMode ? 0.86 : 0.92 },
@@ -3292,12 +3324,13 @@ async function savePdfFromHtml(htmlContent, filename, lightMode=false){
       backgroundColor: '#ffffff'
     },
     jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait', compress: true }
-  }).from(htmlContent, 'string').save();
+  }).from(htmlContent, 'string').save(), lightMode ? 25000 : 35000, 'Tiempo agotado al guardar el PDF');
 }
 async function generatePDFBase64(ficha, titulo, fechaEvStr, filename) {
   const attempts = [
     { skipPhotos:false, lightMode:true, photoMaxPx:1100, photoQuality:0.72 },
-    { skipPhotos:false, lightMode:true, photoMaxPx:800, photoQuality:0.58 }
+    { skipPhotos:false, lightMode:true, photoMaxPx:800, photoQuality:0.58 },
+    { skipPhotos:true, lightMode:true }
   ];
   let lastError = null;
   for(const attempt of attempts){
@@ -3437,9 +3470,20 @@ async function downloadFichaPDF(ficha, titulo, fechaEvStr, filenameOverride, htm
   // Fetch logo as embedded data URL so it works in the about:blank window
   let logoDataUrl = '';
   try {
-    const logoRes = await fetch(window.location.origin + (window.location.pathname.replace(/\/[^/]*$/, '') || '') + '/nonna.png');
-    const logoBlob = await logoRes.blob();
-    logoDataUrl = await new Promise(r => { const fr = new FileReader(); fr.onload = () => r(fr.result); fr.readAsDataURL(logoBlob); });
+    const logoBlob = await fetchBlobWithTimeout(
+      window.location.origin + (window.location.pathname.replace(/\/[^/]*$/, '') || '') + '/nonna.png',
+      8000
+    );
+    logoDataUrl = await withTimeout(
+      new Promise((resolve, reject) => {
+        const fr = new FileReader();
+        fr.onload = () => resolve(fr.result);
+        fr.onerror = () => reject(new Error('No se pudo leer el logo'));
+        fr.readAsDataURL(logoBlob);
+      }),
+      5000,
+      'Tiempo agotado al preparar el logo'
+    );
   } catch(e) {}
   const numNinas = ficha.ninos.filter(n=>n.sexo==='nina').length;
   const numNinos = ficha.ninos.filter(n=>n.sexo==='nino').length;
@@ -3561,7 +3605,13 @@ async function downloadFichaPDF(ficha, titulo, fechaEvStr, filenameOverride, htm
   if(!skipPhotos && fotosUrls.length){
     let fotosHtml = '<div class="fotos-page"><div class="section-title">Fotos de telas y modelos</div><div class="fotos-grid">';
     for(const url of fotosUrls){
-      const dataUrl = await fetchAsDataUrl(url, {maxPx: photoMaxPx, quality: photoQuality});
+      const dataUrl = await fetchAsDataUrl(url, {
+        maxPx: photoMaxPx,
+        quality: photoQuality,
+        timeoutMs: 12000,
+        resizeTimeoutMs: 12000,
+        readTimeoutMs: 8000
+      });
       if(dataUrl) fotosHtml += `<div class="fotos-item"><div class="fotos-frame"><img src="${dataUrl}" alt=""></div></div>`;
     }
     fotosHtml += '</div></div>';
