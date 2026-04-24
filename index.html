@@ -384,15 +384,16 @@ header{height:var(--header-h);padding:0 1.2rem;display:flex;align-items:center;j
 .fp-search-wrap{padding:.65rem 1rem .25rem;}
 .fp-search-inp{width:100%;padding:.55rem .9rem;border:1.5px solid var(--border);border-radius:8px;background:rgba(255,255,255,.7);font-family:'Cormorant Garamond',serif;font-size:1rem;color:var(--dark);transition:border-color .2s;}
 .fp-search-inp:focus{outline:none;border-color:var(--accent);}
-.fp-groups{display:flex;flex-direction:column;gap:.4rem;padding:.7rem 1rem;}
-.fp-month-hdr{width:100%;display:flex;align-items:center;gap:.5rem;padding:.5rem .85rem;background:rgba(255,255,255,.55);border:1px solid rgba(212,201,184,.45);border-radius:8px;cursor:pointer;font-family:'Cormorant Garamond',serif;font-size:.95rem;color:var(--warm);text-align:left;transition:all .15s;}
-.fp-month-hdr:hover{border-color:var(--accent);}
-.fp-month-hdr.open{border-radius:8px 8px 0 0;border-bottom-color:rgba(200,169,110,.2);}
-.fp-month-label{flex:1;font-style:italic;letter-spacing:.03em;}
-.fp-month-count{font-size:.8rem;color:var(--muted);}
-.fp-month-chevron{font-size:.75rem;color:var(--muted);transition:transform .2s;}
+.fp-groups{display:flex;flex-direction:column;gap:.7rem;padding:.8rem 1rem 1rem;}
+.fp-month-group{box-shadow:0 3px 12px rgba(72,50,24,.05);border-radius:12px;}
+.fp-month-hdr{width:100%;display:flex;align-items:center;gap:.65rem;padding:.72rem 1rem;background:linear-gradient(135deg, rgba(200,169,110,.2) 0%, rgba(139,115,85,.12) 100%);border:1.5px solid rgba(200,169,110,.5);border-radius:12px;cursor:pointer;font-family:'Cormorant Garamond',serif;font-size:1.02rem;color:var(--warm);text-align:left;transition:all .18s;box-shadow:inset 0 1px 0 rgba(255,255,255,.5);}
+.fp-month-hdr:hover{border-color:var(--accent);background:linear-gradient(135deg, rgba(200,169,110,.28) 0%, rgba(139,115,85,.16) 100%);}
+.fp-month-hdr.open{border-radius:12px 12px 0 0;border-bottom-color:rgba(200,169,110,.18);background:linear-gradient(135deg, rgba(200,169,110,.32) 0%, rgba(139,115,85,.18) 100%);}
+.fp-month-label{flex:1;font-style:italic;letter-spacing:.04em;font-size:1.1rem;font-weight:600;color:var(--dark);}
+.fp-month-count{font-size:.86rem;color:#6f5a45;font-weight:600;letter-spacing:.02em;}
+.fp-month-chevron{font-size:.9rem;color:var(--warm);transition:transform .2s;}
 .fp-month-hdr.open .fp-month-chevron{transform:rotate(90deg);}
-.fp-month-body{border:1px solid rgba(212,201,184,.4);border-top:none;border-radius:0 0 8px 8px;overflow:hidden;}
+.fp-month-body{border:1.5px solid rgba(212,201,184,.45);border-top:none;border-radius:0 0 12px 12px;overflow:hidden;background:rgba(255,255,255,.45);}
 .fp-month-body .fp-item{border-radius:0;border:none;border-bottom:1px solid rgba(212,201,184,.2);box-shadow:none;}
 .fp-month-body .fp-item:last-child{border-bottom:none;}
 /* Tarjeta de ficha en lista */
@@ -516,6 +517,11 @@ input[type="date"].ficha-big-inp{font-size:1.15rem;padding:.88rem 1rem;}
 .fd-medidas-toggle-btn{padding:.38rem .85rem;background:none;border:1px solid rgba(74,112,88,.3);border-radius:20px;cursor:pointer;color:var(--lino);font-family:'Cormorant Garamond',serif;font-size:.9rem;font-style:italic;transition:all .15s;}
 .fd-medidas-toggle-btn:hover{background:rgba(74,112,88,.08);border-color:rgba(74,112,88,.45);}
 .fd-medidas-toggle-btn.is-active{background:rgba(74,112,88,.12);}
+.fd-fotos-block{margin-top:.9rem;padding:.95rem 1rem;background:rgba(255,255,255,.55);border:1px solid rgba(212,201,184,.45);border-radius:10px;}
+.fd-fotos-title{font-family:'Cormorant Garamond',serif;font-size:1rem;font-style:italic;color:var(--warm);margin-bottom:.65rem;}
+.fd-fotos-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:.65rem;}
+.fd-foto-link{display:block;border-radius:10px;overflow:hidden;background:#fcfaf7;border:1px solid rgba(212,201,184,.5);box-shadow:0 2px 8px rgba(0,0,0,.05);}
+.fd-foto-link img{display:block;width:100%;height:180px;object-fit:cover;}
 .ficha-detail-actions{display:flex;justify-content:flex-end;padding-top:.6rem;border-top:1px solid rgba(212,201,184,.35);margin-top:.2rem;}
 .ficha-del-btn{padding:.4rem .9rem;background:none;border:1px solid rgba(176,64,64,.3);border-radius:20px;cursor:pointer;color:#b04040;font-family:'Cormorant Garamond',serif;font-size:.88rem;font-style:italic;transition:all .15s;}
 .ficha-del-btn:hover{background:#b04040;color:#fff;border-color:#b04040;}
@@ -787,7 +793,7 @@ input[type="date"].ficha-big-inp{font-size:1.15rem;padding:.88rem 1rem;}
           <div class="fichas-subtab-nested-group" id="fichas-con-pedido-group" style="display:none;">
             <button class="fichas-subtab-nested" data-ficha-filter="con-pedido-todos">↳ Todos</button>
             <button class="fichas-subtab-nested" data-ficha-filter="con-pedido-con-medidas">↳ Con medidas</button>
-            <button class="fichas-subtab-nested" data-ficha-filter="con-pedido-sin-medidas">↳ Sin medidas</button>
+            <button class="fichas-subtab-nested" data-ficha-filter="con-pedido-sin-medidas">↳ Sin medidas completas</button>
           </div>
         </div>
       </div>
@@ -2615,10 +2621,10 @@ function getFilteredFichas(){
     
     if(fichasFilter === 'con-pedido' || fichasFilter === 'con-pedido-todos') return true;
     
-    const hasMeasures = getFichaMeasureState(f).hasAny;
+    const measureState = getFichaMeasureState(f);
     
-    if(fichasFilter === 'con-pedido-sin-medidas') return !hasMeasures;
-    if(fichasFilter === 'con-pedido-con-medidas') return hasMeasures;
+    if(fichasFilter === 'con-pedido-sin-medidas') return !measureState.isCompleted;
+    if(fichasFilter === 'con-pedido-con-medidas') return measureState.isCompleted;
     
     return true;
   });
@@ -3307,10 +3313,7 @@ function computeCambios(oldFicha, newFicha) {
 async function sendFichaEmail(ficha, titulo, fechaEvStr, isModification, cambios='') {
   const num = ficha.numeroPedido;
   const safeName = (ficha.nombre||'cliente').replace(/[^a-zA-Z0-9áéíóúüñÁÉÍÓÚÜÑ \-]/g,'').trim();
-  // Filename: "Nombre - dd-mm-yyyy - pedido X" (no prefix, no "Modificación")
-  const fechaPart = ficha.fechaEvento ? ' - ' + ficha.fechaEvento.split('-').reverse().join('-') : '';
-  const numPart   = num ? ' - pedido ' + num : '';
-  const filename  = `${safeName}${fechaPart}${numPart}`;
+  const filename  = `PDF resumen cita - ${safeName || 'cliente'}`;
   const pdfBase64 = await generatePDFBase64(ficha, titulo, fechaEvStr, filename);
   const res = await fetch(N8N_WEBHOOK_URL, {
     method: 'POST',
@@ -3321,9 +3324,9 @@ async function sendFichaEmail(ficha, titulo, fechaEvStr, isModification, cambios
       filename: filename,
       fichaId: ficha.id || '',
       pdfBase64: pdfBase64,
-      isModification: !!isModification,
+      isModification: false,
       fechaEvento: ficha.fechaEvento ? ficha.fechaEvento.split('-').reverse().join('/') : '',
-      cambios: cambios || ''
+      cambios: ''
     })
   });
   if (!res.ok) throw new Error(`Webhook error ${res.status}`);
@@ -3448,6 +3451,7 @@ async function downloadFichaPDF(ficha, titulo, fechaEvStr, filenameOverride, htm
     '.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:.3em .8em;}',
     '.info-lbl{font-size:.68rem;text-transform:uppercase;letter-spacing:.08em;color:#4a3f34;font-weight:600;display:block;margin-bottom:.08em;}',
     '.info-val{font-size:1rem;color:#1a1612;font-weight:400;}',
+    '.info-val.email{word-break:normal;overflow-wrap:anywhere;}',
     '.totals{display:flex;align-items:center;gap:.6em;margin-top:.7em;padding:.5em .7em;background:#f5f0e8;border-radius:6px;font-size:.92rem;border:1px solid #d4c9b8;}',
     '.circle{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.88rem;font-weight:700;flex-shrink:0;}',
     '.circle-nina{background:rgba(180,100,140,.2);color:#8a3060;border:2px solid rgba(180,100,140,.5);}',
@@ -3469,7 +3473,8 @@ async function downloadFichaPDF(ficha, titulo, fechaEvStr, filenameOverride, htm
     '.fotos-page{page-break-before:always;margin-top:1.5em;}',
     '.fotos-grid{display:flex;flex-wrap:wrap;gap:.6em;}',
     '.fotos-item{page-break-inside:avoid;break-inside:avoid;flex:0 0 calc(50% - .3em);max-width:calc(50% - .3em);display:flex;align-items:flex-start;}',
-    '.fotos-item img{width:100%;max-height:240px;object-fit:contain;border-radius:6px;border:1px solid #d4c9b8;display:block;}'
+    '.fotos-frame{width:100%;height:240px;display:flex;align-items:center;justify-content:center;padding:.35em;background:#fcfaf7;border:1px solid #d4c9b8;border-radius:6px;overflow:hidden;}',
+    '.fotos-frame img{max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain;object-position:center;display:block;border-radius:4px;}'
   ].join('\n');
 
   let bodyHTML =
@@ -3488,7 +3493,7 @@ async function downloadFichaPDF(ficha, titulo, fechaEvStr, filenameOverride, htm
     ((ficha.telefono||ficha.email) ?
       '<div class="section"><div class="section-title">Contacto</div><div class="info-grid">' +
         (ficha.telefono ? '<div><span class="info-lbl">Teléfono</span><span class="info-val">'+esc(ficha.telefono)+'</span></div>' : '') +
-        (ficha.email    ? '<div><span class="info-lbl">Email</span><span class="info-val">'+esc(ficha.email)+'</span></div>' : '') +
+        (ficha.email    ? '<div><span class="info-lbl">Email</span><span class="info-val email">'+esc(ficha.email)+'</span></div>' : '') +
       '</div></div>' : '') +
     (totalN ?
       '<div class="section"><div class="section-title">Niños (' + totalN + ' en total)</div>' +
@@ -3507,7 +3512,7 @@ async function downloadFichaPDF(ficha, titulo, fechaEvStr, filenameOverride, htm
     let fotosHtml = '<div class="fotos-page"><div class="section-title">Fotos de telas y modelos</div><div class="fotos-grid">';
     for(const url of fotosUrls){
       const dataUrl = await fetchAsDataUrl(url, {maxPx: photoMaxPx, quality: photoQuality});
-      if(dataUrl) fotosHtml += `<div class="fotos-item"><img src="${dataUrl}" alt=""></div>`;
+      if(dataUrl) fotosHtml += `<div class="fotos-item"><div class="fotos-frame"><img src="${dataUrl}" alt=""></div></div>`;
     }
     fotosHtml += '</div></div>';
     bodyHTML += fotosHtml;
@@ -3602,6 +3607,17 @@ function renderFichaDetail(c, fichaId){
   const numNinas = ficha.ninos.filter(n=>n.sexo==='nina').length;
   const numNinosC = ficha.ninos.filter(n=>n.sexo==='nino').length;
   const totalN = numNinas + numNinosC;
+  const fotosDetalle = ficha.fotos?.length ? ficha.fotos : ficha.ninos.flatMap(n=>n.fotos||[]);
+  const fotosDetalleHtml = fotosDetalle.length
+    ? `<div class="fd-fotos-block">
+         <div class="fd-fotos-title">Fotos de telas y modelos</div>
+         <div class="fd-fotos-grid">
+           ${fotosDetalle.map((url,i)=>`<a class="fd-foto-link" href="${url}" target="_blank" rel="noopener noreferrer" title="Abrir foto ${i+1}">
+             <img src="${url}" alt="Foto ${i+1}">
+           </a>`).join('')}
+         </div>
+       </div>`
+    : '';
 
   // Remove any existing detail modal
   document.getElementById('fichaDetailModal')?.remove();
@@ -3637,7 +3653,7 @@ function renderFichaDetail(c, fichaId){
             </div>`:''}
             ${ficha.email?`<div>
               <span style="font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:.1rem;">Email</span>
-              <span style="font-family:'Cormorant Garamond',serif;color:var(--dark);font-size:.92rem;word-break:break-all;">${escF(ficha.email)}</span>
+              <span style="font-family:'Cormorant Garamond',serif;color:var(--dark);font-size:.92rem;word-break:normal;overflow-wrap:anywhere;">${escF(ficha.email)}</span>
             </div>`:''}
           </div>
           <div class="fd-medidas-toolbar">
@@ -3659,6 +3675,7 @@ function renderFichaDetail(c, fichaId){
         ${ficha.ninos.length
           ? ficha.ninos.map((n,i)=>ninoCard(n,i)).join('')
           : `<div style="text-align:center;padding:1.5rem;font-family:'Cormorant Garamond',serif;font-style:italic;color:var(--muted);">Sin niños añadidos · pulsa Editar para añadir</div>`}
+        ${fotosDetalleHtml}
         <div class="ficha-detail-actions" style="justify-content:space-between;">
           <button class="ficha-del-btn" id="fichaDelBtn">Eliminar ficha</button>
           <button class="ficha-save-btn" id="fichaDetailEnviarBtn" style="background:linear-gradient(135deg,#8b7355,#c8a96e);color:#fff;border:none;padding:.4rem 1.1rem;border-radius:20px;font-size:.9rem;">📨 Enviar email</button>
