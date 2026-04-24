@@ -3402,6 +3402,7 @@ async function generatePDFBase64(ficha, titulo, fechaEvStr, filename) {
   const attempts = [
     { skipPhotos:false, lightMode:true, photoMaxPx: mobileLite ? 560 : 1100, photoQuality: mobileLite ? 0.46 : 0.72 },
     { skipPhotos:false, lightMode:true, photoMaxPx: mobileLite ? 420 : 800, photoQuality: mobileLite ? 0.34 : 0.58 },
+    { skipPhotos:false, lightMode:true, photoMaxPx: mobileLite ? 320 : 560, photoQuality: mobileLite ? 0.26 : 0.42 },
     { skipPhotos:true, lightMode:true }
   ];
   let lastError = null;
@@ -3409,7 +3410,12 @@ async function generatePDFBase64(ficha, titulo, fechaEvStr, filename) {
     try{
       const fullHtml = await downloadFichaPDF(ficha, titulo, fechaEvStr, filename, true, attempt);
       const htmlContent = buildPdfHtmlForEmail(fullHtml);
-      return await renderHtmlToPdfBase64(htmlContent, filename, attempt.lightMode);
+      const pdfBase64 = await renderHtmlToPdfBase64(htmlContent, filename, attempt.lightMode);
+      const approxBytes = Math.ceil((pdfBase64.length * 3) / 4);
+      if(isLikelyMobilePdfDevice() && approxBytes > 2.8 * 1024 * 1024){
+        throw new Error(`PDF demasiado grande para móvil (${Math.round(approxBytes/1024)} KB)`);
+      }
+      return pdfBase64;
     } catch(e){
       lastError = e;
       console.warn('Fallo generando PDF', attempt, e);
@@ -3470,26 +3476,46 @@ async function sendFichaEmail(ficha, titulo, fechaEvStr, isModification, cambios
   const safeName = (ficha.nombre||'cliente').replace(/[^a-zA-Z0-9áéíóúüñÁÉÍÓÚÜÑ \-]/g,'').trim();
   const filename  = `PDF resumen cita - ${safeName || 'cliente'}`;
   const pdfBase64 = await generatePDFBase64(ficha, titulo, fechaEvStr, filename);
+  const payload = {
+    nombre: ficha.nombre || titulo,
+    numeroPedido: num,
+    filename: filename,
+    fichaId: ficha.id || '',
+    pdfBase64: pdfBase64,
+    isModification: !!isModification,
+    fechaEvento: ficha.fechaEvento ? ficha.fechaEvento.split('-').reverse().join('/') : '',
+    cambios: cambios || ''
+  };
   const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
   const timer = controller ? setTimeout(() => controller.abort(), 25000) : null;
   const res = await fetch(N8N_WEBHOOK_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     signal: controller ? controller.signal : undefined,
-    body: JSON.stringify({
-      nombre: ficha.nombre || titulo,
-      numeroPedido: num,
-      filename: filename,
-      fichaId: ficha.id || '',
-      pdfBase64: pdfBase64,
-      isModification: false,
-      fechaEvento: ficha.fechaEvento ? ficha.fechaEvento.split('-').reverse().join('/') : '',
-      cambios: ''
-    })
+    body: JSON.stringify(payload)
   }).finally(() => {
     if (timer) clearTimeout(timer);
   });
-  if (!res.ok) throw new Error(`Webhook error ${res.status}`);
+  const rawText = await res.text().catch(() => '');
+  if (!res.ok) {
+    throw new Error(`Webhook error ${res.status}${rawText ? `: ${rawText.slice(0,180)}` : ''}`);
+  }
+  const contentType = res.headers.get('content-type') || '';
+  if(contentType.includes('application/json') && rawText){
+    try{
+      const data = JSON.parse(rawText);
+      if(data && (data.ok === false || data.success === false || data.error)){
+        throw new Error(data.error || data.message || 'n8n devolvió error');
+      }
+    } catch(e){
+      if(e instanceof SyntaxError){
+        // respuesta no JSON válida aunque declare content-type; no bloqueamos si fue 200
+      } else {
+        throw e;
+      }
+    }
+  }
+  return { ok:true, responseText: rawText };
 }
 
 function openAsocModal(ficha, titulo, fechaEvStr, c){
