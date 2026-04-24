@@ -3202,10 +3202,9 @@ async function downloadFichaPDF(ficha, titulo, fechaEvStr, filenameOverride, htm
     '.desc-box{font-size:.88rem;font-style:italic;color:#3a3028;padding:.35em .55em;background:#f5f0e8;border-left:2px solid #c8a96e;margin-bottom:.35em;}',
     '@media print{body{padding:.8cm 1.1cm;} @page{margin:.8cm 1.1cm;size:A4 portrait;}}',
     '.fotos-page{page-break-before:always;margin-top:1.5em;}',
-    '.fotos-nino{margin-bottom:1.2em;}',
-    '.fotos-nino-name{font-size:1.05rem;font-weight:600;color:#1a1612;border-bottom:1.5px solid #c8a96e;padding-bottom:.2em;margin-bottom:.5em;}',
-    '.fotos-grid{display:flex;flex-wrap:wrap;gap:.5em;}',
-    '.fotos-grid img{width:calc(50% - .25em);max-width:250px;height:auto;object-fit:contain;border-radius:6px;border:1px solid #d4c9b8;}'
+    '.fotos-grid{display:flex;flex-wrap:wrap;gap:.6em;}',
+    '.fotos-item{page-break-inside:avoid;break-inside:avoid;flex:0 0 calc(50% - .3em);max-width:calc(50% - .3em);display:flex;align-items:flex-start;}',
+    '.fotos-item img{width:100%;max-height:240px;object-fit:contain;border-radius:6px;border:1px solid #d4c9b8;display:block;}'
   ].join('\n');
 
   let bodyHTML =
@@ -3242,7 +3241,7 @@ async function downloadFichaPDF(ficha, titulo, fechaEvStr, filenameOverride, htm
     let fotosHtml = '<div class="fotos-page"><div class="section-title">Fotos de telas y modelos</div><div class="fotos-grid">';
     for(const url of fotosUrls){
       const dataUrl = await fetchAsDataUrl(url);
-      if(dataUrl) fotosHtml += `<img src="${dataUrl}" alt="">`;
+      if(dataUrl) fotosHtml += `<div class="fotos-item"><img src="${dataUrl}" alt=""></div>`;
     }
     fotosHtml += '</div></div>';
     bodyHTML += fotosHtml;
