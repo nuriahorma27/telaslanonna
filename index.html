@@ -2431,10 +2431,14 @@ function childHasCompleteMeasures(nino){
   if(required.every(k=>nino?.medidas?.[k]!=='' && nino?.medidas?.[k]!=null)) return true;
   return hasLegacyMeasureData(nino);
 }
+function fichaHasAllMeasuresComplete(ficha){
+  const ninos = ficha?.ninos || [];
+  return !!ninos.length && ninos.every(childHasCompleteMeasures);
+}
 function getFichaMeasureState(ficha){
   const ninos = ficha?.ninos || [];
   const hasAny = ficha?.medidasCompletadas || ninos.some(childHasAnyMeasures);
-  const allComplete = !!ninos.length && ninos.every(childHasCompleteMeasures);
+  const allComplete = fichaHasAllMeasuresComplete(ficha);
   const showWarning = hasAny && !ficha?.medidasCompletadas && !allComplete;
   return {
     hasAny,
@@ -2890,7 +2894,7 @@ function renderFichaFormStep1(c){
 function buildFichaFromForm() {
   const isEdit = !!fichasEditId;
   const existing = isEdit ? fichasData.find(f=>f.id===fichasEditId) : null;
-  return {
+  const ficha = {
     id: isEdit ? fichasEditId : (fichasNewId || (fichasNewId = 'f_'+Date.now())),
     createdAt: isEdit ? existing.createdAt : new Date().toISOString(),
     nombre: fichasFormName.trim(),
@@ -2908,6 +2912,8 @@ function buildFichaFromForm() {
       medidas:{...n.medidas}
     }))
   };
+  if(fichaHasAllMeasuresComplete(ficha)) ficha.medidasCompletadas = true;
+  return ficha;
 }
 function getFichaTitulos(ficha) {
   const d = new Date(ficha.createdAt);
@@ -3663,8 +3669,8 @@ function renderFichaDetail(c, fichaId){
               <span class="fp-measure-badge ${measureBadge.cls}">${measureBadge.cls==='warning'?'⚠ ':''}${measureBadge.text}</span>
               ${measureState.showWarning?'<span style="font-family:\'Cormorant Garamond\',serif;font-size:.88rem;font-style:italic;color:#b04040;">Faltan medidas por completar</span>':''}
             </div>
-            <button class="fd-medidas-toggle-btn${ficha.medidasCompletadas?' is-active':''}" id="fichaMedidasCompleteBtn">
-              ${ficha.medidasCompletadas?'✓ Medidas completadas':'Marcar medidas completadas'}
+            <button class="fd-medidas-toggle-btn${measureState.isCompleted?' is-active':''}" id="fichaMedidasCompleteBtn">
+              ${measureState.isCompleted?'✓ Medidas completadas':'Marcar medidas completadas'}
             </button>
           </div>
           ${totalN?`<div style="display:flex;align-items:center;gap:.55rem;margin-top:.65rem;padding-top:.6rem;border-top:1px solid rgba(212,201,184,.4);">
