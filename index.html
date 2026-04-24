@@ -3311,17 +3311,20 @@ function isLikelyMobilePdfDevice(){
   return isIOS || /Android/i.test(ua) || (touch && Math.min(window.innerWidth, window.innerHeight) <= 1024);
 }
 function createPdfRenderNode(htmlContent){
+  // Wrapper clips content visually (0×0 with overflow:hidden) so user sees nothing.
+  // The host inside has NO left offset — critical because html2pdf clones the host's
+  // inline styles and only overrides "position:relative"; if left:-20000px were present
+  // on the clone it would render 20 000px off-canvas, producing a blank PDF.
+  const wrap = document.createElement('div');
+  wrap.style.cssText = 'position:absolute;top:0;left:0;width:0;height:0;overflow:hidden;pointer-events:none;z-index:-1;';
   const host = document.createElement('div');
-  host.style.position = 'fixed';
-  host.style.left = '-20000px';
-  host.style.top = '0';
-  host.style.width = '794px';
-  host.style.background = '#fff';
-  host.style.zIndex = '-1';
-  host.style.pointerEvents = 'none';
+  host.style.cssText = 'position:absolute;top:0;left:0;width:794px;background:#fff;';
   host.setAttribute('aria-hidden', 'true');
   host.innerHTML = htmlContent;
-  document.body.appendChild(host);
+  wrap.appendChild(host);
+  document.body.appendChild(wrap);
+  // Override remove() so callers transparently clean up the wrapper
+  host.remove = () => wrap.remove();
   return host;
 }
 async function waitForPdfNodeAssets(node, timeoutMs=12000){
@@ -3352,7 +3355,10 @@ async function renderNodeToPdfBlob(node, filename, lightMode=false){
           logging: false,
           backgroundColor: '#ffffff',
           imageTimeout: 12000,
-          removeContainer: true
+          removeContainer: true,
+          scrollX: 0,
+          scrollY: 0,
+          windowWidth: 794
         },
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait', compress: true }
       }).from(node).outputPdf('blob'),
