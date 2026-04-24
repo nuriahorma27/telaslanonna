@@ -1244,10 +1244,6 @@ function doLogin() {
     document.getElementById('loginError').textContent='Contraseña incorrecta';
     document.getElementById('loginPwd').select();
   }
-  .admin-fabric-row{align-items:flex-start;gap:.55rem;padding:.75rem .9rem;flex-wrap:wrap;}
-  .afname{white-space:normal;overflow:visible;text-overflow:unset;line-height:1.2;}
-  .afinfo{min-width:calc(100% - 52px);}
-  .af-badge{margin-left:calc(44px + .55rem);}
 }
 function openAdmin(){
   document.getElementById('adminPanel').classList.remove('hidden');
@@ -1761,11 +1757,10 @@ function showEditRow(code){
 const PAGE_SIZE = 4;
 let S={sel:null,mat:'',pat:'',grp:'',pages:{lino:0,lino_nico:0,velveton:0,algodon:0},filteredCount:12};
 
-// Supabase image transform for small thumbnails (2× @52px = 104px)
+// Use the public object URL directly; the render/image endpoint is returning 404.
 function thumbUrl(url){
   if(!url)return '';
-  try{return url.replace('/object/public/','/render/image/public/')+'?width=280&height=280&resize=cover&quality=75';}
-  catch(e){return url;}
+  return url;
 }
 
 async function loadFabricsMeta(){
@@ -1890,10 +1885,43 @@ async function renderGrid(){
   if(!totalFiltered){el.innerHTML='<div class="no-results">Sin resultados</div>';return;}
 
   function makeGiCard(f, matOverride){
-    const thumb=thumbUrl(f.image_url)||f.image_url||'';
+    const thumb=thumbUrl(f.image_url)||'';
+    const fallback=f.image_url||'';
     const div=document.createElement('div');
+    const wrap=document.createElement('div');
+    const spinner=document.createElement('div');
+    const img=document.createElement('img');
+    const code=document.createElement('div');
+
     div.className='gi'+(S.sel===f.code?' active':'');
-    div.innerHTML=`<div class="gi-img-wrap"><div class="gi-spinner"></div><img class="gi-img" src="${thumb}" decoding="async" loading="lazy" data-fallback="${escF(f.image_url)}" onload="this.classList.add('loaded');this.previousElementSibling.style.display='none';" onerror="if(this.src!==this.dataset.fallback){this.onerror=null;this.src=this.dataset.fallback;}else{this.classList.add('loaded');this.previousElementSibling.style.display='none';}" alt=""></div><div class="gi-code">${f.name||'Sin nombre'}</div>`;
+    wrap.className='gi-img-wrap';
+    spinner.className='gi-spinner';
+    img.className='gi-img';
+    img.decoding='async';
+    img.loading='lazy';
+    img.alt=f.name||'';
+    img.src=thumb||fallback;
+    img.dataset.fallback=fallback;
+    img.onload=()=>{
+      img.classList.add('loaded');
+      spinner.style.display='none';
+    };
+    img.onerror=()=>{
+      if(img.src!==img.dataset.fallback&&img.dataset.fallback){
+        img.src=img.dataset.fallback;
+        return;
+      }
+      img.classList.add('loaded');
+      spinner.style.display='none';
+    };
+
+    code.className='gi-code';
+    code.textContent=f.name||'Sin nombre';
+
+    wrap.appendChild(spinner);
+    wrap.appendChild(img);
+    div.appendChild(wrap);
+    div.appendChild(code);
     div.addEventListener('click',()=>openViewer(f, matOverride||f.material));
     return div;
   }
