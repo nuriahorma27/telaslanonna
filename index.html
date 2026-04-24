@@ -247,8 +247,6 @@ header{height:var(--header-h);padding:0 1.2rem;display:flex;align-items:center;j
 .afinfo{flex:1;min-width:0;}
 .afname{font-family:'Cormorant Garamond',serif;font-size:.95rem;color:var(--dark);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .afmeta{font-family:'Cormorant Garamond',serif;font-size:.78rem;color:var(--muted);font-style:italic;margin-top:.06rem;}
-.af-main{display:flex;align-items:center;gap:.65rem;flex:1;min-width:0;}
-.af-actions{display:flex;align-items:center;gap:.45rem;flex-wrap:wrap;justify-content:flex-end;}
 .af-badge{font-size:.75rem;font-family:'Cormorant Garamond',serif;font-style:italic;padding:.1rem .45rem;border-radius:20px;flex-shrink:0;}
 .af-badge.velveton{background:rgba(107,76,122,.1);color:var(--velveton);border:1px solid rgba(107,76,122,.25);}
 .af-badge.lino{background:rgba(74,112,88,.1);color:var(--lino);border:1px solid rgba(74,112,88,.25);}
@@ -1246,11 +1244,10 @@ function doLogin() {
     document.getElementById('loginError').textContent='Contraseña incorrecta';
     document.getElementById('loginPwd').select();
   }
-  .admin-fabric-row{align-items:flex-start;gap:.75rem;padding:.75rem .9rem;flex-wrap:wrap;}
-  .af-main{width:100%;align-items:flex-start;}
+  .admin-fabric-row{align-items:flex-start;gap:.55rem;padding:.75rem .9rem;flex-wrap:wrap;}
   .afname{white-space:normal;overflow:visible;text-overflow:unset;line-height:1.2;}
-  .af-actions{width:100%;padding-left:calc(44px + .75rem);justify-content:flex-start;}
-  .af-badge{order:-1;}
+  .afinfo{min-width:calc(100% - 52px);}
+  .af-badge{margin-left:calc(44px + .55rem);}
 }
 function openAdmin(){
   document.getElementById('adminPanel').classList.remove('hidden');
@@ -1543,20 +1540,16 @@ function renderAdminList(){
     // Get unique suggestion using render-local tracking
 
     row.innerHTML=`
-      <div class="af-main">
-        <img class="afthumb" src="${src}" alt="">
-        <div class="afinfo" style="min-width:0;flex:1;">
-          <div class="afname">${f.name||'Sin nombre'}${isHidden?' <span style="font-size:.5rem;color:var(--muted);">(oculta)</span>':''}</div>
-          <div class="afmeta">${ML[f.material]||'—'} · ${f.group||'—'}</div>
-        </div>
+      <img class="afthumb" src="${src}" alt="">
+      <div class="afinfo" style="min-width:0;flex:1;">
+        <div class="afname">${f.name||'Sin nombre'}${isHidden?' <span style="font-size:.5rem;color:var(--muted);">(oculta)</span>':''}</div>
+        <div class="afmeta">${ML[f.material]||'—'} · ${f.group||'—'}</div>
       </div>
-      <div class="af-actions">
-        <span class="af-badge ${badgeCls}">${badgeTxt}</span>
-        <label class="afphoto-btn" title="Cambiar foto">📷<input type="file" accept="image/*" data-code="${f.code}"></label>
-        <button class="afhide-btn ${isHidden?'is-hidden':''}" data-code="${f.code}">${isHidden?'👁 Mostrar':'Ocultar'}</button>
-        <button class="afedit-btn" data-code="${f.code}">Editar</button>
-        <button class="afdel-btn" data-code="${f.code}">✕</button>
-      </div>
+      <span class="af-badge ${badgeCls}">${badgeTxt}</span>
+      <label class="afphoto-btn" title="Cambiar foto">📷<input type="file" accept="image/*" data-code="${f.code}"></label>
+      <button class="afhide-btn ${isHidden?'is-hidden':''}" data-code="${f.code}">${isHidden?'👁 Mostrar':'Ocultar'}</button>
+      <button class="afedit-btn" data-code="${f.code}">Editar</button>
+      <button class="afdel-btn" data-code="${f.code}">✕</button>
     `;
 
 
