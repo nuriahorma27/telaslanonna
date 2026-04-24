@@ -369,6 +369,20 @@ header{height:var(--header-h);padding:0 1.2rem;display:flex;align-items:center;j
 .fp-empty{text-align:center;padding:3rem 1.5rem;color:var(--muted);font-family:'Cormorant Garamond',serif;font-style:italic;font-size:1.05rem;display:flex;flex-direction:column;align-items:center;gap:.75rem;}
 .fp-empty-icon{font-size:2.5rem;opacity:.35;}
 .fp-list{display:flex;flex-direction:column;gap:.75rem;padding:.9rem 1rem;}
+.fp-search-wrap{padding:.65rem 1rem .25rem;}
+.fp-search-inp{width:100%;padding:.55rem .9rem;border:1.5px solid var(--border);border-radius:8px;background:rgba(255,255,255,.7);font-family:'Cormorant Garamond',serif;font-size:1rem;color:var(--dark);transition:border-color .2s;}
+.fp-search-inp:focus{outline:none;border-color:var(--accent);}
+.fp-groups{display:flex;flex-direction:column;gap:.4rem;padding:.7rem 1rem;}
+.fp-month-hdr{width:100%;display:flex;align-items:center;gap:.5rem;padding:.5rem .85rem;background:rgba(255,255,255,.55);border:1px solid rgba(212,201,184,.45);border-radius:8px;cursor:pointer;font-family:'Cormorant Garamond',serif;font-size:.95rem;color:var(--warm);text-align:left;transition:all .15s;}
+.fp-month-hdr:hover{border-color:var(--accent);}
+.fp-month-hdr.open{border-radius:8px 8px 0 0;border-bottom-color:rgba(200,169,110,.2);}
+.fp-month-label{flex:1;font-style:italic;letter-spacing:.03em;}
+.fp-month-count{font-size:.8rem;color:var(--muted);}
+.fp-month-chevron{font-size:.75rem;color:var(--muted);transition:transform .2s;}
+.fp-month-hdr.open .fp-month-chevron{transform:rotate(90deg);}
+.fp-month-body{border:1px solid rgba(212,201,184,.4);border-top:none;border-radius:0 0 8px 8px;overflow:hidden;}
+.fp-month-body .fp-item{border-radius:0;border:none;border-bottom:1px solid rgba(212,201,184,.2);box-shadow:none;}
+.fp-month-body .fp-item:last-child{border-bottom:none;}
 /* Tarjeta de ficha en lista */
 .fp-item{background:#fff;border:1px solid rgba(212,201,184,.55);border-radius:14px;padding:1rem 1.1rem;cursor:pointer;transition:all .2s;box-shadow:0 2px 10px rgba(0,0,0,.06);}
 .fp-item:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.1);border-color:rgba(200,169,110,.4);}
@@ -392,6 +406,16 @@ header{height:var(--header-h);padding:0 1.2rem;display:flex;align-items:center;j
 .ficha-step-dots{display:flex;gap:.4rem;align-items:center;}
 .ficha-step-dot{width:8px;height:8px;border-radius:50%;background:var(--border);transition:background .2s;}
 .ficha-step-dot.active{background:var(--warm);width:22px;border-radius:4px;}
+.ficha-stepper{display:flex;align-items:center;gap:0;margin-bottom:.75rem;}
+.fstep-item{display:flex;flex-direction:column;align-items:center;gap:.2rem;min-width:0;}
+.fstep-circle{width:26px;height:26px;border-radius:50%;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-family:'Cormorant Garamond',serif;font-size:.85rem;font-weight:600;color:var(--muted);background:#fff;flex-shrink:0;transition:all .2s;}
+.fstep-circle.active{border-color:var(--warm);color:var(--warm);background:rgba(200,169,110,.1);}
+.fstep-circle.done{border-color:var(--warm);background:var(--warm);color:#fff;}
+.fstep-lbl{font-family:'Cormorant Garamond',serif;font-size:.7rem;color:var(--muted);white-space:nowrap;text-align:center;letter-spacing:.02em;}
+.fstep-lbl.active{color:var(--warm);font-weight:600;}
+.fstep-lbl.done{color:var(--warm);}
+.fstep-line{flex:1;height:2px;background:var(--border);margin:0 .3rem;margin-bottom:.9rem;min-width:.5rem;transition:background .2s;}
+.fstep-line.done{background:var(--warm);}
 .ficha-big-field{display:flex;flex-direction:column;gap:.45rem;}
 .ficha-big-lbl{font-family:'Cormorant Garamond',serif;font-size:.95rem;font-style:italic;color:var(--muted);letter-spacing:.02em;}
 .ficha-big-inp{width:100%;padding:.9rem 1rem;border:1.5px solid rgba(212,201,184,.7);border-radius:10px;background:#fff;color:var(--dark);font-family:'Cormorant Garamond',serif;font-size:1.2rem;transition:all .2s;}
@@ -2299,6 +2323,8 @@ let fichasFormEmail = '';
 let fichasFormNumeroPedido = '';
 let fichasEditId = null; // null = nueva ficha, string = editando ficha existente
 let fichasNewId = null;  // ID pre-generado para fichas nuevas (para storage de fotos)
+let fichasSearch = '';   // búsqueda por nombre
+let fichasOpenGroups = new Set(); // grupos (año-mes) desplegados
 
 function escF(s){ if(!s)return''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
@@ -2411,8 +2437,15 @@ async function renderFichasTab(){
 
 function renderFichasList(c){
   const total = fichasData.length;
-  const rows = fichasData.slice().reverse().map(f=>{
-    const titulo = f.nombre || `Ficha sin nombre`;
+
+  // Determine current month key
+  const now = new Date();
+  const currentMonthKey = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+  if(fichasOpenGroups.size === 0) fichasOpenGroups.add(currentMonthKey);
+
+  // Build item HTML helper
+  const renderItem = f => {
+    const titulo = f.nombre || 'Ficha sin nombre';
     const fechaEvStr = f.fechaEvento ? new Date(f.fechaEvento+'T12:00:00').toLocaleDateString('es-ES',{day:'2-digit',month:'long',year:'numeric'}) : '';
     const numNinas = f.ninos.filter(n=>n.sexo==='nina').length;
     const numNinos = f.ninos.filter(n=>n.sexo==='nino').length;
@@ -2421,7 +2454,7 @@ function renderFichasList(c){
       f.telefono ? `📞 ${escF(f.telefono)}` : '',
       f.email ? `✉ ${escF(f.email)}` : '',
     ].filter(Boolean).join('<span style="margin:0 .2rem;opacity:.4;">·</span>');
-    return `<div class="fp-item" data-fid="${escF(f.id)}">
+    return `<div class="fp-item" data-fid="${escF(f.id)}" data-name="${escF((titulo).toLowerCase())}">
       <div class="fp-item-top">
         <div style="display:flex;flex-direction:column;gap:.12rem;min-width:0;flex:1;">
           ${f.numeroPedido?`<div style="font-family:'Cormorant Garamond',serif;font-size:.8rem;letter-spacing:.08em;color:var(--accent);font-weight:500;">Pedido ${escF(f.numeroPedido)}</div>`:''}
@@ -2438,27 +2471,103 @@ function renderFichasList(c){
         ${totalN?`<span class="fp-total-badge">${totalN} en total</span>`:'<span class="fp-total-badge" style="font-size:.85rem;color:var(--muted);font-weight:400;">Sin niños añadidos</span>'}
       </div>
     </div>`;
+  };
+
+  // Group fichas by event month (most recent first), sin fecha at end
+  const MESES_LABEL = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  const NO_DATE_KEY = 'sin-fecha';
+  const groups = {};
+  fichasData.slice().reverse().forEach(f => {
+    const key = f.fechaEvento ? f.fechaEvento.slice(0,7) : NO_DATE_KEY;
+    if(!groups[key]) groups[key] = { fichas:[], label:'' };
+    groups[key].fichas.push(f);
+  });
+  for(const key of Object.keys(groups)){
+    if(key === NO_DATE_KEY){ groups[key].label = 'Sin fecha de evento'; }
+    else { const [y,m]=key.split('-'); groups[key].label = MESES_LABEL[parseInt(m)-1]+' '+y; }
+  }
+  const sortedKeys = Object.keys(groups).sort((a,b)=>{
+    if(a===NO_DATE_KEY) return 1; if(b===NO_DATE_KEY) return -1; return b.localeCompare(a);
+  });
+
+  const groupsHtml = sortedKeys.map(key=>{
+    const g = groups[key];
+    const isOpen = fichasOpenGroups.has(key);
+    return `<div class="fp-month-group" data-gkey="${key}">
+      <button class="fp-month-hdr${isOpen?' open':''}" data-gkey="${key}">
+        <span class="fp-month-label">${g.label}</span>
+        <span class="fp-month-count">${g.fichas.length} ficha${g.fichas.length!==1?'s':''}</span>
+        <span class="fp-month-chevron">▸</span>
+      </button>
+      <div class="fp-month-body" style="${isOpen?'':'display:none;'}">
+        ${g.fichas.map(f=>renderItem(f)).join('')}
+      </div>
+    </div>`;
   }).join('');
+
   c.innerHTML = `
     <div class="fp-toolbar">
       <span class="fp-count">${total} ficha${total!==1?'s':''}</span>
       <button class="fp-new-btn" id="fpNewBtn">+ Nueva ficha</button>
     </div>
-    ${total===0 ? '<div class="fp-empty"><div class="fp-empty-icon">📋</div>No hay fichas todavía.<br>Pulsa "Nueva ficha" para empezar.</div>'
-                : `<div class="fp-list">${rows}</div>`}
+    ${total===0
+      ? '<div class="fp-empty"><div class="fp-empty-icon">📋</div>No hay fichas todavía.<br>Pulsa "Nueva ficha" para empezar.</div>'
+      : `<div class="fp-search-wrap"><input class="fp-search-inp" id="fpSearchInp" placeholder="Buscar por nombre…" value="${escF(fichasSearch)}" autocomplete="off"></div>
+         <div class="fp-groups">${groupsHtml}</div>`}
   `;
+
   c.querySelector('#fpNewBtn').addEventListener('click',()=>{
-    fichasViewState='new';
-    fichasEditId=null;
-    fichasFormStep=1;
-    fichasFormNinos=[];
-    fichasFormName='';
-    fichasFormFecha='';
-    fichasFormTelefono='';
-    fichasFormEmail='';
-    fichasFormNumeroPedido='';
+    fichasViewState='new'; fichasEditId=null; fichasFormStep=1;
+    fichasFormNinos=[]; fichasFormName=''; fichasFormFecha='';
+    fichasFormTelefono=''; fichasFormEmail=''; fichasFormNumeroPedido='';
     renderFichaForm(c);
   });
+
+  // Search
+  const searchInp = c.querySelector('#fpSearchInp');
+  if(searchInp){
+    if(fichasSearch) searchInp.setSelectionRange(fichasSearch.length,fichasSearch.length);
+    searchInp.addEventListener('input', e=>{
+      fichasSearch = e.target.value;
+      const term = fichasSearch.toLowerCase().trim();
+      c.querySelectorAll('.fp-month-group').forEach(grp=>{
+        let anyVisible = false;
+        grp.querySelectorAll('.fp-item').forEach(el=>{
+          const match = !term || (el.dataset.name||'').includes(term);
+          el.style.display = match ? '' : 'none';
+          if(match) anyVisible = true;
+        });
+        grp.style.display = anyVisible ? '' : 'none';
+        // Auto-open group if search finds something inside
+        if(term && anyVisible){
+          const body = grp.querySelector('.fp-month-body');
+          if(body && body.style.display==='none'){
+            body.style.display='';
+            grp.querySelector('.fp-month-hdr')?.classList.add('open');
+          }
+        }
+      });
+    });
+  }
+
+  // Group toggles
+  c.querySelectorAll('.fp-month-hdr').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      const key = btn.dataset.gkey;
+      const body = btn.nextElementSibling;
+      if(fichasOpenGroups.has(key)){
+        fichasOpenGroups.delete(key);
+        btn.classList.remove('open');
+        body.style.display='none';
+      } else {
+        fichasOpenGroups.add(key);
+        btn.classList.add('open');
+        body.style.display='';
+      }
+    });
+  });
+
+  // Item clicks
   c.querySelectorAll('.fp-item').forEach(el=>{
     el.addEventListener('click',()=>{
       fichasCurrentId=el.dataset.fid;
@@ -2468,25 +2577,35 @@ function renderFichasList(c){
   });
 }
 
+function fichaStepperHtml(active){
+  const steps=[['1','Datos contacto'],['2','Niños'],['3','Imágenes']];
+  return '<div class="ficha-stepper">' + steps.map(([n,lbl],i)=>{
+    const state = i+1 < active ? 'done' : i+1 === active ? 'active' : '';
+    const line  = i < steps.length-1 ? `<div class="fstep-line${i+1<active?' done':''}"></div>` : '';
+    return `<div class="fstep-item">
+      <div class="fstep-circle ${state}">${i+1<active?'✓':n}</div>
+      <div class="fstep-lbl ${state}">${lbl}</div>
+    </div>${line}`;
+  }).join('') + '</div>';
+}
+
 function renderFichaForm(c){
   if(fichasFormStep===1) renderFichaFormStep1(c);
-  else renderFichaFormStep2(c);
+  else if(fichasFormStep===2) renderFichaFormStep2(c);
+  else renderFichaFormStep3(c);
 }
 
 function renderFichaFormStep1(c){
   const isEdit = !!fichasEditId;
   c.innerHTML = `
     <div class="ficha-view" style="padding:1.5rem;max-width:520px;margin:0 auto;">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.4rem;">
-        <button class="ficha-prev-btn" id="fichaBack">← ${isEdit?'Cancelar edición':'Cancelar'}</button>
-        <div class="ficha-step-dots">
-          <div class="ficha-step-dot active"></div>
-          <div class="ficha-step-dot"></div>
-        </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.5rem;">
+        <button class="ficha-prev-btn" id="fichaBack">← ${isEdit?'Cancelar':'Cancelar'}</button>
       </div>
+      ${fichaStepperHtml(1)}
       <div class="ficha-wizard-hdr" style="margin-bottom:.2rem;">
         <div class="ficha-wizard-title">${isEdit?'Editar ficha':'Datos del cliente'}</div>
-        <div class="ficha-wizard-sub">Paso 1 de 2 — información del evento</div>
+        <div class="ficha-wizard-sub">Nombre, fecha del evento y contacto</div>
       </div>
 
       <div class="ficha-big-field">
@@ -2533,6 +2652,37 @@ function renderFichaFormStep1(c){
   c.querySelector('#fichaNameInp').addEventListener('keydown',e=>{
     if(e.key==='Enter'){ e.preventDefault(); c.querySelector('#fichaNxtBtn').click(); }
   });
+}
+
+// ── Helpers de formulario de fichas (scope global para Step 2 y Step 3) ──
+function buildFichaFromForm() {
+  const isEdit = !!fichasEditId;
+  const existing = isEdit ? fichasData.find(f=>f.id===fichasEditId) : null;
+  return {
+    id: isEdit ? fichasEditId : (fichasNewId || (fichasNewId = 'f_'+Date.now())),
+    createdAt: isEdit ? existing.createdAt : new Date().toISOString(),
+    nombre: fichasFormName.trim(),
+    fechaEvento: fichasFormFecha,
+    telefono: fichasFormTelefono.trim(),
+    email: fichasFormEmail.trim(),
+    numeroPedido: fichasFormNumeroPedido.trim(),
+    pedidoRealizado: isEdit ? existing.pedidoRealizado : false,
+    ninos: fichasFormNinos.filter(n=>n.sexo!==null).map(n=>({
+      id:n.id, nombre:n.nombre, edad:n.edad, talla:n.talla||'', sexo:n.sexo,
+      modelo:n.modelo||'', tela:n.tela||'', descripcion:n.descripcion||'',
+      medidas:{...n.medidas},
+      fotos:[...(n.fotos||[])]
+    }))
+  };
+}
+function getFichaTitulos(ficha) {
+  const d = new Date(ficha.createdAt);
+  const ds = d.toLocaleDateString('es-ES',{day:'2-digit',month:'long',year:'numeric'});
+  const titulo = ficha.nombre || `Ficha ${ds}`;
+  const fechaEvStr = ficha.fechaEvento
+    ? new Date(ficha.fechaEvento+'T12:00:00').toLocaleDateString('es-ES',{weekday:'long',day:'2-digit',month:'long',year:'numeric'})
+    : '';
+  return { titulo, fechaEvStr };
 }
 
 function renderFichaFormStep2(c){
@@ -2590,7 +2740,10 @@ function renderFichaFormStep2(c){
             <div><label class="f2-lbl">Nombre</label>
               <input class="f2-inp fn-nombre" data-i="${i}" placeholder="Nombre" value="${escF(n.nombre)}"></div>
             <div><label class="f2-lbl">Edad</label>
-              <input class="f2-inp fn-edad" data-i="${i}" placeholder="Ej: 3 años" value="${escF(n.edad)}"></div>
+              <div style="display:flex;align-items:center;gap:.4rem;">
+                <input class="f2-inp fn-edad" data-i="${i}" placeholder="Ej: 3" value="${escF(n.edad)}" style="flex:1;min-width:0;">
+                <span style="font-family:'Cormorant Garamond',serif;font-size:.9rem;color:var(--muted);flex-shrink:0;">años</span>
+              </div></div>
           </div>
           <div><label class="f2-lbl">Talla habitual</label>
             <input class="f2-inp fn-talla" data-i="${i}" placeholder="Ej: 4T, 6 años, 116 cm…" value="${escF(n.talla||'')}"></div>
@@ -2621,24 +2774,6 @@ function renderFichaFormStep2(c){
               <div class="medidas-grid2">${medHtml}</div>
             </div>
           </div>
-          <div>
-            <button class="medidas-toggle-btn${n.fotoOpen?' open':''}" data-fopen="${i}" style="font-size:.95rem;padding:.55rem .9rem;${!n.fotoOpen&&!(n.fotos&&n.fotos.length)?'border-color:rgba(80,120,80,.45);color:#3a6e3a;background:rgba(80,120,80,.07);':''}">
-              ${n.fotoOpen?'📷 Ocultar fotos':'📷 Fotos'}${(n.fotos&&n.fotos.length)?' ✓ ('+n.fotos.length+')':''}
-            </button>
-            <div class="medidas-section${n.fotoOpen?' open':''}" style="gap:.5rem;">
-              <div class="nino-fotos-preview" data-fprev="${i}" style="display:flex;flex-wrap:wrap;gap:.4rem;margin-bottom:.3rem;">
-                ${(n.fotos||[]).map((url,j)=>`
-                  <div style="position:relative;">
-                    <img src="${url}" style="width:64px;height:64px;object-fit:cover;border-radius:6px;border:1px solid rgba(0,0,0,.12);">
-                    <button class="nino-foto-del" data-dfi="${i}" data-dfj="${j}" style="position:absolute;top:-5px;right:-5px;background:#c00;color:#fff;border:none;border-radius:50%;width:18px;height:18px;font-size:10px;cursor:pointer;line-height:1;padding:0;">✕</button>
-                  </div>`).join('')}
-              </div>
-              <label style="display:inline-flex;align-items:center;gap:.4rem;cursor:pointer;padding:.4rem .8rem;border-radius:20px;border:1.5px dashed rgba(80,120,80,.5);color:#3a6e3a;font-size:.88rem;font-family:'Cormorant Garamond',serif;">
-                <span class="nino-foto-lbl" data-flbl="${i}">📷 Añadir foto</span>
-                <input type="file" accept="image/*" class="nino-foto-inp" data-fni="${i}" style="display:none;" multiple>
-              </label>
-            </div>
-          </div>
         </div>
       </div>`;
   };
@@ -2653,16 +2788,13 @@ function renderFichaFormStep2(c){
 
   c.innerHTML = `
     <div class="ficha-view">
-      <div style="display:flex;align-items:center;justify-content:space-between;">
-        <button class="ficha-prev-btn" id="fichaPrevBtn">← Datos del cliente</button>
-        <div class="ficha-step-dots">
-          <div class="ficha-step-dot"></div>
-          <div class="ficha-step-dot active"></div>
-        </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.5rem;">
+        <button class="ficha-prev-btn" id="fichaPrevBtn">← Datos</button>
       </div>
+      ${fichaStepperHtml(2)}
       <div class="ficha-wizard-hdr">
         <div class="ficha-wizard-title">Niños y medidas</div>
-        <div class="ficha-wizard-sub">Paso 2 de 2 · <strong style="color:var(--dark);font-style:normal;">${escF(fichasFormName)}</strong></div>
+        <div class="ficha-wizard-sub"><strong style="color:var(--dark);font-style:normal;">${escF(fichasFormName)}</strong></div>
       </div>
 
       ${countBar}
@@ -2671,8 +2803,7 @@ function renderFichaFormStep2(c){
 
       <div class="ficha-form-actions" style="flex-wrap:wrap;gap:.5rem;">
         <button class="ficha-cancel-btn" id="fichaCancel">Cancelar</button>
-        <button class="ficha-save-btn" id="fichaSave">💾 Guardar</button>
-        <button class="ficha-save-btn" id="fichaSaveEnviar" style="background:linear-gradient(135deg,#8b7355,#c8a96e);color:#fff;border:none;min-width:9rem;">📨 Guardar y enviar</button>
+        <button class="ficha-save-btn" id="fichaNxtBtn3" style="background:var(--warm);color:#fff;border:none;min-width:9rem;">Imágenes →</button>
       </div>
     </div>`;
 
@@ -2724,14 +2855,75 @@ function renderFichaFormStep2(c){
     });
   });
 
-  // Toggle fotos
-  c.querySelectorAll('[data-fopen]').forEach(btn=>{
+  // Eliminar niño
+  c.querySelectorAll('[data-rm]').forEach(btn=>{
     btn.addEventListener('click',()=>{
-      const idx=parseInt(btn.dataset.fopen);
-      ninos[idx].fotoOpen=!ninos[idx].fotoOpen;
+      fichasFormNinos.splice(parseInt(btn.dataset.rm),1);
       renderFichaFormStep2(c);
     });
   });
+
+  // Añadir niño
+  c.querySelector('#addNinoBtn').addEventListener('click',()=>{
+    fichasFormNinos.push(makeNinoEmpty(null));
+    renderFichaFormStep2(c);
+  });
+
+  // Siguiente → paso 3 imágenes
+  c.querySelector('#fichaNxtBtn3').addEventListener('click',()=>{
+    fichasFormStep=3;
+    renderFichaFormStep3(c);
+  });
+  c.querySelector('#fichaCancel').addEventListener('click',()=>{fichasEditId=null;fichasViewState='list';renderFichasList(c);});
+}
+
+function renderFichaFormStep3(c){
+  const ninos = fichasFormNinos.filter(n=>n.sexo!==null);
+
+  const ninoFotoSec = (n,i)=>`
+    <div style="border-top:3px solid ${n.sexo==='nina'?'#b4648c':'#3a5c8a'};border-radius:0 0 8px 8px;background:#fff;margin-bottom:.75rem;overflow:hidden;">
+      <div style="background:${n.sexo==='nina'?'rgba(180,100,140,.07)':'rgba(58,92,138,.07)'};padding:.5rem .85rem;font-family:'Cormorant Garamond',serif;font-size:1rem;font-weight:600;color:${n.sexo==='nina'?'#b4648c':'#3a5c8a'};">
+        ${n.sexo==='nina'?'👧':'👦'} ${escF(n.nombre||'Sin nombre')}
+      </div>
+      <div style="padding:.65rem .85rem;">
+        <div class="nino-fotos-preview" data-fprev="${i}" style="display:flex;flex-wrap:wrap;gap:.4rem;margin-bottom:.5rem;">
+          ${(n.fotos||[]).map((url,j)=>`
+            <div style="position:relative;">
+              <img src="${url}" style="width:72px;height:72px;object-fit:cover;border-radius:6px;border:1px solid rgba(0,0,0,.12);">
+              <button class="nino-foto-del" data-dfi="${i}" data-dfj="${j}" style="position:absolute;top:-5px;right:-5px;background:#c00;color:#fff;border:none;border-radius:50%;width:18px;height:18px;font-size:10px;cursor:pointer;line-height:1;padding:0;">✕</button>
+            </div>`).join('')}
+        </div>
+        <label style="display:inline-flex;align-items:center;gap:.4rem;cursor:pointer;padding:.4rem .8rem;border-radius:20px;border:1.5px dashed rgba(139,115,85,.45);color:var(--warm);font-size:.88rem;font-family:'Cormorant Garamond',serif;">
+          <span class="nino-foto-lbl" data-flbl="${i}">📷 Añadir foto</span>
+          <input type="file" accept="image/*" class="nino-foto-inp" data-fni="${i}" style="display:none;" multiple>
+        </label>
+      </div>
+    </div>`;
+
+  c.innerHTML = `
+    <div class="ficha-view" style="padding:1.25rem;max-width:520px;margin:0 auto;">
+      <div style="display:flex;align-items:center;margin-bottom:.5rem;">
+        <button class="ficha-prev-btn" id="fichaPrevBtn3">← Niños</button>
+      </div>
+      ${fichaStepperHtml(3)}
+      <div class="ficha-wizard-hdr">
+        <div class="ficha-wizard-title">Imágenes</div>
+        <div class="ficha-wizard-sub">Opcional · fotos por niño para incluir en el PDF</div>
+      </div>
+      <div style="margin-top:.9rem;">
+        ${ninos.length
+          ? ninos.map((n,i)=>ninoFotoSec(n,i)).join('')
+          : `<div style="font-family:'Cormorant Garamond',serif;font-style:italic;color:var(--muted);text-align:center;padding:1.5rem 0;">Sin niños añadidos</div>`}
+      </div>
+      <div class="ficha-form-actions" style="flex-wrap:wrap;gap:.5rem;margin-top:.5rem;">
+        <button class="ficha-cancel-btn" id="fichaCancelS3">Cancelar</button>
+        <button class="ficha-save-btn" id="fichaSave">💾 Guardar</button>
+        <button class="ficha-save-btn" id="fichaSaveEnviar" style="background:linear-gradient(135deg,#8b7355,#c8a96e);color:#fff;border:none;min-width:9rem;">📨 Guardar y enviar</button>
+      </div>
+    </div>`;
+
+  c.querySelector('#fichaPrevBtn3').addEventListener('click',()=>{fichasFormStep=2;renderFichaFormStep2(c);});
+  c.querySelector('#fichaCancelS3').addEventListener('click',()=>{fichasEditId=null;fichasViewState='list';renderFichasList(c);});
 
   // Upload fotos
   c.querySelectorAll('.nino-foto-inp').forEach(inp=>{
@@ -2740,15 +2932,14 @@ function renderFichaFormStep2(c){
       const lbl = c.querySelector(`[data-flbl="${idx}"]`);
       if(!inp.files?.length) return;
       if(lbl) lbl.textContent = 'Subiendo…';
-      // Use same fichaId as buildFichaFromForm so photos land in the right folder
       const fichaId = fichasEditId || (fichasNewId || (fichasNewId = 'f_' + Date.now()));
       try {
         for(const file of Array.from(inp.files)){
           const url = await uploadNinoFoto(file, fichaId);
-          if(!ninos[idx].fotos) ninos[idx].fotos = [];
-          ninos[idx].fotos.push(url);
+          if(!fichasFormNinos[idx].fotos) fichasFormNinos[idx].fotos = [];
+          fichasFormNinos[idx].fotos.push(url);
         }
-        renderFichaFormStep2(c);
+        renderFichaFormStep3(c);
       } catch(e) {
         toast('Error subiendo foto: ' + e.message, true);
         if(lbl) lbl.textContent = '📷 Añadir foto';
@@ -2757,64 +2948,16 @@ function renderFichaFormStep2(c){
     });
   });
 
-  // Borrar foto individual
+  // Borrar foto
   c.querySelectorAll('.nino-foto-del').forEach(btn=>{
-    btn.addEventListener('click', async () => {
-      const fi = parseInt(btn.dataset.dfi);
-      const fj = parseInt(btn.dataset.dfj);
-      ninos[fi].fotos.splice(fj, 1);
-      renderFichaFormStep2(c);
-    });
-  });
-
-  // Eliminar
-  c.querySelectorAll('[data-rm]').forEach(btn=>{
     btn.addEventListener('click',()=>{
-      fichasFormNinos.splice(parseInt(btn.dataset.rm),1);
-      renderFichaFormStep2(c);
+      const fi=parseInt(btn.dataset.dfi), fj=parseInt(btn.dataset.dfj);
+      fichasFormNinos[fi].fotos.splice(fj,1);
+      renderFichaFormStep3(c);
     });
   });
 
-  // Añadir
-  c.querySelector('#addNinoBtn').addEventListener('click',()=>{
-    fichasFormNinos.push(makeNinoEmpty(null));
-    renderFichaFormStep2(c);
-  });
-
-  // Helper: construye el objeto ficha desde el estado del formulario
-  function buildFichaFromForm() {
-    const isEdit = !!fichasEditId;
-    const existing = isEdit ? fichasData.find(f=>f.id===fichasEditId) : null;
-    return {
-      id: isEdit ? fichasEditId : (fichasNewId || (fichasNewId = 'f_'+Date.now())),
-      createdAt: isEdit ? existing.createdAt : new Date().toISOString(),
-      nombre: fichasFormName.trim(),
-      fechaEvento: fichasFormFecha,
-      telefono: fichasFormTelefono.trim(),
-      email: fichasFormEmail.trim(),
-      numeroPedido: fichasFormNumeroPedido.trim(),
-      pedidoRealizado: isEdit ? existing.pedidoRealizado : false,
-      ninos: fichasFormNinos.filter(n=>n.sexo!==null).map(n=>({
-        id:n.id, nombre:n.nombre, edad:n.edad, talla:n.talla||'', sexo:n.sexo,
-        modelo:n.modelo||'', tela:n.tela||'', descripcion:n.descripcion||'',
-        medidas:{...n.medidas},
-        fotos:[...(n.fotos||[])]
-      }))
-    };
-  }
-
-  // Helper: títulos de la ficha
-  function getFichaTitulos(ficha) {
-    const d = new Date(ficha.createdAt);
-    const ds = d.toLocaleDateString('es-ES',{day:'2-digit',month:'long',year:'numeric'});
-    const titulo = ficha.nombre || `Ficha ${ds}`;
-    const fechaEvStr = ficha.fechaEvento
-      ? new Date(ficha.fechaEvento+'T12:00:00').toLocaleDateString('es-ES',{weekday:'long',day:'2-digit',month:'long',year:'numeric'})
-      : '';
-    return { titulo, fechaEvStr };
-  }
-
-  // Guardar / Actualizar
+  // Guardar
   c.querySelector('#fichaSave').addEventListener('click',async()=>{
     const saveBtn=c.querySelector('#fichaSave');
     saveBtn.disabled=true; saveBtn.textContent='Guardando…';
@@ -2822,55 +2965,38 @@ function renderFichaFormStep2(c){
     const ficha = buildFichaFromForm();
     try{
       await sbSaveFicha(ficha);
-      if(isEdit){
-        const idx = fichasData.findIndex(f=>f.id===fichasEditId);
-        if(idx>=0) fichasData[idx]=ficha;
-      } else {
-        fichasData.push(ficha);
-      }
-      fichasEditId=null;
-      fichasViewState='list';
+      if(isEdit){ const idx=fichasData.findIndex(f=>f.id===fichasEditId); if(idx>=0) fichasData[idx]=ficha; }
+      else fichasData.push(ficha);
+      fichasEditId=null; fichasNewId=null; fichasViewState='list';
       toast(isEdit?'Ficha actualizada ✓':'Ficha guardada ✓');
-      renderFichasList(c);
-      renderMedidasTab();
-    } catch(e){
-      saveBtn.disabled=false; saveBtn.textContent='💾 Guardar';
-      toast('Error al guardar: '+e.message);
-    }
+      renderFichasList(c); renderMedidasTab();
+    } catch(e){ saveBtn.disabled=false; saveBtn.textContent='💾 Guardar'; toast('Error al guardar: '+e.message); }
   });
 
-  // Guardar y enviar email + subir PDF a Drive
-  c.querySelector('#fichaSaveEnviar').addEventListener('click', async () => {
-    const sendBtn = c.querySelector('#fichaSaveEnviar');
-    const saveBtn = c.querySelector('#fichaSave');
-    sendBtn.disabled = true; saveBtn.disabled = true;
-    sendBtn.textContent = 'Guardando…';
-    const isEdit = !!fichasEditId;
-    const ficha = buildFichaFromForm();
-    const oldFicha = isEdit ? fichasData.find(f=>f.id===fichasEditId) : null;
-    const cambios = computeCambios(oldFicha, ficha);
-    try {
+  // Guardar y enviar
+  c.querySelector('#fichaSaveEnviar').addEventListener('click',async()=>{
+    const sendBtn=c.querySelector('#fichaSaveEnviar');
+    const saveBtn=c.querySelector('#fichaSave');
+    sendBtn.disabled=true; saveBtn.disabled=true; sendBtn.textContent='Guardando…';
+    const isEdit=!!fichasEditId;
+    const ficha=buildFichaFromForm();
+    const oldFicha=isEdit?fichasData.find(f=>f.id===fichasEditId):null;
+    const cambios=computeCambios(oldFicha,ficha);
+    try{
       await sbSaveFicha(ficha);
-      if (isEdit) {
-        const idx = fichasData.findIndex(f=>f.id===fichasEditId);
-        if (idx>=0) fichasData[idx] = ficha;
-      } else {
-        fichasData.push(ficha);
-      }
-      sendBtn.textContent = 'Generando PDF…';
-      const { titulo, fechaEvStr } = getFichaTitulos(ficha);
-      sendBtn.textContent = 'Enviando…';
-      await sendFichaEmail(ficha, titulo, fechaEvStr, isEdit, cambios);
-      fichasEditId = null;
-      fichasViewState = 'list';
-      toast(isEdit ? '✓ Modificación enviada y ficha actualizada' : '✓ Ficha guardada y email enviado');
-      renderFichasList(c);
-      renderMedidasTab();
-    } catch(e) {
-      sendBtn.disabled = false; saveBtn.disabled = false;
-      sendBtn.textContent = '📨 Guardar y enviar';
-      saveBtn.textContent = '💾 Guardar';
-      toast('Error: ' + e.message);
+      if(isEdit){ const idx=fichasData.findIndex(f=>f.id===fichasEditId); if(idx>=0) fichasData[idx]=ficha; }
+      else fichasData.push(ficha);
+      sendBtn.textContent='Generando PDF…';
+      const {titulo,fechaEvStr}=getFichaTitulos(ficha);
+      sendBtn.textContent='Enviando…';
+      await sendFichaEmail(ficha,titulo,fechaEvStr,isEdit,cambios);
+      fichasEditId=null; fichasNewId=null; fichasViewState='list';
+      toast(isEdit?'✓ Modificación enviada':'✓ Ficha guardada y email enviado');
+      renderFichasList(c); renderMedidasTab();
+    } catch(e){
+      sendBtn.disabled=false; saveBtn.disabled=false;
+      sendBtn.textContent='📨 Guardar y enviar'; saveBtn.textContent='💾 Guardar';
+      toast('Error: '+e.message);
     }
   });
 }
@@ -2879,12 +3005,6 @@ function renderFichaFormStep2(c){
 const NONNA_EMAIL = 'info@atelierlanonna.com';
 // n8n webhook — producción (activar el workflow en n8n y configurar credenciales SMTP antes de usar)
 const N8N_WEBHOOK_URL = 'https://nuriahorma.app.n8n.cloud/webhook/lanonna-ficha';
-
-const MESES_ES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
-function getDriveFolderName(date) {
-  const d = date || new Date();
-  return MESES_ES[d.getMonth()] + ' ' + d.getFullYear();
-}
 
 async function generatePDFBase64(ficha, titulo, fechaEvStr, filename) {
   const fullHtml = await downloadFichaPDF(ficha, titulo, fechaEvStr, filename, true);
@@ -2968,7 +3088,6 @@ async function sendFichaEmail(ficha, titulo, fechaEvStr, isModification, cambios
   const fechaPart = ficha.fechaEvento ? ' - ' + ficha.fechaEvento.split('-').reverse().join('-') : '';
   const numPart   = num ? ' - pedido ' + num : '';
   const filename  = `${safeName}${fechaPart}${numPart}`;
-  const driveFolder = getDriveFolderName();
   const pdfBase64 = await generatePDFBase64(ficha, titulo, fechaEvStr, filename);
   const res = await fetch(N8N_WEBHOOK_URL, {
     method: 'POST',
@@ -2980,7 +3099,6 @@ async function sendFichaEmail(ficha, titulo, fechaEvStr, isModification, cambios
       fichaId: ficha.id || '',
       pdfBase64: pdfBase64,
       isModification: !!isModification,
-      driveFolder: driveFolder,
       fechaEvento: ficha.fechaEvento ? ficha.fechaEvento.split('-').reverse().join('/') : '',
       cambios: cambios || ''
     })
@@ -3033,6 +3151,8 @@ function openAsocModal(ficha, titulo, fechaEvStr, c){
   modal.onclick = e => { if(e.target===modal) modal.classList.add('hidden'); };
 }
 
+function fmtEdad(e){ if(!e) return ''; return /año/i.test(String(e)) ? e : e + ' años'; }
+
 async function downloadFichaPDF(ficha, titulo, fechaEvStr, filenameOverride, htmlOnly){
   const esc = s => (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   // Fetch logo as embedded data URL so it works in the about:blank window
@@ -3048,7 +3168,7 @@ async function downloadFichaPDF(ficha, titulo, fechaEvStr, filenameOverride, htm
 
   const ninoRows = ficha.ninos.map((n,i)=>{
     const isNina = n.sexo === 'nina';
-    const col = isNina ? '#6b4c7a' : '#3a5c8a';
+    const col = isNina ? '#b4648c' : '#3a5c8a';
     const sexLabel = isNina ? 'Niña' : (n.sexo==='nino' ? 'Niño' : '—');
     const newMedFields = isNina
       ? [{k:'contornoPecho',l:'Contorno de pecho'},{k:'largo',l:'Largo'}]
@@ -3074,8 +3194,8 @@ async function downloadFichaPDF(ficha, titulo, fechaEvStr, filenameOverride, htm
       <div class="nino-block" style="border-left:3px solid ${col};">
         <div class="nino-hdr">
           <span class="nino-name" style="color:${col};">${esc(n.nombre||'—')}</span>
-          <span class="nino-sex" style="color:${col};background:${isNina?'rgba(107,76,122,.15)':'rgba(58,92,138,.15)'};border:1.5px solid ${isNina?'rgba(107,76,122,.5)':'rgba(58,92,138,.5)'};">${sexLabel}</span>
-          ${n.edad?`<span class="nino-edad">${esc(n.edad)}</span>`:''}
+          <span class="nino-sex" style="color:${col};background:${isNina?'rgba(180,100,140,.15)':'rgba(58,92,138,.15)'};border:1.5px solid ${isNina?'rgba(180,100,140,.5)':'rgba(58,92,138,.5)'};">${sexLabel}</span>
+          ${n.edad?`<span class="nino-edad">${esc(fmtEdad(n.edad))}</span>`:''}
         </div>
         ${productoHtml}
         <table class="med-table">
@@ -3124,7 +3244,7 @@ async function downloadFichaPDF(ficha, titulo, fechaEvStr, filenameOverride, htm
     '.fotos-nino{margin-bottom:1.2em;}',
     '.fotos-nino-name{font-size:1.05rem;font-weight:600;color:#1a1612;border-bottom:1.5px solid #c8a96e;padding-bottom:.2em;margin-bottom:.5em;}',
     '.fotos-grid{display:flex;flex-wrap:wrap;gap:.5em;}',
-    '.fotos-grid img{width:48%;max-width:230px;height:auto;max-height:260px;object-fit:cover;border-radius:6px;border:1px solid #d4c9b8;}'
+    '.fotos-grid img{width:calc(50% - .25em);max-width:250px;height:auto;object-fit:contain;border-radius:6px;border:1px solid #d4c9b8;}'
   ].join('\n');
 
   let bodyHTML =
@@ -3199,10 +3319,10 @@ function renderFichaDetail(c, fichaId){
 
   const ninoCard = (n,i)=>{
     const isNina = n.sexo === 'nina';
-    const col = isNina ? '#6b4c7a' : '#3a5c8a';
+    const col = isNina ? '#b4648c' : '#3a5c8a';
     const sexLabel = isNina ? '👧 Niña' : (n.sexo==='nino' ? '👦 Niño' : '');
-    const sexBg    = isNina ? 'rgba(107,76,122,.1)' : 'rgba(58,92,138,.1)';
-    const sexBorder= isNina ? 'rgba(107,76,122,.3)'  : 'rgba(58,92,138,.3)';
+    const sexBg    = isNina ? 'rgba(180,100,140,.1)' : 'rgba(58,92,138,.1)';
+    const sexBorder= isNina ? 'rgba(180,100,140,.3)'  : 'rgba(58,92,138,.3)';
 
     // New format medidas
     const newMedFields = isNina
@@ -3244,7 +3364,7 @@ function renderFichaDetail(c, fichaId){
           <div class="ficha-detail-nino-name" style="color:${col};">${escF(n.nombre||'—')}</div>
           <div style="display:flex;align-items:center;gap:.5rem;">
             ${sexLabel?`<span style="font-size:.75rem;padding:.12rem .5rem;border-radius:20px;background:${sexBg};color:${col};border:1px solid ${sexBorder};">${sexLabel}</span>`:''}
-            ${n.edad?`<div class="ficha-detail-nino-edad">${escF(n.edad)}</div>`:''}
+            ${n.edad?`<div class="ficha-detail-nino-edad">${escF(fmtEdad(n.edad))}</div>`:''}
           </div>
         </div>
         <div class="ficha-detail-nino-body">
