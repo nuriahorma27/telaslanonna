@@ -3289,9 +3289,17 @@ function buildPdfHtmlForEmail(fullHtml){
   const cssText = (styleMatch ? styleMatch[1] : '')
     .replace(/@import[^;]+;/gi, '')
     .replace(/\bbody\b\s*\{/g, '.pdf-scope {');
-  return `<style>${cssText}</style>` +
+  const compactCss = isLikelyMobilePdfDevice()
+    ? '<style>.pdf-scope{padding:36px 34px!important;width:720px!important;font-size:11pt!important;}.pdf-scope .fotos-grid{gap:.35em!important;}.pdf-scope .fotos-item{flex:0 0 100%!important;max-width:100%!important;}.pdf-scope .fotos-frame{height:150px!important;padding:.2em!important;}.pdf-scope .nino-block{padding:.55em .65em!important;}.pdf-scope .letterhead img{height:42px!important;}</style>'
+    : '';
+  return `<style>${cssText}</style>${compactCss}` +
     `<div class="pdf-scope" style="padding:68px 76px;font-family:'Cormorant Garamond',Georgia,serif;font-size:13pt;color:#1a1612;background:white;width:794px;">` +
     bodyHtml + `</div>`;
+}
+function isLikelyMobilePdfDevice(){
+  const ua = navigator.userAgent || '';
+  const touch = navigator.maxTouchPoints > 0;
+  return /iPhone|iPad|iPod|Android/i.test(ua) || (touch && Math.min(window.innerWidth, window.innerHeight) <= 1024);
 }
 function createPdfRenderNode(htmlContent){
   const host = document.createElement('div');
@@ -3318,26 +3326,51 @@ async function waitForPdfNodeAssets(node, timeoutMs=12000){
   }))), timeoutMs, 'Tiempo agotado al cargar imágenes del PDF');
 }
 async function renderNodeToPdfBlob(node, filename, lightMode=false){
-  if(typeof html2pdf === 'undefined') throw new Error('html2pdf no está disponible');
+  if(typeof html2canvas === 'undefined') throw new Error('html2canvas no está disponible');
+  const JsPdfCtor = window.jspdf?.jsPDF || window.jsPDF;
+  if(!JsPdfCtor) throw new Error('jsPDF no está disponible');
   await waitForPdfNodeAssets(node, 12000);
-  return await withTimeout(
-    html2pdf().set({
-      margin: 0,
-      filename: filename + '.pdf',
-      image: { type: 'jpeg', quality: lightMode ? 0.8 : 0.9 },
-      html2canvas: {
-        scale: lightMode ? 0.82 : 1.05,
-        useCORS: false,
-        logging: false,
-        backgroundColor: '#ffffff',
-        imageTimeout: 12000,
-        removeContainer: true
-      },
-      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait', compress: true }
-    }).from(node).outputPdf('blob'),
-    lightMode ? 25000 : 35000,
-    'Tiempo agotado al generar el PDF'
+  const mobileLite = isLikelyMobilePdfDevice();
+  const canvas = await withTimeout(
+    html2canvas(node, {
+      scale: mobileLite ? 0.56 : (lightMode ? 0.72 : 0.92),
+      useCORS: false,
+      logging: false,
+      backgroundColor: '#ffffff',
+      imageTimeout: 12000,
+      removeContainer: true,
+      windowWidth: Math.ceil(node.scrollWidth || 794),
+      windowHeight: Math.ceil(node.scrollHeight || node.offsetHeight || 1123),
+      scrollX: 0,
+      scrollY: 0
+    }),
+    mobileLite ? 20000 : 30000,
+    'Tiempo agotado al renderizar el PDF'
   );
+  const pdf = new JsPdfCtor({ unit:'mm', format:'a4', orientation:'portrait', compress:true });
+  const pageW = pdf.internal.pageSize.getWidth();
+  const pageH = pdf.internal.pageSize.getHeight();
+  const imgW = pageW;
+  const imgH = canvas.height * imgW / canvas.width;
+  const pageCanvas = document.createElement('canvas');
+  const pageCtx = pageCanvas.getContext('2d');
+  const pxPerMm = canvas.width / pageW;
+  const pagePxH = Math.floor(pageH * pxPerMm);
+  let rendered = 0;
+  let pageIndex = 0;
+  while(rendered < canvas.height){
+    const sliceH = Math.min(pagePxH, canvas.height - rendered);
+    pageCanvas.width = canvas.width;
+    pageCanvas.height = sliceH;
+    pageCtx.clearRect(0, 0, pageCanvas.width, pageCanvas.height);
+    pageCtx.drawImage(canvas, 0, rendered, canvas.width, sliceH, 0, 0, canvas.width, sliceH);
+    const sliceMmH = sliceH / pxPerMm;
+    if(pageIndex > 0) pdf.addPage();
+    pdf.addImage(pageCanvas.toDataURL('image/jpeg', mobileLite ? 0.72 : 0.82), 'JPEG', 0, 0, imgW, sliceMmH, undefined, 'FAST');
+    rendered += sliceH;
+    pageIndex += 1;
+  }
+  return pdf.output('blob');
 }
 async function renderHtmlToPdfBase64(htmlContent, filename, lightMode=false){
   const host = createPdfRenderNode(htmlContent);
@@ -3365,9 +3398,10 @@ async function savePdfFromHtml(htmlContent, filename, lightMode=false){
   }
 }
 async function generatePDFBase64(ficha, titulo, fechaEvStr, filename) {
+  const mobileLite = isLikelyMobilePdfDevice();
   const attempts = [
-    { skipPhotos:false, lightMode:true, photoMaxPx:1100, photoQuality:0.72 },
-    { skipPhotos:false, lightMode:true, photoMaxPx:800, photoQuality:0.58 },
+    { skipPhotos:false, lightMode:true, photoMaxPx: mobileLite ? 560 : 1100, photoQuality: mobileLite ? 0.46 : 0.72 },
+    { skipPhotos:false, lightMode:true, photoMaxPx: mobileLite ? 420 : 800, photoQuality: mobileLite ? 0.34 : 0.58 },
     { skipPhotos:true, lightMode:true }
   ];
   let lastError = null;
