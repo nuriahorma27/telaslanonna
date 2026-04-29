@@ -2409,13 +2409,15 @@ let fichasFormEmail = '';
 let fichasFormNumeroPedido = '';
 let fichasEditId = null; // null = nueva ficha, string = editando ficha existente
 let fichasNewId = null;  // ID pre-generado para fichas nuevas (para storage de fotos)
-let fichasFormFotos = []; // fotos genéricas de la ficha (telas y modelos)
+let fichasFormFotos = []; // fotos genéricas de la ficha (telas y modelos) — legacy
+let fichasFormDriveFolderUrl = ''; // URL carpeta Google Drive de la ficha activa
 let fichasSearch = '';   // búsqueda por nombre
 let fichasOpenGroups = new Set(); // grupos (año-mes) desplegados
 let fichasFormTipoEvento = '';
 let fichasFilter = 'todas'; // 'todas' | 'con-pedido' | 'con-pedido-todos' | 'con-pedido-sin-medidas' | 'con-pedido-con-medidas'
 const FICHA_FOTOS_ID = '_fotos';
 const FICHA_META_ID = '_meta';
+const FICHA_DRIVE_ID = '_drive';
 const EVENTO_OPTIONS = [
   {value:'arras', label:'Arras'},
   {value:'comunion', label:'Comunión'},
@@ -2440,12 +2442,16 @@ function getFichaStoredMeta(rawNinos){
 function getFichaStoredFotos(rawNinos){
   return getFichaStoredItems(rawNinos).find(n=>n.id===FICHA_FOTOS_ID)?.fotos || [];
 }
+function getFichaStoredDriveUrl(rawNinos){
+  return getFichaStoredItems(rawNinos).find(n=>n.id===FICHA_DRIVE_ID)?.folderUrl || '';
+}
 function getFichaChildren(rawNinos){
-  return getFichaStoredItems(rawNinos).filter(n=>n.id!==FICHA_FOTOS_ID && n.id!==FICHA_META_ID);
+  return getFichaStoredItems(rawNinos).filter(n=>n.id!==FICHA_FOTOS_ID && n.id!==FICHA_META_ID && n.id!==FICHA_DRIVE_ID);
 }
 function serializeFichaNinos(ficha){
   const items = [];
   if(ficha.fotos?.length) items.push({id:FICHA_FOTOS_ID, fotos:ficha.fotos});
+  if(ficha.driveFolderUrl) items.push({id:FICHA_DRIVE_ID, folderUrl:ficha.driveFolderUrl});
   if(ficha.medidasCompletadas || ficha.tipoEvento){
     items.push({id:FICHA_META_ID, medidasCompletadas:!!ficha.medidasCompletadas, tipoEvento:ficha.tipoEvento||''});
   }
@@ -2521,6 +2527,7 @@ async function loadFichas(force=false){
       tipoEvento: getFichaStoredMeta(r.ninos).tipoEvento || '',
       medidasCompletadas: !!getFichaStoredMeta(r.ninos).medidasCompletadas,
       fotos: getFichaStoredFotos(r.ninos),
+      driveFolderUrl: getFichaStoredDriveUrl(r.ninos),
       ninos: getFichaChildren(r.ninos)
     }));
     fichasLoaded = true;
@@ -2755,6 +2762,21 @@ function renderFichasList(c){
       f.telefono ? `📞 ${escF(f.telefono)}` : '',
       f.email ? `✉ <span class="fp-contact-email">${escF(f.email)}</span>` : '',
     ].filter(Boolean).join('<span style="margin:0 .2rem;opacity:.4;">·</span>');
+    const fotosLegacy = f.fotos?.length ? f.fotos : f.ninos.flatMap(n=>n.fotos||[]);
+    const fotosStrip = f.driveFolderUrl
+      ? `<div style="margin-top:.5rem;">
+          <a href="${escF(f.driveFolderUrl)}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation();"
+             style="display:inline-flex;align-items:center;gap:.35rem;padding:.25rem .65rem;border-radius:20px;background:rgba(66,133,244,.08);border:1px solid rgba(66,133,244,.2);text-decoration:none;">
+            <svg width="13" height="13" viewBox="0 0 87.3 78" xmlns="http://www.w3.org/2000/svg"><path d="m6.6 66.85 3.85 6.65c.8 1.4 1.95 2.5 3.3 3.3l13.75-23.8h-27.5c0 1.55.4 3.1 1.2 4.5z" fill="#0066da"/><path d="m43.65 25-13.75-23.8c-1.35.8-2.5 1.9-3.3 3.3l-25.4 44a9.06 9.06 0 0 0 -1.2 4.5h27.5z" fill="#00ac47"/><path d="m73.55 76.8c1.35-.8 2.5-1.9 3.3-3.3l1.6-2.75 7.65-13.25c.8-1.4 1.2-2.95 1.2-4.5h-27.502l5.852 11.5z" fill="#ea4335"/><path d="m43.65 25 13.75-23.8c-1.35-.8-2.9-1.2-4.5-1.2h-18.5c-1.6 0-3.15.45-4.5 1.2z" fill="#00832d"/><path d="m59.8 53h-32.3l-13.75 23.8c1.35.8 2.9 1.2 4.5 1.2h50.8c1.6 0 3.15-.45 4.5-1.2z" fill="#2684fc"/><path d="m73.4 26.5-12.7-22c-.8-1.4-1.95-2.5-3.3-3.3l-13.75 23.8 16.15 27h27.45c0-1.55-.4-3.1-1.2-4.5z" fill="#ffba00"/></svg>
+            <span style="font-family:'Cormorant Garamond',serif;font-size:.82rem;color:#1a73e8;">Fotos en Drive</span>
+          </a>
+        </div>`
+      : fotosLegacy.length
+      ? `<div style="display:flex;gap:.35rem;margin-top:.55rem;overflow-x:auto;padding-bottom:.1rem;">
+          ${fotosLegacy.slice(0,5).map(url=>`<img src="${url}" style="width:52px;height:52px;object-fit:cover;border-radius:6px;border:1px solid rgba(212,201,184,.5);flex-shrink:0;">`).join('')}
+          ${fotosLegacy.length>5?`<div style="width:52px;height:52px;border-radius:6px;background:rgba(212,201,184,.35);border:1px solid rgba(212,201,184,.5);display:flex;align-items:center;justify-content:center;font-family:'Cormorant Garamond',serif;font-size:.82rem;color:var(--warm);flex-shrink:0;">+${fotosLegacy.length-5}</div>`:''}
+        </div>`
+      : '';
     return `<div class="fp-item" data-fid="${escF(f.id)}" data-name="${escF((titulo).toLowerCase())}">
       <div class="fp-item-top">
         <div class="fp-item-top-main">
@@ -2769,6 +2791,7 @@ function renderFichasList(c){
       ${contactItems?`<div class="fp-item-contact">${contactItems}</div>`:''}
       ${fechaEvStr?`<div class="fp-item-fecha">🗓 ${fechaEvStr}</div>`:''}
       ${tipoEventoLabel?`<div class="fp-item-evento">${getEventoIcon(f.tipoEvento)} ${escF(tipoEventoLabel)}</div>`:''}
+      ${fotosStrip}
       <div class="fp-item-bottom">
         ${numNinas?`<div class="fp-circle fp-circle-nina">${numNinas}</div><span class="fp-circle-label" style="color:#b4648c;">niña${numNinas!==1?'s':''}</span>`:''}
         ${numNinas&&numNinos?'<span style="color:var(--border);font-size:.8rem;">·</span>':''}
@@ -2989,6 +3012,7 @@ function buildFichaFromForm() {
     pedidoRealizado: isEdit ? existing.pedidoRealizado : false,
     medidasCompletadas: isEdit ? !!existing.medidasCompletadas : false,
     fotos: [...fichasFormFotos],
+    driveFolderUrl: fichasFormDriveFolderUrl || (isEdit ? existing?.driveFolderUrl||'' : ''),
     ninos: fichasFormNinos.filter(n=>n.sexo!==null).map(n=>({
       id:n.id, nombre:n.nombre, edad:n.edad, talla:n.talla||'', sexo:n.sexo,
       modelo:n.modelo||'', tela:n.tela||'', descripcion:n.descripcion||'',
@@ -3202,11 +3226,26 @@ function renderFichaFormStep2(c){
 }
 
 function renderFichaFormStep3(c){
-  const fotosHtml = fichasFormFotos.map((url,j)=>`
-    <div style="position:relative;">
-      <img src="${url}" style="width:80px;height:80px;object-fit:cover;border-radius:6px;border:1px solid rgba(0,0,0,.12);">
-      <button class="ficha-foto-del" data-fj="${j}" style="position:absolute;top:-5px;right:-5px;background:#c00;color:#fff;border:none;border-radius:50%;width:18px;height:18px;font-size:10px;cursor:pointer;line-height:1;padding:0;">✕</button>
-    </div>`).join('');
+  const driveUrl = fichasFormDriveFolderUrl;
+  const driveLinkHtml = driveUrl
+    ? `<div style="margin-top:.9rem;padding:.8rem 1rem;background:rgba(66,133,244,.07);border:1px solid rgba(66,133,244,.25);border-radius:10px;display:flex;align-items:center;gap:.65rem;">
+        <svg width="20" height="20" viewBox="0 0 87.3 78" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0;"><path d="m6.6 66.85 3.85 6.65c.8 1.4 1.95 2.5 3.3 3.3l13.75-23.8h-27.5c0 1.55.4 3.1 1.2 4.5z" fill="#0066da"/><path d="m43.65 25-13.75-23.8c-1.35.8-2.5 1.9-3.3 3.3l-25.4 44a9.06 9.06 0 0 0 -1.2 4.5h27.5z" fill="#00ac47"/><path d="m73.55 76.8c1.35-.8 2.5-1.9 3.3-3.3l1.6-2.75 7.65-13.25c.8-1.4 1.2-2.95 1.2-4.5h-27.502l5.852 11.5z" fill="#ea4335"/><path d="m43.65 25 13.75-23.8c-1.35-.8-2.9-1.2-4.5-1.2h-18.5c-1.6 0-3.15.45-4.5 1.2z" fill="#00832d"/><path d="m59.8 53h-32.3l-13.75 23.8c1.35.8 2.9 1.2 4.5 1.2h50.8c1.6 0 3.15-.45 4.5-1.2z" fill="#2684fc"/><path d="m73.4 26.5-12.7-22c-.8-1.4-1.95-2.5-3.3-3.3l-13.75 23.8 16.15 27h27.45c0-1.55-.4-3.1-1.2-4.5z" fill="#ffba00"/></svg>
+        <div style="flex:1;min-width:0;">
+          <div style="font-family:'Cormorant Garamond',serif;font-size:.85rem;color:var(--muted);margin-bottom:.15rem;">Carpeta de fotos en Google Drive</div>
+          <a href="${driveUrl}" target="_blank" rel="noopener noreferrer" style="font-family:'Cormorant Garamond',serif;font-size:.95rem;color:#1a73e8;word-break:break-all;">Ver carpeta →</a>
+        </div>
+      </div>
+      <label id="fichaFotoLbl" style="margin-top:.65rem;display:inline-flex;align-items:center;gap:.4rem;cursor:pointer;padding:.4rem .9rem;border-radius:20px;border:1.5px dashed rgba(139,115,85,.4);color:var(--warm);font-size:.88rem;font-family:'Cormorant Garamond',serif;">
+        <span id="fichaFotoLblTxt">📷 Añadir más fotos</span>
+        <input type="file" accept="image/*" id="fichaFotoInp" style="position:absolute;width:1px;height:1px;opacity:0;overflow:hidden;" multiple>
+      </label>`
+    : `<div style="margin-top:.9rem;">
+        <label id="fichaFotoLbl" style="display:flex;align-items:center;justify-content:center;gap:.5rem;cursor:pointer;padding:1.1rem;border-radius:10px;border:2px dashed rgba(139,115,85,.35);color:var(--warm);font-family:'Cormorant Garamond',serif;font-size:1rem;background:rgba(255,255,255,.5);">
+          <span id="fichaFotoLblTxt">📷 Subir fotos a Google Drive</span>
+          <input type="file" accept="image/*" id="fichaFotoInp" style="position:absolute;width:1px;height:1px;opacity:0;overflow:hidden;" multiple>
+        </label>
+        <div style="margin-top:.4rem;font-family:'Cormorant Garamond',serif;font-size:.82rem;font-style:italic;color:var(--muted);text-align:center;">Se creará una carpeta con el nombre de la clienta · Opcional</div>
+      </div>`;
 
   c.innerHTML = `
     <div class="ficha-view" style="padding:1.25rem;max-width:520px;margin:0 auto;">
@@ -3216,15 +3255,9 @@ function renderFichaFormStep3(c){
       ${fichaStepperHtml(3)}
       <div class="ficha-wizard-hdr">
         <div class="ficha-wizard-title">Fotos de telas y modelos</div>
-        <div class="ficha-wizard-sub">Opcional · se incluirán en el PDF</div>
+        <div class="ficha-wizard-sub">Se guardan en Google Drive · enlace en el PDF</div>
       </div>
-      <div style="margin-top:.9rem;display:flex;flex-wrap:wrap;gap:.5rem;margin-bottom:.75rem;">
-        ${fotosHtml}
-      </div>
-      <label id="fichaFotoLbl" style="display:inline-flex;align-items:center;gap:.4rem;cursor:pointer;padding:.5rem 1rem;border-radius:20px;border:1.5px dashed rgba(139,115,85,.45);color:var(--warm);font-size:.9rem;font-family:'Cormorant Garamond',serif;">
-        <span id="fichaFotoLblTxt">📷 Añadir fotos</span>
-        <input type="file" accept="image/*" id="fichaFotoInp" style="display:none;" multiple>
-      </label>
+      ${driveLinkHtml}
       <div class="ficha-form-actions" style="flex-wrap:wrap;gap:.5rem;margin-top:1.25rem;">
         <button class="ficha-cancel-btn" id="fichaCancelS3">Cancelar</button>
         <button class="ficha-save-btn" id="fichaSave">💾 Guardar</button>
@@ -3232,33 +3265,27 @@ function renderFichaFormStep3(c){
     </div>`;
 
   c.querySelector('#fichaPrevBtn3').addEventListener('click',()=>{fichasFormStep=2;renderFichaFormStep2(c);});
-  c.querySelector('#fichaCancelS3').addEventListener('click',()=>{fichasEditId=null;fichasViewState='list';renderFichasList(c);});
+  c.querySelector('#fichaCancelS3').addEventListener('click',()=>{fichasEditId=null;fichasFormDriveFolderUrl='';fichasViewState='list';renderFichasList(c);});
 
-  // Upload fotos
+  // Subir fotos a Google Drive
   c.querySelector('#fichaFotoInp').addEventListener('change', async (e) => {
     if(!e.target.files?.length) return;
     const lbl = c.querySelector('#fichaFotoLblTxt');
-    lbl.textContent = 'Subiendo…';
+    const prevTxt = lbl.textContent;
+    lbl.textContent = 'Subiendo a Drive…';
+    c.querySelector('#fichaFotoLbl').style.pointerEvents = 'none';
     const fichaId = fichasEditId || (fichasNewId || (fichasNewId = 'f_' + Date.now()));
+    const clientName = fichasFormName.trim() || 'Sin nombre';
     try {
-      for(const file of Array.from(e.target.files)){
-        const url = await uploadNinoFoto(file, fichaId);
-        fichasFormFotos.push(url);
-      }
+      const folderUrl = await uploadPhotosToGoogleDrive(e.target.files, clientName, fichaId);
+      fichasFormDriveFolderUrl = folderUrl;
       renderFichaFormStep3(c);
     } catch(err) {
-      toast('Error subiendo foto: ' + err.message, true);
-      lbl.textContent = '📷 Añadir fotos';
+      toast('Error subiendo a Drive: ' + err.message, true);
+      lbl.textContent = prevTxt;
+      c.querySelector('#fichaFotoLbl').style.pointerEvents = '';
     }
     e.target.value = '';
-  });
-
-  // Borrar foto
-  c.querySelectorAll('.ficha-foto-del').forEach(btn=>{
-    btn.addEventListener('click',()=>{
-      fichasFormFotos.splice(parseInt(btn.dataset.fj),1);
-      renderFichaFormStep3(c);
-    });
   });
 
   // Guardar
@@ -3271,11 +3298,32 @@ function renderFichaFormStep3(c){
       await sbSaveFicha(ficha);
       if(isEdit){ const idx=fichasData.findIndex(f=>f.id===fichasEditId); if(idx>=0) fichasData[idx]=ficha; }
       else fichasData.push(ficha);
-      fichasEditId=null; fichasNewId=null; fichasViewState='list';
+      fichasEditId=null; fichasNewId=null; fichasFormDriveFolderUrl=''; fichasViewState='list';
       toast(isEdit?'Ficha actualizada ✓':'Ficha guardada ✓');
       renderFichasList(c);
     } catch(e){ saveBtn.disabled=false; saveBtn.textContent='💾 Guardar'; toast('Error al guardar: '+e.message); }
   });
+}
+
+// ── GOOGLE DRIVE FOTOS ──
+const N8N_DRIVE_WEBHOOK_URL = 'https://nuriahorma.app.n8n.cloud/webhook/lanonna-drive-fotos';
+
+async function uploadPhotosToGoogleDrive(files, clientName, fichaId) {
+  const photos = [];
+  for(const file of Array.from(files)){
+    const resized = await resizeImageForUpload(file instanceof Blob ? file : file, 1600, 0.88);
+    const b64 = await blobToBase64(resized);
+    photos.push({ filename: (file.name || `foto_${Date.now()}.jpg`), data: b64 });
+  }
+  const res = await fetch(N8N_DRIVE_WEBHOOK_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ clientName: clientName || 'Sin nombre', fichaId, photos })
+  });
+  if(!res.ok) throw new Error(`Error al subir a Drive (${res.status})`);
+  const data = await res.json().catch(()=>({}));
+  if(!data.folderUrl) throw new Error('n8n no devolvió la URL de la carpeta de Drive');
+  return data.folderUrl;
 }
 
 // ── ASOCIAR PEDIDO MODAL ──
@@ -3344,9 +3392,9 @@ async function renderNodeToPdfBlob(node, filename, lightMode=false){
       html2pdf().set({
         margin: 0,
         filename: filename + '.pdf',
-        image: { type: 'jpeg', quality: lightMode ? 0.72 : 0.86 },
+        image: { type: 'jpeg', quality: 0.95 },
         html2canvas: {
-          scale: isLikelyMobilePdfDevice() ? 0.56 : (lightMode ? 0.82 : 1.05),
+          scale: isLikelyMobilePdfDevice() ? 1.2 : 2,
           useCORS: false,
           logging: false,
           backgroundColor: '#ffffff',
@@ -3366,7 +3414,7 @@ async function renderNodeToPdfBlob(node, filename, lightMode=false){
   const mobileLite = isLikelyMobilePdfDevice();
   const canvas = await withTimeout(
     html2canvas(node, {
-      scale: mobileLite ? 0.56 : (lightMode ? 0.72 : 0.92),
+      scale: mobileLite ? 1.2 : 2,
       useCORS: false,
       logging: false,
       backgroundColor: '#ffffff',
@@ -3399,7 +3447,7 @@ async function renderNodeToPdfBlob(node, filename, lightMode=false){
     pageCtx.drawImage(canvas, 0, rendered, canvas.width, sliceH, 0, 0, canvas.width, sliceH);
     const sliceMmH = sliceH / pxPerMm;
     if(pageIndex > 0) pdf.addPage();
-    pdf.addImage(pageCanvas.toDataURL('image/jpeg', mobileLite ? 0.72 : 0.82), 'JPEG', 0, 0, imgW, sliceMmH, undefined, 'FAST');
+    pdf.addImage(pageCanvas.toDataURL('image/jpeg', 0.95), 'JPEG', 0, 0, imgW, sliceMmH, undefined, 'FAST');
     rendered += sliceH;
     pageIndex += 1;
   }
@@ -3457,12 +3505,8 @@ async function savePdfFromHtml(htmlContent, filename, lightMode=false){
   }
 }
 async function generatePDFBase64(ficha, titulo, fechaEvStr, filename) {
-  const mobileLite = isLikelyMobilePdfDevice();
   const attempts = [
-    { skipPhotos:false, lightMode:true, photoMaxPx: mobileLite ? 560 : 1100, photoQuality: mobileLite ? 0.46 : 0.72 },
-    { skipPhotos:false, lightMode:true, photoMaxPx: mobileLite ? 420 : 800, photoQuality: mobileLite ? 0.34 : 0.58 },
-    { skipPhotos:false, lightMode:true, photoMaxPx: mobileLite ? 320 : 560, photoQuality: mobileLite ? 0.26 : 0.42 },
-    { skipPhotos:true, lightMode:true }
+    { lightMode:true }
   ];
   let lastError = null;
   for(const attempt of attempts){
@@ -3630,9 +3674,6 @@ function fmtEdad(e){ if(!e) return ''; return /año/i.test(String(e)) ? e : e + 
 
 async function downloadFichaPDF(ficha, titulo, fechaEvStr, filenameOverride, htmlOnly, options={}){
   const esc = s => (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-  const skipPhotos = !!options.skipPhotos;
-  const photoMaxPx = options.photoMaxPx || null;
-  const photoQuality = options.photoQuality ?? 0.72;
   // Fetch logo as embedded data URL so it works in the about:blank window
   let logoDataUrl = '';
   try {
@@ -3729,12 +3770,7 @@ async function downloadFichaPDF(ficha, titulo, fechaEvStr, filenameOverride, htm
     '.prod-chip{font-size:.82rem;padding:.18em .55em;border-radius:4px;background:#f0ebe0;border:1px solid #d4c9b8;color:#1a1612;font-weight:500;}',
     '.prod-lbl{font-size:.68rem;text-transform:uppercase;letter-spacing:.08em;color:#4a3f34;font-weight:600;margin-right:.2em;}',
     '.desc-box{font-size:.88rem;font-style:italic;color:#3a3028;padding:.35em .55em;background:#f5f0e8;border-left:2px solid #c8a96e;margin-bottom:.35em;}',
-    '@media print{body{padding:.8cm 1.1cm;} @page{margin:.8cm 1.1cm;size:A4 portrait;}}',
-    '.fotos-page{page-break-before:always;margin-top:1.5em;}',
-    '.fotos-grid{display:flex;flex-wrap:wrap;gap:.6em;}',
-    '.fotos-item{page-break-inside:avoid;break-inside:avoid;flex:0 0 calc(50% - .3em);max-width:calc(50% - .3em);display:flex;align-items:flex-start;}',
-    '.fotos-frame{width:100%;height:240px;display:flex;align-items:center;justify-content:center;padding:.35em;background:#fcfaf7;border:1px solid #d4c9b8;border-radius:6px;overflow:hidden;}',
-    '.fotos-frame img{max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain;object-position:center;display:block;border-radius:4px;}'
+    '@media print{body{padding:.8cm 1.1cm;} @page{margin:.8cm 1.1cm;size:A4 portrait;}}'
   ].join('\n');
 
   let bodyHTML =
@@ -3765,23 +3801,23 @@ async function downloadFichaPDF(ficha, titulo, fechaEvStr, filenameOverride, htm
         '<div style="margin-top:.65em;">' + ninoRows + '</div>' +
       '</div>' : '');
 
-  // Sección de fotos (pre-fetch como data URLs para que html2pdf las embeba)
-  const fotosUrls = ficha.fotos?.length ? ficha.fotos
-    : ficha.ninos.flatMap(n=>n.fotos||[]); // compatibilidad con datos legacy
-  if(!skipPhotos && fotosUrls.length){
-    let fotosHtml = '<div class="fotos-page"><div class="section-title">Fotos de telas y modelos</div><div class="fotos-grid">';
-    for(const url of fotosUrls){
-      const dataUrl = await fetchAsDataUrl(url, {
-        maxPx: photoMaxPx,
-        quality: photoQuality,
-        timeoutMs: 12000,
-        resizeTimeoutMs: 12000,
-        readTimeoutMs: 8000
-      });
-      if(dataUrl) fotosHtml += `<div class="fotos-item"><div class="fotos-frame"><img src="${dataUrl}" alt=""></div></div>`;
+  // Enlace de Google Drive al final del PDF
+  if(ficha.driveFolderUrl){
+    bodyHTML +=
+      '<div style="margin-top:1.4em;padding:.75em 1em;background:#f5f0e8;border:1px solid #d4c9b8;border-left:3px solid #c8a96e;border-radius:6px;">' +
+        '<div style="font-size:.7rem;text-transform:uppercase;letter-spacing:.1em;color:#4a3f34;font-weight:700;margin-bottom:.35em;">Fotos de telas y modelos</div>' +
+        '<div style="font-size:.9rem;color:#1a1612;margin-bottom:.3em;">Las fotos están disponibles en la carpeta de Google Drive:</div>' +
+        '<div style="font-size:.82rem;font-family:-apple-system,BlinkMacSystemFont,\'Segoe UI\',sans-serif;color:#1a73e8;word-break:break-all;">' + esc(ficha.driveFolderUrl) + '</div>' +
+      '</div>';
+  } else {
+    const fotosUrls = ficha.fotos?.length ? ficha.fotos : ficha.ninos.flatMap(n=>n.fotos||[]);
+    if(fotosUrls.length){
+      bodyHTML +=
+        '<div style="margin-top:1.4em;padding:.75em 1em;background:#f5f0e8;border:1px solid #d4c9b8;border-left:3px solid #c8a96e;border-radius:6px;">' +
+          '<div style="font-size:.7rem;text-transform:uppercase;letter-spacing:.1em;color:#4a3f34;font-weight:700;margin-bottom:.35em;">Fotos de telas y modelos</div>' +
+          '<div style="font-size:.9rem;color:#1a1612;">📷 ' + fotosUrls.length + ' foto' + (fotosUrls.length!==1?'s':'') + ' disponible' + (fotosUrls.length!==1?'s':'') + ' en la ficha digital.</div>' +
+        '</div>';
     }
-    fotosHtml += '</div></div>';
-    bodyHTML += fotosHtml;
   }
 
   // Si htmlOnly=true, devolver el HTML completo sin abrir ventana (para enviar por email)
@@ -3874,7 +3910,22 @@ function renderFichaDetail(c, fichaId){
   const numNinosC = ficha.ninos.filter(n=>n.sexo==='nino').length;
   const totalN = numNinas + numNinosC;
   const fotosDetalle = ficha.fotos?.length ? ficha.fotos : ficha.ninos.flatMap(n=>n.fotos||[]);
-  const fotosDetalleHtml = fotosDetalle.length
+  const fotosDetalleHtml = ficha.driveFolderUrl
+    ? `<div class="fd-fotos-block">
+         <div class="fd-fotos-title" style="display:flex;align-items:center;justify-content:space-between;">
+           <span>Fotos de telas y modelos</span>
+           <button id="fichaDelDriveBtn" style="background:none;border:none;cursor:pointer;font-size:.78rem;color:var(--muted);padding:.15rem .4rem;border-radius:6px;font-family:-apple-system,sans-serif;" title="Eliminar enlace de fotos">✕ Eliminar fotos</button>
+         </div>
+         <a href="${escF(ficha.driveFolderUrl)}" target="_blank" rel="noopener noreferrer"
+            style="display:flex;align-items:center;gap:.65rem;padding:.75rem .9rem;background:rgba(66,133,244,.07);border:1px solid rgba(66,133,244,.22);border-radius:10px;text-decoration:none;">
+           <svg width="22" height="22" viewBox="0 0 87.3 78" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0;"><path d="m6.6 66.85 3.85 6.65c.8 1.4 1.95 2.5 3.3 3.3l13.75-23.8h-27.5c0 1.55.4 3.1 1.2 4.5z" fill="#0066da"/><path d="m43.65 25-13.75-23.8c-1.35.8-2.5 1.9-3.3 3.3l-25.4 44a9.06 9.06 0 0 0 -1.2 4.5h27.5z" fill="#00ac47"/><path d="m73.55 76.8c1.35-.8 2.5-1.9 3.3-3.3l1.6-2.75 7.65-13.25c.8-1.4 1.2-2.95 1.2-4.5h-27.502l5.852 11.5z" fill="#ea4335"/><path d="m43.65 25 13.75-23.8c-1.35-.8-2.9-1.2-4.5-1.2h-18.5c-1.6 0-3.15.45-4.5 1.2z" fill="#00832d"/><path d="m59.8 53h-32.3l-13.75 23.8c1.35.8 2.9 1.2 4.5 1.2h50.8c1.6 0 3.15-.45 4.5-1.2z" fill="#2684fc"/><path d="m73.4 26.5-12.7-22c-.8-1.4-1.95-2.5-3.3-3.3l-13.75 23.8 16.15 27h27.45c0-1.55-.4-3.1-1.2-4.5z" fill="#ffba00"/></svg>
+           <div>
+             <div style="font-family:'Cormorant Garamond',serif;font-size:.95rem;color:var(--dark);">Ver carpeta de fotos en Google Drive</div>
+             <div style="font-family:-apple-system,sans-serif;font-size:.78rem;color:#1a73e8;margin-top:.1rem;">Abre en nueva pestaña →</div>
+           </div>
+         </a>
+       </div>`
+    : fotosDetalle.length
     ? `<div class="fd-fotos-block">
          <div class="fd-fotos-title">Fotos de telas y modelos</div>
          <div class="fd-fotos-grid">
@@ -3904,11 +3955,8 @@ function renderFichaDetail(c, fichaId){
             </div>
           </div>
           ${ficha.numeroPedido
-            ? `<div style="display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;">
-                 <div class="fd-num-pedido">Pedido ${escF(ficha.numeroPedido)}</div>
-                 <button class="ficha-back-btn" id="fichaAsocBtn" style="color:var(--accent);border:1px solid rgba(200,169,110,.45);padding:.18rem .65rem;border-radius:20px;background:rgba(200,169,110,.09);">✏️ Cambiar</button>
-               </div>`
-            : `<button class="ficha-back-btn" id="fichaAsocBtn" style="color:var(--warm);border:1.5px solid rgba(139,115,85,.4);padding:.3rem .8rem;border-radius:20px;background:rgba(200,169,110,.1);font-size:.92rem;margin-bottom:.3rem;">📨 Asociar a nº de pedido y enviar email</button>`}
+            ? `<div class="fd-num-pedido">Pedido ${escF(ficha.numeroPedido)}</div>`
+            : ''}
           <div class="fd-titulo">${escF(titulo)}</div>
           ${tipoEventoLabel?`<div class="fd-fecha-badge">✨ ${escF(tipoEventoLabel)}</div>`:''}
           ${fechaEvStr?`<div class="fd-fecha-badge">🗓 ${fechaEvStr}</div>`:''}
@@ -3938,13 +3986,12 @@ function renderFichaDetail(c, fichaId){
             <span style="margin-left:auto;font-family:'Cormorant Garamond',serif;font-size:1.25rem;font-weight:700;color:var(--dark);">${totalN} en total</span>
           </div>`:''}
         </div>
+        ${fotosDetalleHtml}
         ${ficha.ninos.length
           ? ficha.ninos.map((n,i)=>ninoCard(n,i)).join('')
           : `<div style="text-align:center;padding:1.5rem;font-family:'Cormorant Garamond',serif;font-style:italic;color:var(--muted);">Sin niños añadidos · pulsa Editar para añadir</div>`}
-        ${fotosDetalleHtml}
-        <div class="ficha-detail-actions" style="justify-content:space-between;">
+        <div class="ficha-detail-actions">
           <button class="ficha-del-btn" id="fichaDelBtn">Eliminar ficha</button>
-          <button class="ficha-save-btn" id="fichaDetailEnviarBtn" style="background:linear-gradient(135deg,#8b7355,#c8a96e);color:#fff;border:none;padding:.4rem 1.1rem;border-radius:20px;font-size:.9rem;">📨 Enviar email</button>
         </div>
       </div>
     </div>`;
@@ -3975,6 +4022,7 @@ function renderFichaDetail(c, fichaId){
       ...(ficha.fotos||[]),
       ...ficha.ninos.flatMap(n=>n.fotos||[]) // migrar fotos legacy por niño
     ];
+    fichasFormDriveFolderUrl = ficha.driveFolderUrl||'';
     fichasFormNinos = ficha.ninos.map(n=>({
       id: n.id,
       nombre: n.nombre||'',
@@ -4020,27 +4068,27 @@ function renderFichaDetail(c, fichaId){
     }
   });
 
-  modal.querySelector('#fichaDetailEnviarBtn').addEventListener('click', async () => {
-    const btn = modal.querySelector('#fichaDetailEnviarBtn');
-    btn.disabled = true;
-    btn.textContent = 'Generando PDF…';
-    showLoading('Generando PDF', 'Por favor espera…', 0);
-    try {
-      await sendFichaEmail(ficha, titulo, fechaEvStr, false);
-      toast('✓ Email enviado a La Nonna');
-    } catch(e) {
-      modal.remove();
-      showBlockingError('Error al enviar: ' + e.message);
-    } finally {
-      hideLoading();
-      btn.disabled = false;
-      btn.textContent = '📨 Enviar';
-    }
-  });
-
-  modal.querySelector('#fichaAsocBtn').addEventListener('click',()=>{
-    openAsocModal(ficha, titulo, fechaEvStr, c);
-  });
+  if(ficha.driveFolderUrl){
+    modal.querySelector('#fichaDelDriveBtn').addEventListener('click', async () => {
+      if(!confirm('¿Eliminar el enlace de fotos de Drive de esta ficha?')) return;
+      const btn = modal.querySelector('#fichaDelDriveBtn');
+      btn.disabled = true;
+      const idx = fichasData.findIndex(f=>f.id===fichaId);
+      try {
+        if(idx>=0) fichasData[idx].driveFolderUrl = '';
+        const newNinos = serializeFichaNinos(idx>=0 ? fichasData[idx] : ficha);
+        await sbPatch(`/rest/v1/fichas?id=eq.${encodeURIComponent(fichaId)}`,
+          {ninos: JSON.stringify(newNinos)});
+        toast('Enlace de fotos eliminado');
+        modal.remove();
+        renderFichasList(c);
+      } catch(e) {
+        if(idx>=0) fichasData[idx].driveFolderUrl = ficha.driveFolderUrl;
+        btn.disabled = false;
+        toast('Error: ' + e.message, true);
+      }
+    });
+  }
 
   modal.querySelector('#fichaDelBtn').addEventListener('click',async()=>{
     if(!confirm('¿Eliminar esta ficha? No se puede deshacer.')) return;
