@@ -3990,8 +3990,9 @@ function renderFichaDetail(c, fichaId){
         ${ficha.ninos.length
           ? ficha.ninos.map((n,i)=>ninoCard(n,i)).join('')
           : `<div style="text-align:center;padding:1.5rem;font-family:'Cormorant Garamond',serif;font-style:italic;color:var(--muted);">Sin niños añadidos · pulsa Editar para añadir</div>`}
-        <div class="ficha-detail-actions">
+        <div class="ficha-detail-actions" style="justify-content:space-between;">
           <button class="ficha-del-btn" id="fichaDelBtn">Eliminar ficha</button>
+          <button class="ficha-save-btn" id="fichaDetailEnviarBtn" style="background:linear-gradient(135deg,#8b7355,#c8a96e);color:#fff;border:none;padding:.4rem 1.1rem;border-radius:20px;font-size:.9rem;">📨 Enviar email</button>
         </div>
       </div>
     </div>`;
@@ -4089,6 +4090,24 @@ function renderFichaDetail(c, fichaId){
       }
     });
   }
+
+  modal.querySelector('#fichaDetailEnviarBtn').addEventListener('click', async () => {
+    const btn = modal.querySelector('#fichaDetailEnviarBtn');
+    btn.disabled = true;
+    btn.textContent = 'Generando PDF…';
+    showLoading('Generando PDF', 'Por favor espera…', 0);
+    try {
+      await sendFichaEmail(ficha, titulo, fechaEvStr, false);
+      toast('✓ Email enviado a La Nonna');
+    } catch(e) {
+      modal.remove();
+      showBlockingError('Error al enviar: ' + e.message);
+    } finally {
+      hideLoading();
+      btn.disabled = false;
+      btn.textContent = '📨 Enviar email';
+    }
+  });
 
   modal.querySelector('#fichaDelBtn').addEventListener('click',async()=>{
     if(!confirm('¿Eliminar esta ficha? No se puede deshacer.')) return;
