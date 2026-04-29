@@ -3385,16 +3385,18 @@ async function renderNodeToPdfBlob(node, filename, lightMode=false){
   const hasHtml2Canvas = typeof html2canvas !== 'undefined';
   const JsPdfCtor = window.jspdf?.jsPDF || window.jsPDF;
   const hasJsPdf = !!JsPdfCtor;
-  if(!hasHtml2Canvas || !hasJsPdf){
+  const mobileLite = isLikelyMobilePdfDevice();
+  // On mobile always use html2pdf — html2canvas + jsPDF fails on iOS/Android
+  if(!hasHtml2Canvas || !hasJsPdf || mobileLite){
     if(typeof html2pdf === 'undefined') throw new Error('html2pdf no está disponible');
     await waitForPdfNodeAssets(node, 12000);
     return await withTimeout(
       html2pdf().set({
         margin: 0,
         filename: filename + '.pdf',
-        image: { type: 'jpeg', quality: 0.95 },
+        image: { type: 'jpeg', quality: mobileLite ? 0.80 : 0.95 },
         html2canvas: {
-          scale: isLikelyMobilePdfDevice() ? 1.2 : 2,
+          scale: mobileLite ? 1.0 : 2,
           useCORS: false,
           logging: false,
           backgroundColor: '#ffffff',
@@ -3406,15 +3408,14 @@ async function renderNodeToPdfBlob(node, filename, lightMode=false){
         },
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait', compress: true }
       }).from(node).outputPdf('blob'),
-      lightMode ? 25000 : 35000,
+      lightMode ? 40000 : 50000,
       'Tiempo agotado al generar el PDF'
     );
   }
   await waitForPdfNodeAssets(node, 12000);
-  const mobileLite = isLikelyMobilePdfDevice();
   const canvas = await withTimeout(
     html2canvas(node, {
-      scale: mobileLite ? 1.2 : 2,
+      scale: 2,
       useCORS: false,
       logging: false,
       backgroundColor: '#ffffff',
@@ -3425,7 +3426,7 @@ async function renderNodeToPdfBlob(node, filename, lightMode=false){
       scrollX: 0,
       scrollY: 0
     }),
-    mobileLite ? 20000 : 30000,
+    30000,
     'Tiempo agotado al renderizar el PDF'
   );
   const pdf = new JsPdfCtor({ unit:'mm', format:'a4', orientation:'portrait', compress:true });
@@ -3514,10 +3515,6 @@ async function generatePDFBase64(ficha, titulo, fechaEvStr, filename) {
       const fullHtml = await downloadFichaPDF(ficha, titulo, fechaEvStr, filename, true, attempt);
       const htmlContent = buildPdfHtmlForEmail(fullHtml);
       const pdfBase64 = await renderHtmlToPdfBase64(htmlContent, filename, attempt.lightMode);
-      const approxBytes = Math.ceil((pdfBase64.length * 3) / 4);
-      if(isLikelyMobilePdfDevice() && approxBytes > 2.8 * 1024 * 1024){
-        throw new Error(`PDF demasiado grande para móvil (${Math.round(approxBytes/1024)} KB)`);
-      }
       return pdfBase64;
     } catch(e){
       lastError = e;
