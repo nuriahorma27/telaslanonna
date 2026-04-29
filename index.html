@@ -439,6 +439,18 @@ header{height:var(--header-h);padding:0 1.2rem;display:flex;align-items:center;j
 .fstep-lbl.done{color:var(--warm);}
 .fstep-line{flex:1;height:2px;background:var(--border);margin:0 .3rem;margin-bottom:.9rem;min-width:.5rem;transition:background .2s;}
 .fstep-line.done{background:var(--warm);}
+/* ── ACCORDION EDIT MODE ── */
+.ficha-acc{display:flex;flex-direction:column;gap:.5rem;}
+.ficha-acc-section{border:1.5px solid rgba(212,201,184,.6);border-radius:12px;overflow:hidden;background:#fff;}
+.ficha-acc-hdr{display:flex;align-items:center;justify-content:space-between;padding:.85rem 1.1rem;cursor:pointer;user-select:none;background:rgba(255,255,255,.9);transition:background .15s;}
+.ficha-acc-hdr:hover{background:rgba(200,169,110,.06);}
+.ficha-acc-section.open .ficha-acc-hdr{background:rgba(200,169,110,.08);border-bottom:1px solid rgba(200,169,110,.25);}
+.ficha-acc-title{font-family:'Cormorant Garamond',serif;font-size:1.05rem;color:var(--dark);font-weight:600;letter-spacing:.02em;}
+.ficha-acc-sub{font-family:'Cormorant Garamond',serif;font-size:.8rem;font-style:italic;color:var(--muted);margin-top:.1rem;}
+.ficha-acc-arrow{font-size:.75rem;color:var(--muted);transition:transform .2s;}
+.ficha-acc-section.open .ficha-acc-arrow{transform:rotate(180deg);}
+.ficha-acc-body{display:none;padding:1rem 1.1rem;}
+.ficha-acc-section.open .ficha-acc-body{display:block;}
 .ficha-big-field{display:flex;flex-direction:column;gap:.45rem;}
 .ficha-big-lbl{font-family:'Cormorant Garamond',serif;font-size:.95rem;font-style:italic;color:var(--muted);letter-spacing:.02em;}
 .ficha-big-inp{width:100%;padding:.9rem 1rem;border:1.5px solid rgba(212,201,184,.7);border-radius:10px;background:#fff;color:var(--dark);font-family:'Cormorant Garamond',serif;font-size:1.2rem;transition:all .2s;}
@@ -2929,6 +2941,198 @@ function renderFichaForm(c){
   else renderFichaFormStep3(c);
 }
 
+let fichasAccOpen = [true, false, false];
+
+function renderFichaFormEdit(c){
+  fichasAccOpen = [true, false, false];
+  const ninos = fichasFormNinos;
+
+  function ninoCardHtml(n, i){
+    if(n.sexo === null){
+      return `<div class="nino-card" data-ni="${i}" style="border:2px dashed rgba(200,169,110,.45);background:rgba(255,255,255,.5);">
+        <div class="nino-card-hdr" style="background:transparent;">
+          <span class="nino-card-label" style="color:var(--muted);font-style:italic;">¿Niño o niña?</span>
+          <button class="nino-remove-btn" data-rm="${i}">✕</button>
+        </div>
+        <div class="nino-card-body" style="flex-direction:row;gap:.75rem;padding:.9rem 1rem;">
+          <button class="nino-sex-btn" data-si="${i}" data-sex="nino" style="flex:1;padding:1rem .5rem;border-radius:12px;border:2px solid rgba(58,92,138,.3);background:rgba(58,92,138,.06);cursor:pointer;font-family:'Cormorant Garamond',serif;font-size:1.1rem;color:#3a5c8a;transition:all .18s;display:flex;flex-direction:column;align-items:center;gap:.35rem;"><span style="font-size:2rem;">👦</span>Niño</button>
+          <button class="nino-sex-btn" data-si="${i}" data-sex="nina" style="flex:1;padding:1rem .5rem;border-radius:12px;border:2px solid rgba(180,100,140,.3);background:rgba(180,100,140,.06);cursor:pointer;font-family:'Cormorant Garamond',serif;font-size:1.1rem;color:#b4648c;transition:all .18s;display:flex;flex-direction:column;align-items:center;gap:.35rem;"><span style="font-size:2rem;">👧</span>Niña</button>
+        </div>
+      </div>`;
+    }
+    const isNina=n.sexo==='nina', sexColor=isNina?'#b4648c':'#3a5c8a', sexBg=isNina?'rgba(180,100,140,.07)':'rgba(58,92,138,.07)', sexBorder=isNina?'rgba(180,100,140,.3)':'rgba(58,92,138,.3)', sexLabel=isNina?'👧 Niña':'👦 Niño';
+    const medFields=isNina?[{k:'contornoPecho',l:'Contorno de pecho'},{k:'largo',l:'Largo'}]:[{k:'contornoPecho',l:'Contorno de pecho'},{k:'largo',l:'Largo'},{k:'contornoCintura',l:'Contorno de cintura'},{k:'pantalon',l:'Largo del pantalón'}];
+    const hasMedData=medFields.some(f=>n.medidas?.[f.k]&&n.medidas[f.k]!=='');
+    const medHtml=medFields.map(f=>`<div><label class="f2-lbl">${f.l}</label><div class="medidas-inp-wrap"><input type="number" class="f2-inp fmn" data-i="${i}" data-mk="${f.k}" placeholder="0" min="0" step="0.5" value="${escF(n.medidas?.[f.k]||'')}"><span class="medidas-unit">cm</span></div></div>`).join('');
+    return `<div class="nino-card" data-ni="${i}" style="border-top:3px solid ${sexColor};background:#fff;">
+      <div class="nino-card-hdr" style="background:${sexBg};"><span class="nino-card-label" style="color:${sexColor};">${sexLabel} · ${escF(n.nombre||'Sin nombre')}</span><button class="nino-remove-btn" data-rm="${i}">✕</button></div>
+      <div class="nino-card-body">
+        <div class="f2-row">
+          <div><label class="f2-lbl">Nombre</label><input class="f2-inp fn-nombre" data-i="${i}" placeholder="Nombre" value="${escF(n.nombre)}"></div>
+          <div><label class="f2-lbl">Edad</label><div style="display:flex;align-items:center;gap:.4rem;"><input class="f2-inp fn-edad" data-i="${i}" placeholder="Ej: 3" value="${escF(n.edad)}" style="flex:1;min-width:0;"><span style="font-family:'Cormorant Garamond',serif;font-size:.9rem;color:var(--muted);flex-shrink:0;">años</span></div></div>
+        </div>
+        <div><label class="f2-lbl">Talla habitual</label><input class="f2-inp fn-talla" data-i="${i}" placeholder="Ej: 4T, 6 años, 116 cm…" value="${escF(n.talla||'')}"></div>
+        <div>
+          <button class="medidas-toggle-btn${n.productoOpen?' open':''}" data-popen="${i}" style="font-size:.95rem;padding:.55rem .9rem;${!n.productoOpen&&!(n.modelo||n.tela||n.descripcion)?'border-color:rgba(107,76,122,.45);color:#6b4c7a;background:rgba(107,76,122,.07);':''}">${n.productoOpen?'🎨 Ocultar producto':'🎨 Producto'}${(n.modelo||n.tela||n.descripcion)?' ✓':''}</button>
+          <div class="medidas-section${n.productoOpen?' open':''}">
+            <div><label class="f2-lbl">Modelo</label><input class="f2-inp fn-modelo" data-i="${i}" placeholder="Ej: Vestido comunión clásico" value="${escF(n.modelo||'')}"></div>
+            <div><label class="f2-lbl">Tela</label><input class="f2-inp fn-tela" data-i="${i}" placeholder="Ej: Lino crudo…" value="${escF(n.tela||'')}"></div>
+            <div><label class="f2-lbl">Descripción</label><textarea class="f2-textarea fn-descripcion" data-i="${i}" placeholder="Detalles del modelo…" rows="3">${escF(n.descripcion||'')}</textarea></div>
+          </div>
+        </div>
+        <div>
+          <button class="medidas-toggle-btn${n.medidasOpen?' open':''}" data-mopen="${i}" style="font-size:.95rem;padding:.55rem .9rem;${!n.medidasOpen&&!hasMedData?'border-color:rgba(139,115,85,.5);color:var(--warm);background:rgba(200,169,110,.08);':''}">${n.medidasOpen?'📐 Ocultar medidas':'📏 Añadir medidas'}${hasMedData?' ✓':''}</button>
+          <div class="medidas-section${n.medidasOpen?' open':''}"><div class="medidas-grid2">${medHtml}</div></div>
+        </div>
+      </div>
+    </div>`;
+  }
+
+  function ninosBodyContent(){
+    const numNinas=ninos.filter(n=>n.sexo==='nina').length, numNinos=ninos.filter(n=>n.sexo==='nino').length, totalN=numNinas+numNinos;
+    const countBar=totalN?`<div style="display:flex;align-items:center;gap:.55rem;padding:.55rem .9rem;background:rgba(255,255,255,.7);border-radius:8px;border:1px solid rgba(212,201,184,.4);margin-bottom:.5rem;">${numNinas?`<div class="fp-circle fp-circle-nina">${numNinas}</div><span style="font-family:'Cormorant Garamond',serif;font-size:.88rem;font-style:italic;color:#b4648c;">niña${numNinas!==1?'s':''}</span>`:''} ${numNinas&&numNinos?'<span style="color:var(--border);">·</span>':''} ${numNinos?`<div class="fp-circle fp-circle-nino">${numNinos}</div><span style="font-family:'Cormorant Garamond',serif;font-size:.88rem;font-style:italic;color:#3a5c8a;">niño${numNinos!==1?'s':''}</span>`:''}<span style="margin-left:auto;font-family:'Cormorant Garamond',serif;font-size:1.2rem;font-weight:700;color:var(--dark);">${totalN} en total</span></div>`:'';
+    return countBar + ninos.map((n,i)=>ninoCardHtml(n,i)).join('') + `<button class="add-nino-btn" id="accAddNinoBtn" style="margin-top:.5rem;">👶 Añadir niño o niña</button>`;
+  }
+
+  function driveBodyContent(){
+    const driveUrl=fichasFormDriveFolderUrl;
+    if(driveUrl) return `<div style="padding:.8rem 1rem;background:rgba(66,133,244,.07);border:1px solid rgba(66,133,244,.25);border-radius:10px;display:flex;align-items:center;gap:.65rem;margin-bottom:.65rem;"><svg width="20" height="20" viewBox="0 0 87.3 78" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0;"><path d="m6.6 66.85 3.85 6.65c.8 1.4 1.95 2.5 3.3 3.3l13.75-23.8h-27.5c0 1.55.4 3.1 1.2 4.5z" fill="#0066da"/><path d="m43.65 25-13.75-23.8c-1.35.8-2.5 1.9-3.3 3.3l-25.4 44a9.06 9.06 0 0 0 -1.2 4.5h27.5z" fill="#00ac47"/><path d="m73.55 76.8c1.35-.8 2.5-1.9 3.3-3.3l1.6-2.75 7.65-13.25c.8-1.4 1.2-2.95 1.2-4.5h-27.502l5.852 11.5z" fill="#ea4335"/><path d="m43.65 25 13.75-23.8c-1.35-.8-2.9-1.2-4.5-1.2h-18.5c-1.6 0-3.15.45-4.5 1.2z" fill="#00832d"/><path d="m59.8 53h-32.3l-13.75 23.8c1.35.8 2.9 1.2 4.5 1.2h50.8c1.6 0 3.15-.45 4.5-1.2z" fill="#2684fc"/><path d="m73.4 26.5-12.7-22c-.8-1.4-1.95-2.5-3.3-3.3l-13.75 23.8 16.15 27h27.45c0-1.55-.4-3.1-1.2-4.5z" fill="#ffba00"/></svg><div style="flex:1;min-width:0;"><div style="font-family:'Cormorant Garamond',serif;font-size:.85rem;color:var(--muted);margin-bottom:.15rem;">Carpeta de fotos en Google Drive</div><a href="${driveUrl}" target="_blank" rel="noopener noreferrer" style="font-family:'Cormorant Garamond',serif;font-size:.95rem;color:#1a73e8;word-break:break-all;">Ver carpeta →</a></div></div>
+    <label id="fichaFotoLbl" style="display:inline-flex;align-items:center;gap:.4rem;cursor:pointer;padding:.4rem .9rem;border-radius:20px;border:1.5px dashed rgba(139,115,85,.4);color:var(--warm);font-size:.88rem;font-family:'Cormorant Garamond',serif;"><span id="fichaFotoLblTxt">📷 Añadir más fotos</span><input type="file" accept="image/*" id="fichaFotoInp" style="position:absolute;width:1px;height:1px;opacity:0;overflow:hidden;" multiple></label>`;
+    return `<div style=""><label id="fichaFotoLbl" style="display:flex;align-items:center;justify-content:center;gap:.5rem;cursor:pointer;padding:1.1rem;border-radius:10px;border:2px dashed rgba(139,115,85,.35);color:var(--warm);font-family:'Cormorant Garamond',serif;font-size:1rem;background:rgba(255,255,255,.5);"><span id="fichaFotoLblTxt">📷 Subir fotos a Google Drive</span><input type="file" accept="image/*" id="fichaFotoInp" style="position:absolute;width:1px;height:1px;opacity:0;overflow:hidden;" multiple></label><div style="margin-top:.4rem;font-family:'Cormorant Garamond',serif;font-size:.82rem;font-style:italic;color:var(--muted);text-align:center;">Se creará una carpeta con el nombre de la clienta · Opcional</div></div>`;
+  }
+
+  function sec1Html(){
+    return `<div style="display:flex;flex-direction:column;gap:.75rem;">
+      <div class="ficha-big-field"><label class="ficha-big-lbl">Nombre del cliente *</label><input class="ficha-big-inp" id="fichaNameInp" placeholder="Nombre y apellido" value="${escF(fichasFormName)}" autocomplete="off"></div>
+      <div class="ficha-big-field"><label class="ficha-big-lbl">Fecha del evento</label><input type="date" class="ficha-big-inp" id="fichaFechaInp" value="${escF(fichasFormFecha)}"></div>
+      <div class="ficha-big-field"><label class="ficha-big-lbl">Tipo de evento</label><select class="ficha-big-inp" id="fichaTipoEventoInp"><option value="">Selecciona una opción</option>${EVENTO_OPTIONS.map(opt=>`<option value="${opt.value}" ${fichasFormTipoEvento===opt.value?'selected':''}>${opt.label}</option>`).join('')}</select></div>
+      <div class="ficha-row2">
+        <div class="ficha-big-field"><label class="ficha-big-lbl">Teléfono</label><input type="tel" class="ficha-big-inp" id="fichaTelInp" placeholder="612 345 678" value="${escF(fichasFormTelefono)}"></div>
+        <div class="ficha-big-field"><label class="ficha-big-lbl">Email</label><input type="email" class="ficha-big-inp" id="fichaEmailInp" placeholder="correo@ejemplo.com" value="${escF(fichasFormEmail)}"></div>
+      </div>
+      <div class="ficha-big-field"><label class="ficha-big-lbl">Nº de pedido <span style="font-size:.78rem;font-weight:400;color:var(--muted);font-style:italic;">(opcional)</span></label><input class="ficha-big-inp" id="fichaPedidoInp" placeholder="Ej: 1042" value="${escF(fichasFormNumeroPedido)}" autocomplete="off"></div>
+    </div>`;
+  }
+
+  const ninosSub = ninos.length ? `${ninos.length} niño${ninos.length!==1?'s':''} añadidos` : 'Sin niños aún';
+
+  c.innerHTML = `<div class="ficha-view" style="padding:1.25rem;max-width:520px;margin:0 auto;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.75rem;">
+      <button class="ficha-prev-btn" id="fichaAccBack">← Cancelar</button>
+      <span style="font-family:'Cormorant Garamond',serif;font-size:1rem;font-style:italic;color:var(--muted);">Editar ficha</span>
+    </div>
+    <div class="ficha-acc">
+      <div class="ficha-acc-section${fichasAccOpen[0]?' open':''}" data-acc="0">
+        <div class="ficha-acc-hdr"><div><div class="ficha-acc-title">Datos del cliente</div><div class="ficha-acc-sub">Nombre, fecha y contacto</div></div><span class="ficha-acc-arrow">▼</span></div>
+        <div class="ficha-acc-body">${sec1Html()}</div>
+      </div>
+      <div class="ficha-acc-section${fichasAccOpen[1]?' open':''}" data-acc="1">
+        <div class="ficha-acc-hdr"><div><div class="ficha-acc-title">Niños y medidas</div><div class="ficha-acc-sub" id="accNinosSub">${ninosSub}</div></div><span class="ficha-acc-arrow">▼</span></div>
+        <div class="ficha-acc-body" id="accNinosBody">${ninosBodyContent()}</div>
+      </div>
+      <div class="ficha-acc-section${fichasAccOpen[2]?' open':''}" data-acc="2">
+        <div class="ficha-acc-hdr"><div><div class="ficha-acc-title">Fotos</div><div class="ficha-acc-sub">Imágenes en Google Drive</div></div><span class="ficha-acc-arrow">▼</span></div>
+        <div class="ficha-acc-body">${driveBodyContent()}</div>
+      </div>
+    </div>
+    <div class="ficha-form-actions" style="margin-top:1rem;flex-wrap:wrap;gap:.5rem;">
+      <button class="ficha-cancel-btn" id="fichaAccCancel">Cancelar</button>
+      <button class="ficha-save-btn" id="fichaSave">💾 Guardar</button>
+    </div>
+  </div>`;
+
+  function refreshNinos(){
+    const body=c.querySelector('#accNinosBody');
+    body.innerHTML=ninosBodyContent();
+    const sub=c.querySelector('#accNinosSub');
+    if(sub) sub.textContent=ninos.length?`${ninos.length} niño${ninos.length!==1?'s':''} añadidos`:'Sin niños aún';
+    attachNinosListeners();
+  }
+
+  function attachNinosListeners(){
+    c.querySelectorAll('.nino-sex-btn').forEach(btn=>btn.addEventListener('click',()=>{
+      fichasFormNinos[parseInt(btn.dataset.si)].sexo=btn.dataset.sex; refreshNinos();
+    }));
+    c.querySelectorAll('.fn-nombre,.fn-edad,.fn-talla,.fn-modelo,.fn-tela,.fn-descripcion').forEach(el=>el.addEventListener('input',()=>{
+      const idx=parseInt(el.dataset.i), key=[...el.classList].find(k=>k.startsWith('fn-'))?.replace('fn-','');
+      if(key&&!isNaN(idx)) ninos[idx][key]=el.value;
+    }));
+    c.querySelectorAll('.fmn').forEach(el=>el.addEventListener('input',()=>{
+      const idx=parseInt(el.dataset.i),mk=el.dataset.mk;
+      if(!isNaN(idx)&&mk){if(!ninos[idx].medidas)ninos[idx].medidas={};ninos[idx].medidas[mk]=el.value;}
+    }));
+    c.querySelectorAll('[data-popen]').forEach(btn=>btn.addEventListener('click',()=>{
+      const idx=parseInt(btn.dataset.popen); ninos[idx].productoOpen=!ninos[idx].productoOpen; refreshNinos();
+    }));
+    c.querySelectorAll('[data-mopen]').forEach(btn=>btn.addEventListener('click',()=>{
+      const idx=parseInt(btn.dataset.mopen); ninos[idx].medidasOpen=!ninos[idx].medidasOpen; refreshNinos();
+    }));
+    c.querySelectorAll('[data-rm]').forEach(btn=>btn.addEventListener('click',()=>{
+      fichasFormNinos.splice(parseInt(btn.dataset.rm),1); refreshNinos();
+    }));
+    c.querySelector('#accAddNinoBtn')?.addEventListener('click',()=>{
+      fichasFormNinos.push(makeNinoEmpty(null)); refreshNinos();
+    });
+  }
+
+  // Accordion toggle
+  c.querySelectorAll('.ficha-acc-hdr').forEach(hdr=>hdr.addEventListener('click',()=>{
+    const sec=hdr.closest('.ficha-acc-section'), idx=parseInt(sec.dataset.acc);
+    fichasAccOpen[idx]=!fichasAccOpen[idx];
+    sec.classList.toggle('open',fichasAccOpen[idx]);
+  }));
+
+  // Section 1 listeners
+  c.querySelector('#fichaNameInp').addEventListener('input',e=>fichasFormName=e.target.value);
+  c.querySelector('#fichaFechaInp').addEventListener('input',e=>fichasFormFecha=e.target.value);
+  c.querySelector('#fichaTipoEventoInp').addEventListener('input',e=>fichasFormTipoEvento=e.target.value);
+  c.querySelector('#fichaTelInp').addEventListener('input',e=>fichasFormTelefono=e.target.value);
+  c.querySelector('#fichaEmailInp').addEventListener('input',e=>fichasFormEmail=e.target.value);
+  c.querySelector('#fichaPedidoInp').addEventListener('input',e=>fichasFormNumeroPedido=e.target.value);
+
+  // Section 2 listeners
+  attachNinosListeners();
+
+  // Drive upload — usando delegación en el contenedor de la sección
+  c.querySelector('.ficha-acc-section[data-acc="2"]').addEventListener('change',async(e)=>{
+    if(e.target.id!=='fichaFotoInp'||!e.target.files?.length)return;
+    const lbl=c.querySelector('#fichaFotoLblTxt'), prevTxt=lbl?.textContent||'📷';
+    if(lbl) lbl.textContent='Subiendo a Drive…';
+    const fotoLbl=c.querySelector('#fichaFotoLbl');
+    if(fotoLbl) fotoLbl.style.pointerEvents='none';
+    const fichaId=fichasEditId||(fichasNewId||(fichasNewId='f_'+Date.now()));
+    try{
+      fichasFormDriveFolderUrl=await uploadPhotosToGoogleDrive(e.target.files,fichasFormName.trim()||'Sin nombre',fichaId);
+      c.querySelector('.ficha-acc-section[data-acc="2"] .ficha-acc-body').innerHTML=driveBodyContent();
+    }catch(err){
+      toast('Error subiendo a Drive: '+err.message,true);
+      const l=c.querySelector('#fichaFotoLblTxt'); if(l) l.textContent=prevTxt;
+      const fl=c.querySelector('#fichaFotoLbl'); if(fl) fl.style.pointerEvents='';
+    }
+    e.target.value='';
+  });
+
+  // Cancel / back
+  const cancelFn=()=>{fichasEditId=null;fichasViewState='list';renderFichasList(c);};
+  c.querySelector('#fichaAccBack').addEventListener('click',cancelFn);
+  c.querySelector('#fichaAccCancel').addEventListener('click',cancelFn);
+
+  // Save
+  c.querySelector('#fichaSave').addEventListener('click',async()=>{
+    const saveBtn=c.querySelector('#fichaSave');
+    saveBtn.disabled=true; saveBtn.textContent='Guardando…';
+    const ficha=buildFichaFromForm();
+    try{
+      await sbSaveFicha(ficha);
+      const idx=fichasData.findIndex(f=>f.id===fichasEditId); if(idx>=0) fichasData[idx]=ficha;
+      fichasEditId=null; fichasNewId=null; fichasFormDriveFolderUrl=''; fichasViewState='list';
+      toast('Ficha actualizada ✓');
+      renderFichasList(c);
+    }catch(e){saveBtn.disabled=false;saveBtn.textContent='💾 Guardar';toast('Error al guardar: '+e.message);}
+  });
+}
+
+
 function renderFichaFormStep1(c){
   const isEdit = !!fichasEditId;
   c.innerHTML = `
@@ -4035,7 +4239,7 @@ function renderFichaDetail(c, fichaId){
       medidas: {...(n.medidas||{})}
     }));
     fichasViewState='new';
-    renderFichaFormStep1(c);
+    renderFichaFormEdit(c);
   });
 
   modal.querySelector('#fichaPdfBtn').addEventListener('click', async () => {
