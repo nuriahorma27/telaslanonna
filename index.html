@@ -3845,90 +3845,39 @@ function computeCambios(oldFicha, newFicha) {
   return parts.join(' · ');
 }
 
-function generateSimplePDFMobile(ficha, titulo, fechaEvStr, filename) {
-  // Genera un PDF de texto plano con jsPDF sin usar html2canvas (no bloquea el hilo).
-  const JsPdfCtor = window.jspdf?.jsPDF || window.jsPDF;
-  if (!JsPdfCtor) throw new Error('jsPDF no disponible');
-  const doc = new JsPdfCtor({ unit: 'mm', format: 'a4', orientation: 'portrait' });
-  const lm = 18, rm = 192, lh = 7;
-  let y = 20;
-  const nl = (n=1) => { y += lh * n; if (y > 275) { doc.addPage(); y = 20; } };
-  const line = (txt, sz=11, bold=false, color=[30,22,12]) => {
-    doc.setFontSize(sz);
-    doc.setFont('helvetica', bold ? 'bold' : 'normal');
-    doc.setTextColor(...color);
-    doc.text(txt, lm, y);
-    nl();
-  };
-  const sep = () => { doc.setDrawColor(180,160,140); doc.line(lm, y, rm, y); nl(); };
-
-  line('La Nonna — Resumen de cita', 18, true, [100,60,30]);
-  nl(0.3);
-  sep();
-  if (titulo) line(titulo, 13, true);
-  if (fechaEvStr) line('Fecha del evento: ' + fechaEvStr, 11, false, [80,60,40]);
-  if (ficha.tipoEvento) line('Tipo de evento: ' + ficha.tipoEvento, 11);
-  if (ficha.numeroPedido) line('Nº de pedido: ' + ficha.numeroPedido, 11);
-  nl(0.5);
-  sep();
-  line('Datos de contacto', 12, true, [100,60,30]);
-  if (ficha.nombre) line('Nombre: ' + ficha.nombre, 11);
-  if (ficha.telefono) line('Teléfono: ' + ficha.telefono, 11);
-  if (ficha.email) line('Email: ' + ficha.email, 11);
-  nl(0.5);
-
-  const ninos = ficha.ninos || [];
-  if (ninos.length) {
-    sep();
-    line('Niños/as (' + ninos.length + ')', 12, true, [100,60,30]);
-    ninos.forEach((n, i) => {
-      nl(0.3);
-      const sexLbl = n.sexo === 'nina' ? 'Niña' : n.sexo === 'nino' ? 'Niño' : '';
-      line((i+1) + '. ' + (n.nombre||'Sin nombre') + (sexLbl ? '  ·  ' + sexLbl : ''), 11, true);
-      if (n.edad) line('   Edad: ' + n.edad, 10);
-      if (n.talla) line('   Talla: ' + n.talla, 10);
-      if (n.modelo) line('   Modelo: ' + n.modelo, 10);
-      if (n.tela) line('   Tela: ' + n.tela, 10);
-      if (n.descripcion) {
-        const wrapped = doc.splitTextToSize('   Notas: ' + n.descripcion, rm - lm - 5);
-        wrapped.forEach(l => { doc.text(l, lm, y); nl(); });
-      }
-      // Medidas
-      const meds = n.medidas || {};
-      const medLines = [];
-      ['contornoPecho','largo','contornoCintura','pantalon'].forEach(k => {
-        if (meds[k] && meds[k] !== '') {
-          const labels = {contornoPecho:'Contorno pecho', largo:'Largo', contornoCintura:'Contorno cintura', pantalon:'Largo pantalón'};
-          medLines.push(labels[k] + ': ' + meds[k] + ' cm');
-        }
-      });
-      if (typeof MED_TYPES !== 'undefined') {
-        Object.entries(MED_TYPES).forEach(([tkey, tval]) => {
-          const mdata = meds[tkey] || {};
-          (tval.fields||[]).forEach(f => {
-            if (mdata[f.k] && mdata[f.k] !== '') medLines.push((tval.label||tkey) + ' ' + f.l + ': ' + mdata[f.k] + ' cm');
-          });
-        });
-      }
-      if (medLines.length) {
-        line('   Medidas:', 10, true);
-        medLines.forEach(ml => line('      ' + ml, 10));
-      }
-    });
+async function generateStyledPDFMobile(ficha, titulo, fechaEvStr, filename) {
+  // Genera el PDF con el mismo HTML estilizado que el escritorio, pero eliminando
+  // las imágenes externas (Supabase) para evitar bloqueos CORS en html2canvas.
+  // Sin imágenes externas, html2canvas es mucho más rápido en iOS/iPad.
+  if (typeof html2pdf === 'undefined') throw new Error('html2pdf no disponible');
+  const fullHtml = await downloadFichaPDF(ficha, titulo, fechaEvStr, filename, true, { lightMode: true });
+  const htmlContent = buildPdfHtmlForEmail(fullHtml);
+  // Eliminar SOLO imgs con src externo (http/https); conservar data: (logo)
+  const strippedHtml = htmlContent.replace(/<img\b[^>]*\bsrc=["']https?:\/\/[^"']*["'][^>]*\/?>/gi, '');
+  const host = createPdfRenderNode(strippedHtml);
+  try {
+    const blob = await html2pdf().set({
+      margin: 0,
+      filename: filename + '.pdf',
+      image: { type: 'jpeg', quality: 0.85 },
+      html2canvas: {
+        scale: 1.0,
+        useCORS: false,
+        allowTaint: false,
+        logging: false,
+        backgroundColor: '#ffffff',
+        imageTimeout: 3000,
+        removeContainer: false,
+        scrollX: 0,
+        scrollY: 0,
+        windowWidth: 794
+      },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait', compress: true }
+    }).from(host).outputPdf('blob');
+    return await blobToBase64(blob);
+  } finally {
+    host.remove();
   }
-
-  if (ficha.notas) {
-    nl(0.5); sep();
-    line('Notas generales', 12, true, [100,60,30]);
-    const wrapped = doc.splitTextToSize(ficha.notas, rm - lm);
-    wrapped.forEach(l => { doc.text(l, lm, y); nl(); });
-  }
-
-  nl(0.5); sep();
-  doc.setFontSize(9); doc.setTextColor(140,120,100);
-  doc.text('Generado desde la app de La Nonna · ' + new Date().toLocaleDateString('es-ES'), lm, y);
-
-  return btoa(doc.output('binary'));
 }
 
 async function sendFichaEmail(ficha, titulo, fechaEvStr, isModification, cambios='') {
@@ -3938,12 +3887,13 @@ async function sendFichaEmail(ficha, titulo, fechaEvStr, isModification, cambios
   let pdfBase64 = '';
   let pdfFailed = false;
   if (isLikelyMobilePdfDevice()) {
-    // En móvil/tablet html2canvas bloquea el hilo JS; usamos jsPDF puro (texto) que es instantáneo.
+    // En móvil: generamos el PDF estilizado igual que escritorio pero sin imágenes externas
+    // (eliminadas para evitar bloqueos CORS en html2canvas). Mucho más rápido en iOS/iPad.
     try {
-      pdfBase64 = generateSimplePDFMobile(ficha, titulo, fechaEvStr, filename);
+      pdfBase64 = await generateStyledPDFMobile(ficha, titulo, fechaEvStr, filename);
     } catch(mobileErr) {
       pdfFailed = true;
-      console.warn('No se pudo generar el PDF simple:', mobileErr);
+      console.warn('No se pudo generar el PDF en móvil:', mobileErr);
     }
   } else {
     try {
@@ -4431,20 +4381,23 @@ function renderFichaDetail(c, fichaId){
 
   modal.querySelector('#fichaPdfBtn').addEventListener('click', async () => {
     if (isLikelyMobilePdfDevice()) {
-      // En móvil descargamos el PDF simple de texto (evita html2canvas que bloquea el hilo)
+      // En móvil: PDF estilizado igual que escritorio pero sin imágenes externas
+      showLoading('Generando PDF', 'Por favor espera…', 0);
       try {
         const safeName = (ficha.nombre||'cliente').replace(/[^a-zA-Z0-9áéíóúüñÁÉÍÓÚÜÑ \-]/g,'').trim();
         const fname = `PDF resumen cita - ${safeName || 'cliente'}`;
-        const b64 = generateSimplePDFMobile(ficha, titulo, fechaEvStr, fname);
+        const b64 = await generateStyledPDFMobile(ficha, titulo, fechaEvStr, fname);
         const byteArr = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
         const blob = new Blob([byteArr], { type: 'application/pdf' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url; a.download = fname + '.pdf'; a.click();
         setTimeout(() => URL.revokeObjectURL(url), 5000);
-        toast('PDF descargado');
+        toast('PDF generado');
       } catch(e) {
-        toast('Error al generar PDF: ' + e.message);
+        showBlockingError('Error al generar PDF: ' + e.message);
+      } finally {
+        hideLoading();
       }
       return;
     }
