@@ -691,6 +691,66 @@ input[type="date"].ficha-big-inp{font-size:1.15rem;padding:.88rem 1rem;}
   .afside{width:100%;margin-left:calc(44px + .65rem);}
   .afactions{padding-left:calc(44px + .65rem);}
 }
+
+/* ── ADMIN PANEL: Mayor tamaño de letra y contraste ── */
+.admin-panel{
+  --muted:#4a3f34;
+  font-size:1.05rem;
+}
+.admin-tab{font-size:1.05rem;padding:.52rem 1.1rem;}
+.admin-card-title{font-size:1.1rem;}
+.admin-card-body{font-size:1rem;}
+.admin-close-btn{font-size:1rem;}
+.admin-badge{font-size:.6rem;letter-spacing:.18em;}
+.admin-live-badge{font-size:.6rem;}
+.flbl{font-size:.9rem;color:#4a3f34;}
+.finp{font-size:1.05rem;}
+.col-inp{font-size:1rem;}
+.chips-hint{font-size:.92rem;color:#4a3f34;}
+.chip{font-size:.88rem;}
+.storage-txt{font-size:.95rem;color:#4a3f34;}
+.btn-sm-ghost{font-size:.95rem;}
+.uz-title{font-size:1.25rem;}
+.uz-hint{font-size:.88rem;}
+.afname{font-size:1.05rem;color:#1a1612;}
+.afmeta{font-size:.88rem;color:#4a3f34;}
+.af-badge{font-size:.82rem;}
+.afphoto-btn,.afedit-btn,.afdel-btn,.afhide-btn{font-size:.88rem;padding:.25rem .6rem;}
+.add-more-lbl{font-size:.95rem;}
+.fichas-subtab{font-size:1.05rem;}
+.fichas-subtab-nested{font-size:.95rem;}
+.fp-new-btn{font-size:1.05rem;}
+.fp-count{font-size:1rem;}
+.fp-item-title{font-size:1.2rem;}
+.fp-item-contact{font-size:.95rem;}
+.fp-item-fecha{font-size:.92rem;}
+.fp-measure-badge{font-size:.88rem;}
+.ficha-big-lbl{font-size:1rem;}
+.ficha-big-inp{font-size:1.25rem;}
+.ficha-wizard-title{font-size:1.75rem;}
+.ficha-wizard-sub{font-size:1.05rem;}
+.f2-lbl{font-size:.98rem;color:#4a3f34;}
+.f2-inp{font-size:1.1rem;}
+.f2-textarea{font-size:1rem;}
+.nino-card-label{font-size:1.1rem;}
+.ficha-acc-title{font-size:1.1rem;}
+.ficha-acc-sub{font-size:.88rem;}
+.ficha-next-btn{font-size:1.25rem;}
+.admin-empty{font-size:1.05rem;}
+.fp-empty{font-size:1.1rem;}
+.ficha-view-title{font-size:1.45rem;}
+.fd-titulo{font-size:1.65rem;}
+.fd-fecha-badge{font-size:1rem;}
+.fd-key{font-size:.88rem;color:#4a3f34;}
+.fd-val{font-size:1rem;}
+.ficha-detail-nino-name{font-size:1.15rem;}
+.fd-medida-key{font-size:.85rem;color:#4a3f34;}
+.fd-medida-val{font-size:1rem;}
+.ficha-del-btn{font-size:.95rem;}
+.ped-tab-btn{font-size:1rem;}
+.mn-item-key{font-size:.88rem;color:#4a3f34;}
+.mn-item-val{font-size:1rem;}
+.mn-card-name{font-size:1.08rem;}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -3101,11 +3161,16 @@ function renderFichaFormEdit(c){
     const fotoLbl=c.querySelector('#fichaFotoLbl');
     if(fotoLbl) fotoLbl.style.pointerEvents='none';
     const fichaId=fichasEditId||(fichasNewId||(fichasNewId='f_'+Date.now()));
+    const nFiles = e.target.files.length;
+    showLoading('Subiendo fotos a Google Drive…', `Enviando ${nFiles} foto${nFiles!==1?'s':''}… por favor espera`, 0);
     try{
       fichasFormDriveFolderUrl=await uploadPhotosToGoogleDrive(e.target.files,fichasFormName.trim()||'Sin nombre',fichaId);
+      hideLoading();
+      toast(`✓ ${nFiles} foto${nFiles!==1?'s':''} subida${nFiles!==1?'s':''} a Google Drive`);
       c.querySelector('.ficha-acc-section[data-acc="2"] .ficha-acc-body').innerHTML=driveBodyContent();
     }catch(err){
-      toast('Error subiendo a Drive: '+err.message,true);
+      hideLoading();
+      toast('Error subiendo a Drive: '+err.message);
       const l=c.querySelector('#fichaFotoLblTxt'); if(l) l.textContent=prevTxt;
       const fl=c.querySelector('#fichaFotoLbl'); if(fl) fl.style.pointerEvents='';
     }
@@ -3480,12 +3545,17 @@ function renderFichaFormStep3(c){
     c.querySelector('#fichaFotoLbl').style.pointerEvents = 'none';
     const fichaId = fichasEditId || (fichasNewId || (fichasNewId = 'f_' + Date.now()));
     const clientName = fichasFormName.trim() || 'Sin nombre';
+    const nFiles = e.target.files.length;
+    showLoading('Subiendo fotos a Google Drive…', `Enviando ${nFiles} foto${nFiles!==1?'s':''}… por favor espera`, 0);
     try {
       const folderUrl = await uploadPhotosToGoogleDrive(e.target.files, clientName, fichaId);
       fichasFormDriveFolderUrl = folderUrl;
+      hideLoading();
+      toast(`✓ ${nFiles} foto${nFiles!==1?'s':''} subida${nFiles!==1?'s':''} a Google Drive`);
       renderFichaFormStep3(c);
     } catch(err) {
-      toast('Error subiendo a Drive: ' + err.message, true);
+      hideLoading();
+      toast('Error subiendo a Drive: ' + err.message);
       lbl.textContent = prevTxt;
       c.querySelector('#fichaFotoLbl').style.pointerEvents = '';
     }
@@ -3775,11 +3845,114 @@ function computeCambios(oldFicha, newFicha) {
   return parts.join(' · ');
 }
 
+function generateSimplePDFMobile(ficha, titulo, fechaEvStr, filename) {
+  // Genera un PDF de texto plano con jsPDF sin usar html2canvas (no bloquea el hilo).
+  const JsPdfCtor = window.jspdf?.jsPDF || window.jsPDF;
+  if (!JsPdfCtor) throw new Error('jsPDF no disponible');
+  const doc = new JsPdfCtor({ unit: 'mm', format: 'a4', orientation: 'portrait' });
+  const lm = 18, rm = 192, lh = 7;
+  let y = 20;
+  const nl = (n=1) => { y += lh * n; if (y > 275) { doc.addPage(); y = 20; } };
+  const line = (txt, sz=11, bold=false, color=[30,22,12]) => {
+    doc.setFontSize(sz);
+    doc.setFont('helvetica', bold ? 'bold' : 'normal');
+    doc.setTextColor(...color);
+    doc.text(txt, lm, y);
+    nl();
+  };
+  const sep = () => { doc.setDrawColor(180,160,140); doc.line(lm, y, rm, y); nl(); };
+
+  line('La Nonna — Resumen de cita', 18, true, [100,60,30]);
+  nl(0.3);
+  sep();
+  if (titulo) line(titulo, 13, true);
+  if (fechaEvStr) line('Fecha del evento: ' + fechaEvStr, 11, false, [80,60,40]);
+  if (ficha.tipoEvento) line('Tipo de evento: ' + ficha.tipoEvento, 11);
+  if (ficha.numeroPedido) line('Nº de pedido: ' + ficha.numeroPedido, 11);
+  nl(0.5);
+  sep();
+  line('Datos de contacto', 12, true, [100,60,30]);
+  if (ficha.nombre) line('Nombre: ' + ficha.nombre, 11);
+  if (ficha.telefono) line('Teléfono: ' + ficha.telefono, 11);
+  if (ficha.email) line('Email: ' + ficha.email, 11);
+  nl(0.5);
+
+  const ninos = ficha.ninos || [];
+  if (ninos.length) {
+    sep();
+    line('Niños/as (' + ninos.length + ')', 12, true, [100,60,30]);
+    ninos.forEach((n, i) => {
+      nl(0.3);
+      const sexLbl = n.sexo === 'nina' ? 'Niña' : n.sexo === 'nino' ? 'Niño' : '';
+      line((i+1) + '. ' + (n.nombre||'Sin nombre') + (sexLbl ? '  ·  ' + sexLbl : ''), 11, true);
+      if (n.edad) line('   Edad: ' + n.edad, 10);
+      if (n.talla) line('   Talla: ' + n.talla, 10);
+      if (n.modelo) line('   Modelo: ' + n.modelo, 10);
+      if (n.tela) line('   Tela: ' + n.tela, 10);
+      if (n.descripcion) {
+        const wrapped = doc.splitTextToSize('   Notas: ' + n.descripcion, rm - lm - 5);
+        wrapped.forEach(l => { doc.text(l, lm, y); nl(); });
+      }
+      // Medidas
+      const meds = n.medidas || {};
+      const medLines = [];
+      ['contornoPecho','largo','contornoCintura','pantalon'].forEach(k => {
+        if (meds[k] && meds[k] !== '') {
+          const labels = {contornoPecho:'Contorno pecho', largo:'Largo', contornoCintura:'Contorno cintura', pantalon:'Largo pantalón'};
+          medLines.push(labels[k] + ': ' + meds[k] + ' cm');
+        }
+      });
+      if (typeof MED_TYPES !== 'undefined') {
+        Object.entries(MED_TYPES).forEach(([tkey, tval]) => {
+          const mdata = meds[tkey] || {};
+          (tval.fields||[]).forEach(f => {
+            if (mdata[f.k] && mdata[f.k] !== '') medLines.push((tval.label||tkey) + ' ' + f.l + ': ' + mdata[f.k] + ' cm');
+          });
+        });
+      }
+      if (medLines.length) {
+        line('   Medidas:', 10, true);
+        medLines.forEach(ml => line('      ' + ml, 10));
+      }
+    });
+  }
+
+  if (ficha.notas) {
+    nl(0.5); sep();
+    line('Notas generales', 12, true, [100,60,30]);
+    const wrapped = doc.splitTextToSize(ficha.notas, rm - lm);
+    wrapped.forEach(l => { doc.text(l, lm, y); nl(); });
+  }
+
+  nl(0.5); sep();
+  doc.setFontSize(9); doc.setTextColor(140,120,100);
+  doc.text('Generado desde la app de La Nonna · ' + new Date().toLocaleDateString('es-ES'), lm, y);
+
+  return btoa(doc.output('binary'));
+}
+
 async function sendFichaEmail(ficha, titulo, fechaEvStr, isModification, cambios='') {
   const num = ficha.numeroPedido;
   const safeName = (ficha.nombre||'cliente').replace(/[^a-zA-Z0-9áéíóúüñÁÉÍÓÚÜÑ \-]/g,'').trim();
   const filename  = `PDF resumen cita - ${safeName || 'cliente'}`;
-  const pdfBase64 = await generatePDFBase64(ficha, titulo, fechaEvStr, filename);
+  let pdfBase64 = '';
+  let pdfFailed = false;
+  if (isLikelyMobilePdfDevice()) {
+    // En móvil/tablet html2canvas bloquea el hilo JS; usamos jsPDF puro (texto) que es instantáneo.
+    try {
+      pdfBase64 = generateSimplePDFMobile(ficha, titulo, fechaEvStr, filename);
+    } catch(mobileErr) {
+      pdfFailed = true;
+      console.warn('No se pudo generar el PDF simple:', mobileErr);
+    }
+  } else {
+    try {
+      pdfBase64 = await generatePDFBase64(ficha, titulo, fechaEvStr, filename);
+    } catch(pdfErr) {
+      pdfFailed = true;
+      console.warn('No se pudo generar el PDF, se enviará sin adjunto:', pdfErr);
+    }
+  }
   const payload = {
     nombre: ficha.nombre || titulo,
     numeroPedido: num,
@@ -3788,10 +3961,20 @@ async function sendFichaEmail(ficha, titulo, fechaEvStr, isModification, cambios
     pdfBase64: pdfBase64,
     isModification: !!isModification,
     fechaEvento: ficha.fechaEvento ? ficha.fechaEvento.split('-').reverse().join('/') : '',
-    cambios: cambios || ''
+    cambios: cambios || '',
+    // Datos de la ficha en texto plano por si el PDF no está disponible
+    fichaResumen: !pdfBase64 ? JSON.stringify({
+      nombre: ficha.nombre, telefono: ficha.telefono, email: ficha.email,
+      fechaEvento: ficha.fechaEvento, tipoEvento: ficha.tipoEvento,
+      numeroPedido: ficha.numeroPedido,
+      ninos: (ficha.ninos||[]).map(n=>({nombre:n.nombre,edad:n.edad,talla:n.talla,sexo:n.sexo,modelo:n.modelo,tela:n.tela}))
+    }) : ''
   };
+  // Actualizar mensaje de loading para indicar que se está enviando
+  try { document.getElementById('loadingTitle').textContent = 'Enviando email…'; } catch(_) {}
+  try { document.getElementById('loadingTxt').textContent = pdfFailed ? 'Enviando datos (sin PDF adjunto)…' : 'Enviando email con PDF adjunto…'; } catch(_) {}
   const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
-  const fetchTimeoutMs = isLikelyMobilePdfDevice() ? 50000 : 25000;
+  const fetchTimeoutMs = isLikelyMobilePdfDevice() ? 60000 : 30000;
   const timer = controller ? setTimeout(() => controller.abort(), fetchTimeoutMs) : null;
   const res = await fetch(N8N_WEBHOOK_URL, {
     method: 'POST',
@@ -3820,7 +4003,7 @@ async function sendFichaEmail(ficha, titulo, fechaEvStr, isModification, cambios
       }
     }
   }
-  return { ok:true, responseText: rawText };
+  return { ok:true, responseText: rawText, pdfFailed };
 }
 
 function openAsocModal(ficha, titulo, fechaEvStr, c){
@@ -3849,12 +4032,16 @@ function openAsocModal(ficha, titulo, fechaEvStr, c){
       await sbPatch(`/rest/v1/fichas?id=eq.${encodeURIComponent(ficha.id)}`, {numero_pedido: num});
 
       // 3. Generar PDF y enviar al webhook de n8n → email + Drive
-      btn.textContent = 'Generando PDF…';
-      showLoading('Generando PDF', 'Por favor espera…', 0);
-      await sendFichaEmail(ficha, titulo, fechaEvStr, isModification, cambiosAsoc);
+      btn.textContent = 'Enviando…';
+      showLoading('Enviando email', 'Preparando y enviando…', 0);
+      const result = await sendFichaEmail(ficha, titulo, fechaEvStr, isModification, cambiosAsoc);
 
       modal.classList.add('hidden');
-      toast('✓ Email enviado a La Nonna');
+      if(result.pdfFailed){
+        toast('✓ Email enviado (sin PDF adjunto)');
+      } else {
+        toast('✓ Email enviado a La Nonna');
+      }
       renderFichaDetail(c, ficha.id);
     } catch(e) {
       modal.classList.add('hidden');
@@ -4243,6 +4430,24 @@ function renderFichaDetail(c, fichaId){
   });
 
   modal.querySelector('#fichaPdfBtn').addEventListener('click', async () => {
+    if (isLikelyMobilePdfDevice()) {
+      // En móvil descargamos el PDF simple de texto (evita html2canvas que bloquea el hilo)
+      try {
+        const safeName = (ficha.nombre||'cliente').replace(/[^a-zA-Z0-9áéíóúüñÁÉÍÓÚÜÑ \-]/g,'').trim();
+        const fname = `PDF resumen cita - ${safeName || 'cliente'}`;
+        const b64 = generateSimplePDFMobile(ficha, titulo, fechaEvStr, fname);
+        const byteArr = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+        const blob = new Blob([byteArr], { type: 'application/pdf' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = fname + '.pdf'; a.click();
+        setTimeout(() => URL.revokeObjectURL(url), 5000);
+        toast('PDF descargado');
+      } catch(e) {
+        toast('Error al generar PDF: ' + e.message);
+      }
+      return;
+    }
     showLoading('Generando PDF', 'Por favor espera…', 0);
     try {
       await downloadFichaPDF(ficha, titulo, fechaEvStr);
@@ -4295,13 +4500,16 @@ function renderFichaDetail(c, fichaId){
   modal.querySelector('#fichaDetailEnviarBtn').addEventListener('click', async () => {
     const btn = modal.querySelector('#fichaDetailEnviarBtn');
     btn.disabled = true;
-    btn.textContent = 'Generando PDF…';
-    showLoading('Generando PDF', 'Por favor espera…', 0);
+    btn.textContent = 'Enviando…';
+    showLoading('Enviando email', 'Preparando y enviando…', 0);
     try {
-      await sendFichaEmail(ficha, titulo, fechaEvStr, false);
-      toast('✓ Email enviado a La Nonna');
+      const result = await sendFichaEmail(ficha, titulo, fechaEvStr, false);
+      if(result.pdfFailed){
+        toast('✓ Email enviado (sin PDF adjunto)');
+      } else {
+        toast('✓ Email enviado a La Nonna');
+      }
     } catch(e) {
-      modal.remove();
       showBlockingError('Error al enviar: ' + e.message);
     } finally {
       hideLoading();
