@@ -3634,6 +3634,150 @@ function isLikelyMobilePdfDevice(){
   const isIOS = /iPhone|iPad|iPod/i.test(ua) || (/Mac/i.test(ua) && touch && typeof document.ontouchend !== 'undefined');
   return isIOS || /Android/i.test(ua) || (touch && Math.min(window.innerWidth, window.innerHeight) <= 1024);
 }
+function getNinoMedidaRows(n){
+  const isNina = n?.sexo === 'nina';
+  const preferred = isNina
+    ? [{k:'contornoPecho',l:'Contorno de pecho'},{k:'largo',l:'Largo'}]
+    : [{k:'contornoPecho',l:'Contorno de pecho'},{k:'largo',l:'Largo'},{k:'contornoCintura',l:'Contorno de cintura'},{k:'pantalon',l:'Largo del pantalón'}];
+  const rows = [];
+  const seen = new Set();
+  const addRow = (key, label, value) => {
+    if(value === undefined || value === null || value === '') return;
+    const clean = String(value).trim();
+    if(!clean) return;
+    seen.add(key);
+    rows.push({ key, label, value: clean });
+  };
+  preferred.forEach(f => addRow(f.k, f.l, n?.medidas?.[f.k]));
+  if(typeof MED_TYPES !== 'undefined'){
+    Object.entries(MED_TYPES).forEach(([tkey,tval])=>{
+      const mdata = n?.medidas?.[tkey] || {};
+      (tval.fields||[]).forEach(f => addRow(`${tkey}.${f.k}`, `${tval.label} · ${f.l}`, mdata[f.k]));
+      if(mdata.specs) addRow(`${tkey}.specs`, `${tval.label} · Especificaciones`, mdata.specs);
+    });
+  }
+  Object.entries(n?.medidas || {}).forEach(([key,value])=>{
+    if(seen.has(key)) return;
+    if(value && typeof value === 'object'){
+      Object.entries(value).forEach(([subKey, subValue])=>{
+        const rowKey = `${key}.${subKey}`;
+        if(!seen.has(rowKey)) addRow(rowKey, `${key} · ${subKey}`, subValue);
+      });
+    } else {
+      addRow(key, key.replace(/([A-Z])/g,' $1').replace(/^./, c=>c.toUpperCase()), value);
+    }
+  });
+  return rows;
+}
+function buildFichaPlainData(ficha, titulo='', fechaEvStr=''){
+  const fotos = ficha?.fotos?.length ? ficha.fotos : (ficha?.ninos||[]).flatMap(n=>n.fotos||[]);
+  return {
+    id: ficha?.id || '',
+    nombre: ficha?.nombre || titulo || '',
+    numeroPedido: ficha?.numeroPedido || '',
+    fechaCita: ficha?.createdAt ? new Date(ficha.createdAt).toLocaleDateString('es-ES',{day:'2-digit',month:'long',year:'numeric'}) : '',
+    fechaEvento: fechaEvStr || (ficha?.fechaEvento ? ficha.fechaEvento.split('-').reverse().join('/') : ''),
+    tipoEvento: getEventoLabel(ficha?.tipoEvento) || ficha?.tipoEvento || '',
+    telefono: ficha?.telefono || '',
+    email: ficha?.email || '',
+    medidasCompletadas: !!ficha?.medidasCompletadas,
+    driveFolderUrl: ficha?.driveFolderUrl || '',
+    fotosCount: fotos.length,
+    ninos: (ficha?.ninos||[]).map(n=>({
+      nombre: n.nombre || '',
+      sexo: n.sexo === 'nina' ? 'Niña' : (n.sexo === 'nino' ? 'Niño' : ''),
+      edad: n.edad ? fmtEdad(n.edad) : '',
+      talla: n.talla || '',
+      modelo: n.modelo || '',
+      tela: n.tela || '',
+      descripcion: n.descripcion || '',
+      medidas: getNinoMedidaRows(n)
+    }))
+  };
+}
+function addWrappedPdfText(pdf, text, x, y, maxW, lineH, pageH, bottom=16){
+  const lines = pdf.splitTextToSize(String(text || ''), maxW);
+  lines.forEach(line=>{
+    if(y > pageH - bottom){ pdf.addPage(); y = 18; }
+    pdf.text(line, x, y);
+    y += lineH;
+  });
+  return y;
+}
+async function generateFallbackFichaPdfBase64(ficha, titulo, fechaEvStr, filename){
+  const JsPdfCtor = window.jspdf?.jsPDF || window.jsPDF;
+  if(!JsPdfCtor) throw new Error('jsPDF no está disponible');
+  const pdf = new JsPdfCtor({ unit:'mm', format:'a4', orientation:'portrait', compress:true });
+  const pageW = pdf.internal.pageSize.getWidth();
+  const pageH = pdf.internal.pageSize.getHeight();
+  const left = 16;
+  const maxW = pageW - 32;
+  const data = buildFichaPlainData(ficha, titulo, fechaEvStr);
+  let y = 18;
+  pdf.setFont('times','normal');
+  pdf.setFontSize(18);
+  y = addWrappedPdfText(pdf, 'Atelier La Nonna', left, y, maxW, 8, pageH);
+  pdf.setFontSize(14);
+  y = addWrappedPdfText(pdf, `Ficha completa - ${data.nombre || 'Cliente'}`, left, y + 2, maxW, 7, pageH);
+  pdf.setDrawColor(200,169,110);
+  pdf.line(left, y, pageW - left, y);
+  y += 7;
+  pdf.setFontSize(11);
+  const general = [
+    ['Nº de pedido', data.numeroPedido],
+    ['Fecha de cita', data.fechaCita],
+    ['Tipo de evento', data.tipoEvento],
+    ['Fecha del evento', data.fechaEvento],
+    ['Teléfono', data.telefono],
+    ['Email', data.email],
+    ['Medidas completadas', data.medidasCompletadas ? 'Sí' : 'No'],
+    ['Carpeta de fotos', data.driveFolderUrl],
+    ['Fotos en ficha', data.fotosCount ? `${data.fotosCount}` : 'Sin fotos']
+  ].filter(([,v])=>v !== undefined && v !== null && String(v).trim() !== '');
+  general.forEach(([label,value])=>{
+    pdf.setFont('times','bold');
+    y = addWrappedPdfText(pdf, `${label}:`, left, y, 42, 5.5, pageH);
+    pdf.setFont('times','normal');
+    y = addWrappedPdfText(pdf, value, left + 44, y - 5.5, maxW - 44, 5.5, pageH);
+    y += 1.2;
+  });
+  y += 4;
+  data.ninos.forEach((n, idx)=>{
+    if(y > pageH - 36){ pdf.addPage(); y = 18; }
+    pdf.setFont('times','bold');
+    pdf.setFontSize(13);
+    y = addWrappedPdfText(pdf, `${idx + 1}. ${n.nombre || 'Niño/a sin nombre'}`, left, y, maxW, 6.5, pageH);
+    pdf.setFontSize(10.5);
+    pdf.setFont('times','normal');
+    [
+      ['Sexo', n.sexo],
+      ['Edad', n.edad],
+      ['Talla habitual', n.talla],
+      ['Modelo', n.modelo],
+      ['Tela', n.tela],
+      ['Descripción', n.descripcion]
+    ].filter(([,v])=>v).forEach(([label,value])=>{
+      pdf.setFont('times','bold');
+      y = addWrappedPdfText(pdf, `${label}:`, left + 4, y, 38, 5.2, pageH);
+      pdf.setFont('times','normal');
+      y = addWrappedPdfText(pdf, value, left + 44, y - 5.2, maxW - 44, 5.2, pageH);
+    });
+    pdf.setFont('times','bold');
+    y = addWrappedPdfText(pdf, 'Medidas:', left + 4, y + 1, maxW, 5.2, pageH);
+    pdf.setFont('times','normal');
+    if(n.medidas.length){
+      n.medidas.forEach(m=>{
+        const unit = /^\d+([,.]\d+)?$/.test(m.value) ? ' cm' : '';
+        y = addWrappedPdfText(pdf, `- ${m.label}: ${m.value}${unit}`, left + 8, y, maxW - 8, 5.2, pageH);
+      });
+    } else {
+      y = addWrappedPdfText(pdf, '- Sin medidas registradas', left + 8, y, maxW - 8, 5.2, pageH);
+    }
+    y += 4;
+  });
+  const blob = pdf.output('blob');
+  return await blobToBase64(blob);
+}
 function createPdfRenderNode(htmlContent){
   const host = document.createElement('div');
   // Positioned in-viewport so the browser compositor renders it (required for
@@ -3886,6 +4030,7 @@ async function sendFichaEmail(ficha, titulo, fechaEvStr, isModification, cambios
   const filename  = `PDF resumen cita - ${safeName || 'cliente'}`;
   let pdfBase64 = '';
   let pdfFailed = false;
+  const fullFichaData = buildFichaPlainData(ficha, titulo, fechaEvStr);
   if (isLikelyMobilePdfDevice()) {
     // En móvil: generamos el PDF estilizado igual que escritorio pero sin imágenes externas
     // (eliminadas para evitar bloqueos CORS en html2canvas). Mucho más rápido en iOS/iPad.
@@ -3893,36 +4038,62 @@ async function sendFichaEmail(ficha, titulo, fechaEvStr, isModification, cambios
       pdfBase64 = await generateStyledPDFMobile(ficha, titulo, fechaEvStr, filename);
     } catch(mobileErr) {
       pdfFailed = true;
-      console.warn('No se pudo generar el PDF en móvil:', mobileErr);
+      console.warn('No se pudo generar el PDF estilizado en móvil, se intentará PDF básico:', mobileErr);
     }
   } else {
     try {
       pdfBase64 = await generatePDFBase64(ficha, titulo, fechaEvStr, filename);
     } catch(pdfErr) {
       pdfFailed = true;
-      console.warn('No se pudo generar el PDF, se enviará sin adjunto:', pdfErr);
+      console.warn('No se pudo generar el PDF estilizado, se intentará PDF básico:', pdfErr);
     }
   }
+  if(!pdfBase64){
+    try {
+      pdfBase64 = await generateFallbackFichaPdfBase64(ficha, titulo, fechaEvStr, filename);
+      pdfFailed = false;
+      console.warn('Se usó PDF fallback de texto para asegurar el adjunto.');
+    } catch(fallbackErr) {
+      console.error('No se pudo generar ningún PDF:', fallbackErr);
+      throw new Error('No se pudo generar el PDF adjunto: ' + fallbackErr.message);
+    }
+  }
+  const pdfFilename = filename + '.pdf';
   const payload = {
     nombre: ficha.nombre || titulo,
     numeroPedido: num,
     filename: filename,
+    pdfFilename: pdfFilename,
     fichaId: ficha.id || '',
     pdfBase64: pdfBase64,
+    pdf_base64: pdfBase64,
+    pdfMimeType: 'application/pdf',
+    attachment: {
+      filename: pdfFilename,
+      contentType: 'application/pdf',
+      data: pdfBase64,
+      content: pdfBase64,
+      base64: pdfBase64,
+      encoding: 'base64'
+    },
+    attachments: [{
+      filename: pdfFilename,
+      contentType: 'application/pdf',
+      data: pdfBase64,
+      content: pdfBase64,
+      base64: pdfBase64,
+      encoding: 'base64'
+    }],
     isModification: !!isModification,
     fechaEvento: ficha.fechaEvento ? ficha.fechaEvento.split('-').reverse().join('/') : '',
     cambios: cambios || '',
-    // Datos de la ficha en texto plano por si el PDF no está disponible
-    fichaResumen: !pdfBase64 ? JSON.stringify({
-      nombre: ficha.nombre, telefono: ficha.telefono, email: ficha.email,
-      fechaEvento: ficha.fechaEvento, tipoEvento: ficha.tipoEvento,
-      numeroPedido: ficha.numeroPedido,
-      ninos: (ficha.ninos||[]).map(n=>({nombre:n.nombre,edad:n.edad,talla:n.talla,sexo:n.sexo,modelo:n.modelo,tela:n.tela}))
-    }) : ''
+    ficha: fullFichaData,
+    // Datos completos en texto plano para n8n/Drive aunque el adjunto exista.
+    fichaResumen: JSON.stringify(fullFichaData)
   };
   // Actualizar mensaje de loading para indicar que se está enviando
   try { document.getElementById('loadingTitle').textContent = 'Enviando email…'; } catch(_) {}
-  try { document.getElementById('loadingTxt').textContent = pdfFailed ? 'Enviando sin adjunto…' : 'Adjuntando PDF y enviando…'; } catch(_) {}
+  try { document.getElementById('loadingTxt').textContent = pdfFailed ? 'Adjuntando PDF básico y enviando…' : 'Adjuntando PDF y enviando…'; } catch(_) {}
   const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
   const fetchTimeoutMs = isLikelyMobilePdfDevice() ? 60000 : 30000;
   const timer = controller ? setTimeout(() => controller.abort(), fetchTimeoutMs) : null;
@@ -4039,22 +4210,11 @@ async function downloadFichaPDF(ficha, titulo, fechaEvStr, filenameOverride, htm
     const isNina = n.sexo === 'nina';
     const col = isNina ? '#b4648c' : '#3a5c8a';
     const sexLabel = isNina ? 'Niña' : (n.sexo==='nino' ? 'Niño' : '—');
-    const newMedFields = isNina
-      ? [{k:'contornoPecho',l:'Contorno de pecho'},{k:'largo',l:'Largo'}]
-      : [{k:'contornoPecho',l:'Contorno de pecho'},{k:'largo',l:'Largo'},{k:'contornoCintura',l:'Contorno de cintura'},{k:'pantalon',l:'Largo del pantalón'}];
-    const hasNewMed = newMedFields.some(f=>n.medidas?.[f.k]&&n.medidas[f.k]!=='');
-    let medsHtml = '';
-    if(hasNewMed){
-      const filled = newMedFields.filter(f=>n.medidas?.[f.k]&&n.medidas[f.k]!=='');
-      medsHtml = filled.map(f=>`<tr><td class="med-k">${esc(f.l)}</td><td class="med-v">${esc(n.medidas[f.k])} cm</td></tr>`).join('');
-    } else if(typeof MED_TYPES !== 'undefined'){
-      const rows = Object.entries(MED_TYPES).flatMap(([tkey,tval])=>{
-        const mdata = n.medidas?.[tkey]||{};
-        return (tval.fields||[]).filter(f=>mdata[f.k]&&mdata[f.k]!=='')
-          .map(f=>`<tr><td class="med-k">${esc(tval.label+' · '+f.l)}</td><td class="med-v">${esc(mdata[f.k])} cm</td></tr>`);
-      });
-      medsHtml = rows.join('');
-    }
+    const medsRows = getNinoMedidaRows(n);
+    const medsHtml = medsRows.map(m=>{
+      const unit = /^\d+([,.]\d+)?$/.test(m.value) ? ' cm' : '';
+      return `<tr><td class="med-k">${esc(m.label)}</td><td class="med-v">${esc(m.value)}${unit}</td></tr>`;
+    }).join('');
     const productoHtml = (n.modelo||n.tela||n.descripcion) ? (
       (n.modelo||n.tela ? `<div class="prod-row">${n.modelo?`<span><span class="prod-lbl">Modelo:</span><span class="prod-chip">${esc(n.modelo)}</span></span>`:''} ${n.tela?`<span><span class="prod-lbl">Tela:</span><span class="prod-chip">${esc(n.tela)}</span></span>`:''}</div>`:'') +
       (n.descripcion ? `<div class="desc-box">${esc(n.descripcion)}</div>` : '')
@@ -4124,6 +4284,7 @@ async function downloadFichaPDF(ficha, titulo, fechaEvStr, filenameOverride, htm
       '<div class="ficha-title">' + esc(titulo) + '</div>' +
       (ficha.tipoEvento ? '<div class="fecha-badge">Tipo de evento: ' + esc(getEventoLabel(ficha.tipoEvento)) + '</div>' : '') +
       (fechaEvStr ? '<div class="fecha-badge">Evento: ' + esc(fechaEvStr) + '</div>' : '') +
+      '<div class="fecha-badge">Medidas completadas: ' + (ficha.medidasCompletadas ? 'Sí' : 'No') + '</div>' +
     '</div>' +
     ((ficha.telefono||ficha.email) ?
       '<div class="section"><div class="section-title">Contacto</div><div class="info-grid">' +
