@@ -365,9 +365,9 @@ header{height:var(--header-h);padding:0 1.2rem;display:flex;align-items:center;j
 .viewer-fabric-meta{font-size:.55rem;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);margin-top:.2rem;}
 
 /* Toast & loading */
-.toast{position:fixed;bottom:1rem;left:50%;transform:translateX(-50%) translateY(70px);background:var(--dark);color:var(--cream);padding:.48rem 1.1rem;border-radius:20px;font-size:.68rem;z-index:999;transition:transform .28s ease;white-space:nowrap;pointer-events:none;}
+.toast{position:fixed;bottom:1rem;left:50%;transform:translateX(-50%) translateY(70px);background:var(--dark);color:var(--cream);padding:.48rem 1.1rem;border-radius:20px;font-size:.68rem;z-index:2000;transition:transform .28s ease;white-space:nowrap;pointer-events:none;}
 .toast.show{transform:translateX(-50%) translateY(0);}
-.loading-overlay{position:fixed;inset:0;z-index:400;background:rgba(26,22,18,.6);display:flex;align-items:center;justify-content:center;}
+.loading-overlay{position:fixed;inset:0;z-index:1500;background:rgba(26,22,18,.6);display:flex;align-items:center;justify-content:center;}
 .loading-overlay.hidden{display:none;}
 .loading-card{background:var(--cream);border-radius:10px;padding:1.5rem 2rem;text-align:center;min-width:260px;}
 .loading-title{font-family:'Cormorant Garamond',serif;font-size:1.1rem;margin-bottom:.6rem;}
@@ -3922,7 +3922,7 @@ async function sendFichaEmail(ficha, titulo, fechaEvStr, isModification, cambios
   };
   // Actualizar mensaje de loading para indicar que se está enviando
   try { document.getElementById('loadingTitle').textContent = 'Enviando email…'; } catch(_) {}
-  try { document.getElementById('loadingTxt').textContent = pdfFailed ? 'Enviando datos (sin PDF adjunto)…' : 'Enviando email con PDF adjunto…'; } catch(_) {}
+  try { document.getElementById('loadingTxt').textContent = pdfFailed ? 'Enviando sin adjunto…' : 'Adjuntando PDF y enviando…'; } catch(_) {}
   const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
   const fetchTimeoutMs = isLikelyMobilePdfDevice() ? 60000 : 30000;
   const timer = controller ? setTimeout(() => controller.abort(), fetchTimeoutMs) : null;
@@ -3983,9 +3983,10 @@ function openAsocModal(ficha, titulo, fechaEvStr, c){
 
       // 3. Generar PDF y enviar al webhook de n8n → email + Drive
       btn.textContent = 'Enviando…';
-      showLoading('Enviando email', 'Preparando y enviando…', 0);
+      showLoading('Generando PDF…', 'Preparando resumen de la cita…', 0);
       const result = await sendFichaEmail(ficha, titulo, fechaEvStr, isModification, cambiosAsoc);
 
+      hideLoading();
       modal.classList.add('hidden');
       if(result.pdfFailed){
         toast('✓ Email enviado (sin PDF adjunto)');
@@ -3994,10 +3995,10 @@ function openAsocModal(ficha, titulo, fechaEvStr, c){
       }
       renderFichaDetail(c, ficha.id);
     } catch(e) {
+      hideLoading();
       modal.classList.add('hidden');
       showBlockingError('Error al enviar: ' + e.message);
     } finally {
-      hideLoading();
       btn.disabled = false; btn.textContent = '📎 Asociar y enviar';
     }
   };
@@ -4454,18 +4455,19 @@ function renderFichaDetail(c, fichaId){
     const btn = modal.querySelector('#fichaDetailEnviarBtn');
     btn.disabled = true;
     btn.textContent = 'Enviando…';
-    showLoading('Enviando email', 'Preparando y enviando…', 0);
+    showLoading('Generando PDF…', 'Preparando resumen de la cita…', 0);
     try {
       const result = await sendFichaEmail(ficha, titulo, fechaEvStr, false);
+      hideLoading();
       if(result.pdfFailed){
         toast('✓ Email enviado (sin PDF adjunto)');
       } else {
         toast('✓ Email enviado a La Nonna');
       }
     } catch(e) {
+      hideLoading();
       showBlockingError('Error al enviar: ' + e.message);
     } finally {
-      hideLoading();
       btn.disabled = false;
       btn.textContent = '📨 Enviar email';
     }
