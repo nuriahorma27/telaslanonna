@@ -252,6 +252,14 @@ header{height:var(--header-h);padding:0 1.2rem;display:flex;align-items:center;j
 
 /* Gestionar */
 .admin-fabric-list{display:flex;flex-direction:column;}
+.admin-fabric-filters{padding:1rem 1.1rem;border-bottom:1px solid rgba(212,201,184,.38);display:grid;grid-template-columns:1.4fr repeat(3,1fr) auto;gap:.55rem;align-items:end;background:rgba(255,255,255,.35);}
+.admin-filter-field{display:flex;flex-direction:column;gap:.25rem;min-width:0;}
+.admin-filter-label{font-family:'Cormorant Garamond',serif;font-size:.74rem;font-style:italic;color:var(--muted);letter-spacing:.03em;}
+.admin-filter-input,.admin-filter-select{width:100%;padding:.42rem .58rem;border:1.5px solid rgba(212,201,184,.72);border-radius:7px;background:rgba(255,255,255,.72);color:var(--dark);font-family:'Cormorant Garamond',serif;font-size:.95rem;transition:all .2s;}
+.admin-filter-input:focus,.admin-filter-select:focus{outline:none;border-color:var(--accent);background:#fff;}
+.admin-filter-input.active-filter,.admin-filter-select.active-filter{border-color:var(--accent);background:#fffaf2;}
+.admin-filter-clear{padding:.42rem .75rem;border:1.5px solid var(--border);border-radius:7px;background:rgba(255,255,255,.58);cursor:pointer;color:var(--muted);font-family:'Cormorant Garamond',serif;font-size:.9rem;font-style:italic;white-space:nowrap;transition:all .15s;}
+.admin-filter-clear:hover{border-color:var(--accent);color:var(--accent);background:#fff;}
 .admin-fabric-row{display:flex;align-items:flex-start;gap:.65rem;padding:.75rem 1.1rem;border-bottom:1px solid rgba(212,201,184,.35);transition:background .15s;flex-wrap:wrap;}
 .admin-fabric-row:hover{background:rgba(255,255,255,.4);}
 .admin-fabric-row:last-child{border-bottom:none;}
@@ -699,6 +707,7 @@ input[type="date"].ficha-big-inp{font-size:1.15rem;padding:.88rem 1rem;}
   .viewer-nav-btn{width:34px;height:34px;font-size:1.2rem;}
 
   .admin-fabric-row{padding:.75rem .9rem;}
+  .admin-fabric-filters{grid-template-columns:1fr;gap:.65rem;}
   .afinfo{flex-basis:calc(100% - 44px - .65rem);}
   .afside{width:100%;margin-left:calc(44px + .65rem);}
   .afactions{padding-left:calc(44px + .65rem);}
@@ -866,6 +875,25 @@ input[type="date"].ficha-big-inp{font-size:1.15rem;padding:.88rem 1rem;}
 
       <div class="admin-card">
         <div class="admin-card-hdr"><div class="admin-card-title" id="adminListTitle">Telas — 0</div></div>
+        <div class="admin-fabric-filters">
+          <div class="admin-filter-field">
+            <label class="admin-filter-label">Buscar por nombre</label>
+            <input type="search" class="admin-filter-input" id="adminFabricSearch" placeholder="Ej: azul navy, verde agua…" autocomplete="off">
+          </div>
+          <div class="admin-filter-field">
+            <label class="admin-filter-label">Material</label>
+            <select class="admin-filter-select" id="adminFabricMaterial"><option value="">Todos</option></select>
+          </div>
+          <div class="admin-filter-field">
+            <label class="admin-filter-label">Acabado</label>
+            <select class="admin-filter-select" id="adminFabricPattern"><option value="">Todos</option></select>
+          </div>
+          <div class="admin-filter-field">
+            <label class="admin-filter-label">Colección</label>
+            <select class="admin-filter-select" id="adminFabricGroup"><option value="">Todas</option></select>
+          </div>
+          <button class="admin-filter-clear" id="adminFabricClearFilters" type="button">Limpiar</button>
+        </div>
         <div class="admin-fabric-list" id="adminFabricList"><div class="admin-empty">Cargando…</div></div>
       </div>
     </div>
@@ -1179,6 +1207,7 @@ let FABRICS_META = []; // lightweight (no image_url) — used by public view/fil
 let FABRICS_BY_MAT = {}; // {mat:[full items]} for current page per section
 let FABRICS_FLAT = []; // flat sorted list for "Todas" view
 let FABRICS_FLAT_loaded = false;
+let ADMIN_FABRIC_FILTERS = {q:'',mat:'',pat:'',grp:''};
 const adminUndoStack = [];
 
 function updateAdminUndoButton(){
@@ -1650,15 +1679,59 @@ document.getElementById('labConfirmOne').addEventListener('click', async()=>{
 });
 
 // ── GESTIONAR ──
+function rebuildAdminFabricFilters(){
+  const q=document.getElementById('adminFabricSearch');
+  if(q){
+    if(q.value!==ADMIN_FABRIC_FILTERS.q) q.value=ADMIN_FABRIC_FILTERS.q;
+    q.className='admin-filter-input'+(ADMIN_FABRIC_FILTERS.q.trim()?' active-filter':'');
+  }
+  const setSelect=(id,values,emptyLabel,current)=>{
+    const sel=document.getElementById(id);
+    if(!sel) return;
+    sel.innerHTML=`<option value="">${emptyLabel}</option>`;
+    values.forEach(v=>{
+      const o=document.createElement('option');
+      o.value=v.value;
+      o.textContent=v.label;
+      sel.appendChild(o);
+    });
+    sel.value=values.some(v=>v.value===current)?current:'';
+    sel.className='admin-filter-select'+(sel.value?' active-filter':'');
+  };
+  const mats=MAT_LIST.filter(m=>FABRICS.some(f=>f.material===m)).map(m=>({value:m,label:ML[m]||m}));
+  const pats=[...new Set(FABRICS.map(f=>f.pattern).filter(Boolean))].sort().map(p=>({value:p,label:PL[p]||p}));
+  const groups=[...new Set(FABRICS.map(f=>f.group).filter(Boolean))].sort().map(g=>({value:g,label:g}));
+  setSelect('adminFabricMaterial',mats,'Todos',ADMIN_FABRIC_FILTERS.mat);
+  setSelect('adminFabricPattern',pats,'Todos',ADMIN_FABRIC_FILTERS.pat);
+  setSelect('adminFabricGroup',groups,'Todas',ADMIN_FABRIC_FILTERS.grp);
+}
+
+function getAdminFilteredFabrics(){
+  const q=normalizeSearchText(ADMIN_FABRIC_FILTERS.q);
+  return FABRICS.filter(f=>{
+    if(q&&!normalizeSearchText(`${f.name||''} ${f.code||''}`).includes(q)) return false;
+    if(ADMIN_FABRIC_FILTERS.mat&&f.material!==ADMIN_FABRIC_FILTERS.mat) return false;
+    if(ADMIN_FABRIC_FILTERS.pat&&f.pattern!==ADMIN_FABRIC_FILTERS.pat) return false;
+    if(ADMIN_FABRIC_FILTERS.grp&&f.group!==ADMIN_FABRIC_FILTERS.grp) return false;
+    return true;
+  });
+}
+
 function renderAdminList(){
   const el=document.getElementById('adminFabricList');
   const hiddenCount=FABRICS.filter(f=>f.visible===false).length;
   const visibleCount=FABRICS.length-hiddenCount;
+  rebuildAdminFabricFilters();
+  const filteredFabrics=getAdminFilteredFabrics();
+  const filtersOn=!!(ADMIN_FABRIC_FILTERS.q.trim()||ADMIN_FABRIC_FILTERS.mat||ADMIN_FABRIC_FILTERS.pat||ADMIN_FABRIC_FILTERS.grp);
   document.getElementById('adminListTitle').textContent=
-    hiddenCount>0 ? `Telas — ${visibleCount} visibles · ${hiddenCount} ocultas` : `Telas — ${FABRICS.length}`;
+    filtersOn
+      ? `Telas — ${filteredFabrics.length} de ${FABRICS.length}`
+      : hiddenCount>0 ? `Telas — ${visibleCount} visibles · ${hiddenCount} ocultas` : `Telas — ${FABRICS.length}`;
   if(!FABRICS.length){el.innerHTML='<div class="admin-empty">No hay telas todavía.</div>';return;}
+  if(!filteredFabrics.length){el.innerHTML='<div class="admin-empty">Sin resultados con esos filtros.</div>';return;}
   el.innerHTML='';
-  FABRICS.forEach(f=>{
+  filteredFabrics.forEach(f=>{
     const row=document.createElement('div');
     row.className='admin-fabric-row';
     row.id=`afrow-${f.code}`;
@@ -1666,7 +1739,7 @@ function renderAdminList(){
     const isHidden=f.visible===false;
     if(isHidden) row.classList.add('is-hidden');
     const badgeCls=f.material||'unlabeled';
-    const badgeTxt={velveton:'Velvetón',lino:'Lino',algodon:'Algodón'}[f.material]||'Sin tipo';
+    const badgeTxt={velveton:'Velvetón',lino:'Lino',lino_nico:'Lino Nico',algodon:'Algodón'}[f.material]||'Sin tipo';
 
     // Detect nameless fabrics
     const hasNoName=!f.name||f.name.startsWith('Sin nombre')||f.name.startsWith('Tela ')||/\.(jpg|jpeg|png|webp)/i.test(f.name||'')||f.name===f.code||/\d{12}/.test(f.name||'');
@@ -1747,6 +1820,27 @@ function renderAdminList(){
   // We can't easily distinguish, so just keep usedNamesSession as-is for this render
   // The key fix is that suggestions are now unique PER RENDER
 }
+
+document.getElementById('adminFabricSearch').addEventListener('input',e=>{
+  ADMIN_FABRIC_FILTERS.q=e.target.value;
+  renderAdminList();
+});
+document.getElementById('adminFabricMaterial').addEventListener('change',e=>{
+  ADMIN_FABRIC_FILTERS.mat=e.target.value;
+  renderAdminList();
+});
+document.getElementById('adminFabricPattern').addEventListener('change',e=>{
+  ADMIN_FABRIC_FILTERS.pat=e.target.value;
+  renderAdminList();
+});
+document.getElementById('adminFabricGroup').addEventListener('change',e=>{
+  ADMIN_FABRIC_FILTERS.grp=e.target.value;
+  renderAdminList();
+});
+document.getElementById('adminFabricClearFilters').addEventListener('click',()=>{
+  ADMIN_FABRIC_FILTERS={q:'',mat:'',pat:'',grp:''};
+  renderAdminList();
+});
 
 function showEditRow(code){
   // Close any open edit rows first
@@ -2015,7 +2109,7 @@ function rebuildSelects(){
   const sq=document.getElementById('searchName');
   if(sq){
     if(sq.value!==S.q) sq.value=S.q||'';
-    sq.className='f-search'+(S.q?' active-filter':'');
+    sq.className='f-search'+(S.q.trim()?' active-filter':'');
   }
 
   const pa=[...new Set(FABRICS_META.map(f=>f.pattern).filter(Boolean))].sort();
@@ -2191,7 +2285,7 @@ document.getElementById('previewCloseBtn').addEventListener('click',()=>{
   window.scrollTo({top:0,behavior:'smooth'});
 });
 
-document.getElementById('searchName').addEventListener('input',e=>{S.q=e.target.value.trim();render();});
+document.getElementById('searchName').addEventListener('input',e=>{S.q=e.target.value;render();});
 document.getElementById('selPattern').addEventListener('change',e=>{S.pat=e.target.value;render();});
 document.getElementById('selColor').addEventListener('change',e=>{S.grp=e.target.value;render();});
 document.getElementById('resetBtn').addEventListener('click',()=>{S={sel:S.sel,mat:'',pat:'',grp:'',q:'',pages:{lino:0,lino_nico:0,velveton:0,algodon:0},filteredCount:12};render();});
