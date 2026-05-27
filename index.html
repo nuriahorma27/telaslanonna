@@ -688,6 +688,10 @@ input[type="date"].ficha-big-inp{font-size:1.15rem;padding:.88rem 1rem;}
 .sidebar-overlay{display:none;position:fixed;inset:0;z-index:140;background:rgba(0,0,0,.45);}
 .sidebar-overlay.open{display:block;}
 
+/* ── MOBILE SEARCH BAR (always visible) ── */
+.mobile-search-bar{display:none;}
+
+
 /* ── MOBILE ── */
 @media(max-width:640px){
   /* Sidebar → drawer */
@@ -710,6 +714,26 @@ input[type="date"].ficha-big-inp{font-size:1.15rem;padding:.88rem 1rem;}
     transition:all .2s;
   }
   .filter-toggle-btn.has-filters{border-color:var(--accent);color:var(--accent);}
+
+  /* Search bar always visible on mobile */
+  .mobile-search-bar{
+    display:flex;align-items:center;gap:.5rem;
+    padding:.55rem .85rem;
+    background:rgba(255,255,255,0.22);backdrop-filter:blur(14px) saturate(1.4);-webkit-backdrop-filter:blur(14px) saturate(1.4);
+    border-bottom:1px solid rgba(255,255,255,0.35);
+    position:sticky;top:var(--header-h);z-index:45;
+  }
+  .mobile-search-bar input{
+    flex:1;padding:.42rem .65rem;
+    border:1.5px solid rgba(255,255,255,0.65);border-radius:6px;
+    background:rgba(255,255,255,0.62);color:var(--dark);
+    font-family:'Cormorant Garamond',serif;font-size:1rem;
+    transition:border-color .2s,background .2s;
+  }
+  .mobile-search-bar input:focus{outline:none;border-color:var(--accent);background:rgba(255,255,255,.85);}
+  .mobile-search-bar input.active-filter{border-color:var(--accent);background:rgba(255,255,255,.78);}
+  .mobile-search-clear{display:none;background:none;border:none;padding:.2rem .4rem;cursor:pointer;color:var(--muted);font-size:1.1rem;line-height:1;flex-shrink:0;}
+  .mobile-search-bar.has-text .mobile-search-clear{display:block;}
 
   /* Header: group right buttons */
   .header-right{display:flex;align-items:center;gap:.5rem;}
@@ -990,6 +1014,10 @@ input[type="date"].ficha-big-inp{font-size:1.15rem;padding:.88rem 1rem;}
   </div>
 </header>
 <div id="sidebarOverlay" class="sidebar-overlay"></div>
+<div class="mobile-search-bar" id="mobileSearchBar">
+  <input type="search" id="mobileSearchName" placeholder="Buscar tela…" autocomplete="off" inputmode="search">
+  <button class="mobile-search-clear" id="mobileSearchClear" aria-label="Borrar búsqueda">✕</button>
+</div>
 <div class="main-wrapper">
   <div class="sidebar">
     <div class="filter-bar">
@@ -2429,6 +2457,13 @@ function rebuildSelects(){
     if(sq.value!==S.q) sq.value=S.q||'';
     sq.className='f-search'+(S.q.trim()?' active-filter':'');
   }
+  const msq=document.getElementById('mobileSearchName');
+  const msbar=document.getElementById('mobileSearchBar');
+  if(msq){
+    if(msq.value!==S.q) msq.value=S.q||'';
+    msq.className=S.q.trim()?'active-filter':'';
+    if(msbar) msbar.classList.toggle('has-text',!!(S.q.trim()));
+  }
 
   const pa=[...new Set(FABRICS_META.map(f=>f.pattern).filter(Boolean))].sort();
   const sp=document.getElementById('selPattern');const cp=sp.value;
@@ -2614,6 +2649,8 @@ document.getElementById('previewCloseBtn').addEventListener('click',()=>{
 });
 
 document.getElementById('searchName').addEventListener('input',e=>{S.q=e.target.value;render();});
+document.getElementById('mobileSearchName').addEventListener('input',e=>{S.q=e.target.value;render();});
+document.getElementById('mobileSearchClear').addEventListener('click',()=>{S.q='';render();document.getElementById('mobileSearchName').focus();});
 document.getElementById('selPattern').addEventListener('change',e=>{S.pat=e.target.value;render();});
 document.getElementById('selColor').addEventListener('change',e=>{S.grp=e.target.value;render();});
 document.getElementById('resetBtn').addEventListener('click',()=>{S={sel:S.sel,mat:'',pat:'',grp:'',q:'',pages:{lino:0,lino_nico:0,velveton:0,algodon:0},filteredCount:12};render();});
