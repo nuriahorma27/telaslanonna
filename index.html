@@ -2852,9 +2852,11 @@ document.querySelectorAll('.type-tab-btn').forEach(btn=>{
     S.mat=newMat;
     S.pages={lino:0,lino_nico:0,velveton:0,algodon:0};
     S.filteredCount=12; // Reset filtered count when changing tabs
-    
+
     // Don't pre-load, let renderGrid handle it
     render();
+    const sa=document.querySelector('.scroll-area');
+    if(sa) sa.scrollTo({top:0,behavior:'smooth'});
   });
 });
 
