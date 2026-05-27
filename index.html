@@ -2535,14 +2535,19 @@ function getFilteredByMat(mat){
     return true;
   });
   if(!hasActiveFilters()){
-    // Sin filtros: agrupar por colección → nombre dentro de cada colección
+    // Sin filtros: new primero → colección → nombre
     return filtered.sort((a,b)=>{
+      if(!!b.is_new!==!!a.is_new)return b.is_new?1:-1;
       const ga=a.group||'zzz',gb=b.group||'zzz';
       if(ga!==gb)return ga.localeCompare(gb,'es');
       return (a.name||'').localeCompare(b.name||'','es');
     });
   }
-  return filtered.sort((a,b)=>(a.name||'').localeCompare(b.name||'','es'));
+  // Con filtros: new primero → nombre
+  return filtered.sort((a,b)=>{
+    if(!!b.is_new!==!!a.is_new)return b.is_new?1:-1;
+    return (a.name||'').localeCompare(b.name||'','es');
+  });
 }
 
 // Legacy getFiltered — now uses FABRICS_META
@@ -2557,7 +2562,9 @@ function getFiltered(){
   });
   if(!hasActiveFilters()){
     const MAT_ORDER=getMaterialOrder();
+    // Sin filtros: new primero → material → colección → nombre
     return filtered.sort((a,b)=>{
+      if(!!b.is_new!==!!a.is_new)return b.is_new?1:-1;
       const oa=MAT_ORDER[a.material]??9,ob=MAT_ORDER[b.material]??9;
       if(oa!==ob)return oa-ob;
       const ga=a.group||'zzz',gb=b.group||'zzz';
@@ -2565,7 +2572,9 @@ function getFiltered(){
       return (a.name||'').localeCompare(b.name||'','es');
     });
   }
+  // Con filtros: new primero → material → nombre
   return filtered.sort((a,b)=>{
+    if(!!b.is_new!==!!a.is_new)return b.is_new?1:-1;
     const MAT_ORDER=getMaterialOrder();
     const oa=MAT_ORDER[a.material]??9,ob=MAT_ORDER[b.material]??9;
     if(oa!==ob)return oa-ob;
