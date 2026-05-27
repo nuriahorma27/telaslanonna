@@ -341,6 +341,16 @@ header{height:var(--header-h);padding:0 1.2rem;display:flex;align-items:center;j
 .list-item-meta{font-size:.78rem;color:var(--muted);font-style:italic;}
 .list-item-del{background:none;border:1px solid rgba(176,64,64,.28);border-radius:5px;padding:.16rem .45rem;cursor:pointer;color:#b04040;font-family:'Cormorant Garamond',serif;font-size:.82rem;font-style:italic;white-space:nowrap;}
 .list-item-del:hover{background:#b04040;color:#fff;border-color:#b04040;}
+.list-item-edit{background:none;border:1px solid var(--border);border-radius:5px;padding:.16rem .45rem;cursor:pointer;color:var(--muted);font-family:'Cormorant Garamond',serif;font-size:.82rem;font-style:italic;white-space:nowrap;}
+.list-item-edit:hover{border-color:var(--accent);color:var(--accent);}
+.list-item-btns{display:flex;gap:.3rem;flex-shrink:0;}
+.list-item-row.editing{background:rgba(255,255,255,.85);border-color:rgba(200,169,110,.5);}
+.list-item-edit-inp{flex:1;min-width:0;padding:.22rem .45rem;border:1.5px solid rgba(200,169,110,.6);border-radius:5px;font-family:'Cormorant Garamond',serif;font-size:.92rem;color:var(--dark);background:#fff;}
+.list-item-edit-inp:focus{outline:none;border-color:var(--accent);}
+.list-item-save{background:var(--warm);border:1px solid var(--warm);border-radius:5px;padding:.16rem .52rem;cursor:pointer;color:#fff;font-family:'Cormorant Garamond',serif;font-size:.82rem;font-style:italic;white-space:nowrap;}
+.list-item-save:hover{background:var(--dark);border-color:var(--dark);}
+.list-item-cancel{background:none;border:1px solid var(--border);border-radius:5px;padding:.16rem .45rem;cursor:pointer;color:var(--muted);font-family:'Cormorant Garamond',serif;font-size:.82rem;font-style:italic;white-space:nowrap;}
+.list-item-cancel:hover{border-color:var(--muted);color:var(--dark);}
 #listEditorCard.admin-card{position:fixed;inset:0;z-index:280;display:none;flex-direction:column;align-items:center;justify-content:center;padding:1rem;background:rgba(26,22,18,.48);border:none;border-radius:0;box-shadow:none;backdrop-filter:blur(3px);overflow:auto;}
 #listEditorCard.admin-card .admin-card-hdr,#listEditorCard.admin-card .admin-card-body{width:min(760px,94vw);flex:none;background:#f5f0e8;border-left:1px solid var(--border);border-right:1px solid var(--border);}
 #listEditorCard.admin-card .admin-card-hdr{border-top:1px solid var(--border);border-radius:12px 12px 0 0;}
@@ -1885,17 +1895,23 @@ function renderListEditor(){
   if(materialEl){
     materialEl.innerHTML=getMaterialOptions().map(m=>{
       const isBuiltIn=BUILTIN_MATERIALS.some(b=>b.key===m.key);
-      return `<div class="list-item-row">
-        <div><div>${m.icon||'▫'} ${m.label}</div><div class="list-item-meta">${PL[m.pattern]||m.pattern}${isBuiltIn?' · fijo':''}</div></div>
-        <button class="list-item-del" data-del-material="${m.key}">Eliminar</button>
+      return `<div class="list-item-row" data-material-key="${m.key}">
+        <div style="min-width:0;flex:1;"><div>${m.icon||'▫'} ${m.label}</div><div class="list-item-meta">${PL[m.pattern]||m.pattern}${isBuiltIn?' · fijo':''}</div></div>
+        <div class="list-item-btns">
+          <button class="list-item-edit" data-edit-material="${m.key}">Editar</button>
+          <button class="list-item-del" data-del-material="${m.key}">Eliminar</button>
+        </div>
       </div>`;
     }).join('');
   }
   if(collectionEl){
     const usedCounts=FABRICS.reduce((acc,f)=>{if(f.group)acc[f.group]=(acc[f.group]||0)+1;return acc;},{});
-    collectionEl.innerHTML=getCollectionOptions().map(c=>`<div class="list-item-row">
-      <div><div>${c}</div><div class="list-item-meta">${usedCounts[c]||0} tela${usedCounts[c]===1?'':'s'}</div></div>
-      <button class="list-item-del" data-del-collection="${c.replace(/"/g,'&quot;')}">Eliminar</button>
+    collectionEl.innerHTML=getCollectionOptions().map(c=>`<div class="list-item-row" data-collection-name="${c.replace(/"/g,'&quot;')}">
+      <div style="min-width:0;flex:1;"><div>${c}</div><div class="list-item-meta">${usedCounts[c]||0} tela${usedCounts[c]===1?'':'s'}</div></div>
+      <div class="list-item-btns">
+        <button class="list-item-edit" data-edit-collection="${c.replace(/"/g,'&quot;')}">Editar</button>
+        <button class="list-item-del" data-del-collection="${c.replace(/"/g,'&quot;')}">Eliminar</button>
+      </div>
     </div>`).join('')||'<div class="admin-empty" style="padding:1rem;">No hay colecciones.</div>';
   }
 }
@@ -1953,6 +1969,36 @@ document.getElementById('addCollectionBtn').addEventListener('click',()=>{
   toast('Colección añadida');
 });
 document.getElementById('materialListEditor').addEventListener('click',async e=>{
+  // Edit material name
+  const editBtn=e.target.closest('[data-edit-material]');
+  if(editBtn){
+    const key=editBtn.dataset.editMaterial;
+    const row=editBtn.closest('.list-item-row');
+    const material=getMaterialOptions().find(m=>m.key===key);
+    if(!material||row.classList.contains('editing')) return;
+    row.classList.add('editing');
+    const origHTML=row.innerHTML;
+    row.innerHTML=`
+      <input class="list-item-edit-inp" value="${material.label.replace(/"/g,'&quot;')}" maxlength="60">
+      <div class="list-item-btns">
+        <button class="list-item-save">Guardar</button>
+        <button class="list-item-cancel">Cancelar</button>
+      </div>`;
+    const inp=row.querySelector('.list-item-edit-inp');
+    inp.focus();inp.select();
+    row.querySelector('.list-item-cancel').addEventListener('click',()=>{row.classList.remove('editing');row.innerHTML=origHTML;});
+    row.querySelector('.list-item-save').addEventListener('click',()=>{
+      const newLabel=inp.value.trim();
+      if(!newLabel){toast('El nombre no puede estar vacío');inp.focus();return;}
+      const customs=getCustomMaterials();
+      const idx=customs.findIndex(m=>m.key===key);
+      if(idx>=0){customs[idx].label=newLabel;saveCustomMaterials(customs);}
+      refreshMaterialCollectionUi();
+      toast('Material renombrado');
+    });
+    inp.addEventListener('keydown',e=>{if(e.key==='Enter')row.querySelector('.list-item-save').click();if(e.key==='Escape')row.querySelector('.list-item-cancel').click();});
+    return;
+  }
   const btn=e.target.closest('[data-del-material]');
   if(!btn) return;
   const key=btn.dataset.delMaterial;
@@ -1976,6 +2022,45 @@ document.getElementById('materialListEditor').addEventListener('click',async e=>
   }catch(err){hideLoading();toast('Error: '+err.message);}
 });
 document.getElementById('collectionListEditor').addEventListener('click',async e=>{
+  // Edit collection name
+  const editBtn=e.target.closest('[data-edit-collection]');
+  if(editBtn){
+    const oldName=editBtn.dataset.editCollection;
+    const row=editBtn.closest('.list-item-row');
+    if(row.classList.contains('editing')) return;
+    row.classList.add('editing');
+    const origHTML=row.innerHTML;
+    row.innerHTML=`
+      <input class="list-item-edit-inp" value="${oldName.replace(/"/g,'&quot;')}" maxlength="80">
+      <div class="list-item-btns">
+        <button class="list-item-save">Guardar</button>
+        <button class="list-item-cancel">Cancelar</button>
+      </div>`;
+    const inp=row.querySelector('.list-item-edit-inp');
+    inp.focus();inp.select();
+    row.querySelector('.list-item-cancel').addEventListener('click',()=>{row.classList.remove('editing');row.innerHTML=origHTML;});
+    row.querySelector('.list-item-save').addEventListener('click',async()=>{
+      const newName=inp.value.trim();
+      if(!newName){toast('El nombre no puede estar vacío');inp.focus();return;}
+      if(newName===oldName){row.querySelector('.list-item-cancel').click();return;}
+      showLoading('Renombrando colección…','Actualizando telas…',40);
+      try{
+        // Update fabrics in Supabase
+        await sbPatch(`/rest/v1/fabrics?group=eq.${encodeURIComponent(oldName)}`,{group:newName});
+        // Update localStorage
+        const customs=getCustomCollections().map(c=>c===oldName?newName:c);
+        saveCustomCollections([...new Set(customs)]);
+        const deleted=getDeletedCollections().map(c=>c===oldName?newName:c);
+        saveDeletedCollections(deleted);
+        await loadFabrics();
+        hideLoading();
+        refreshMaterialCollectionUi();
+        toast('Colección renombrada');
+      }catch(err){hideLoading();toast('Error: '+err.message);}
+    });
+    inp.addEventListener('keydown',e=>{if(e.key==='Enter')row.querySelector('.list-item-save').click();if(e.key==='Escape')row.querySelector('.list-item-cancel').click();});
+    return;
+  }
   const btn=e.target.closest('[data-del-collection]');
   if(!btn) return;
   const name=btn.dataset.delCollection;
