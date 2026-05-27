@@ -77,6 +77,11 @@ header{height:var(--header-h);padding:0 1.2rem;display:flex;align-items:center;j
 
 /* ── TYPE TABS ── */
 .type-tabs-bar{display:flex;gap:.5rem;padding:1rem 1.5rem .8rem;border-bottom:1px solid rgba(255,255,255,0.35);overflow-x:auto;-webkit-overflow-scrolling:touch;background:rgba(255,255,255,0.18);backdrop-filter:blur(12px) saturate(1.4);-webkit-backdrop-filter:blur(12px) saturate(1.4);}
+.active-filters-bar{display:none;align-items:center;gap:.4rem;flex-wrap:wrap;padding:.5rem 1.2rem .45rem;background:rgba(255,255,255,.15);border-bottom:1px solid rgba(255,255,255,.28);}
+.active-filter-chip{display:inline-flex;align-items:center;gap:.32rem;padding:.22rem .55rem .22rem .65rem;border-radius:20px;background:rgba(200,169,110,.18);border:1px solid rgba(200,169,110,.5);color:var(--dark);font-family:'Cormorant Garamond',serif;font-size:.82rem;font-style:italic;cursor:pointer;transition:background .15s;white-space:nowrap;}
+.active-filter-chip:hover{background:rgba(200,169,110,.35);border-color:rgba(200,169,110,.75);}
+.active-filter-chip .chip-x{font-size:.7rem;color:var(--muted);font-style:normal;line-height:1;opacity:.75;}
+.active-filter-chip-all{opacity:.65;font-size:.78rem;}
 .type-tabs-bar::-webkit-scrollbar{height:4px;}
 .type-tabs-bar::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
 .type-tab-btn{display:inline-flex;align-items:center;gap:.4rem;padding:.5rem 1.1rem;background:white;border:1.5px solid var(--border);border-radius:6px;cursor:pointer;color:var(--muted);font-size:1rem;font-family:'Cormorant Garamond',serif;font-weight:400;letter-spacing:.03em;white-space:nowrap;transition:all .2s;flex-shrink:0;}
@@ -1064,6 +1069,7 @@ input[type="date"].ficha-big-inp{font-size:1.15rem;padding:.88rem 1rem;}
       <button class="type-tab-btn" data-type="velveton"><span>Velvetón</span></button>
       <button class="type-tab-btn" data-type="algodon"><span>Algodón</span></button>
     </div>
+    <div class="active-filters-bar" id="activeFiltersBar"></div>
     <div class="scroll-area">
       <div class="preview-box" id="previewBox" style="display:none;">
         <div class="preview-hdr"><span class="preview-lbl">Vista de tela</span><span class="preview-code" id="previewCode">—</span><button class="preview-close-btn" id="previewCloseBtn" title="Cerrar vista">✕</button></div>
@@ -2646,6 +2652,32 @@ function selectFabric(f){
   renderGrid();
 }
 
+function renderActiveFilters(){
+  const bar=document.getElementById('activeFiltersBar');
+  if(!bar)return;
+  const chips=[];
+  if(S.q.trim()) chips.push({label:`"${S.q.trim()}"`,clear:()=>{S.q='';render();}});
+  if(S.pat) chips.push({label:PL[S.pat]||S.pat,clear:()=>{S.pat='';render();}});
+  if(S.grp) chips.push({label:S.grp,clear:()=>{S.grp='';render();}});
+  if(!chips.length){bar.style.display='none';bar.innerHTML='';return;}
+  bar.style.display='flex';
+  bar.innerHTML='';
+  chips.forEach(c=>{
+    const el=document.createElement('button');
+    el.className='active-filter-chip';
+    el.innerHTML=`${c.label} <span class="chip-x">✕</span>`;
+    el.addEventListener('click',c.clear);
+    bar.appendChild(el);
+  });
+  if(chips.length>1){
+    const all=document.createElement('button');
+    all.className='active-filter-chip active-filter-chip-all';
+    all.innerHTML=`Limpiar todo <span class="chip-x">✕</span>`;
+    all.addEventListener('click',()=>{S.q='';S.pat='';S.grp='';render();});
+    bar.appendChild(all);
+  }
+}
+
 async function render(){
   S.pages={lino:0,lino_nico:0,velveton:0,algodon:0};
   S.filteredCount=12;
@@ -2654,6 +2686,7 @@ async function render(){
   FABRICS_FLAT=[];
   Object.keys(FABRICS_BY_MAT).forEach(m=>{ if(FABRICS_BY_MAT[m]) delete FABRICS_BY_MAT[m]._allLoaded; });
   rebuildSelects();
+  renderActiveFilters();
   // Only pre-load section pages for "Todas" view; specific tab loads all items in renderGrid
   if(!S.mat) await loadAllSectionPages();
   await renderGrid();
