@@ -49,6 +49,9 @@ header{height:var(--header-h);padding:0 1.2rem;display:flex;align-items:center;j
 .filter-row{display:flex;flex-direction:column;align-items:flex-start;gap:.35rem;}
 .f-step{display:none;}
 .f-label{font-size:.88rem;letter-spacing:.02em;color:var(--muted);font-weight:400;font-style:italic;font-family:'Cormorant Garamond',serif;display:block;margin-bottom:.15rem;}
+.f-search{width:100%;padding:.5rem .62rem;border:1.5px solid rgba(255,255,255,0.65);border-radius:6px;background:rgba(255,255,255,0.6);color:var(--dark);font-family:'Cormorant Garamond',serif;font-size:1rem;transition:all .2s;}
+.f-search:focus{outline:none;border-color:var(--accent);background:rgba(255,255,255,0.82);}
+.f-search.active-filter{border-color:var(--accent);background:rgba(255,255,255,0.78);}
 .f-select{width:100%;padding:.42rem 1.4rem .42rem .5rem;border:1.5px solid rgba(255,255,255,0.6);border-radius:5px;background:rgba(255,255,255,0.55);color:var(--dark);font-family:'Cormorant Garamond',serif;font-size:.95rem;cursor:pointer;appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='7' viewBox='0 0 10 7'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%238b7355' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right .5rem center;transition:all .2s;}
 .f-select:focus{outline:none;border-color:var(--accent);}
 .f-select:disabled{opacity:.38;cursor:not-allowed;background-color:#f0ebe2;}
@@ -909,7 +912,7 @@ input[type="date"].ficha-big-inp{font-size:1.15rem;padding:.88rem 1rem;}
       <div style="padding-bottom:.5rem;border-bottom:1px solid var(--border);margin-bottom:.3rem;">
         <div style="font-family:'Cormorant Garamond',serif;font-size:.9rem;font-weight:600;color:var(--warm);letter-spacing:.08em;">FILTROS</div>
       </div>
-      <div class="filter-row"><span class="f-label">Material</span><select class="f-select" id="selMaterial"><option value="">Todos</option></select></div>
+      <div class="filter-row"><span class="f-label">Buscar por nombre</span><input type="search" class="f-search" id="searchName" placeholder="Ej: azul navy, verde agua…" autocomplete="off"></div>
       <div class="filter-row"><span class="f-label">Acabado</span><select class="f-select" id="selPattern"><option value="">Todos</option></select></div>
       <div class="filter-row"><span class="f-label">Colección</span><select class="f-select" id="selColor"><option value="">Todas</option></select></div>
       <div class="filter-reset-row"><span class="result-count" id="resultCount"></span><button class="reset-btn" id="resetBtn">Limpiar</button></div>
@@ -1364,7 +1367,7 @@ function closeSidebar(){
 document.getElementById('filterToggleBtn').addEventListener('click', openSidebar);
 document.getElementById('sidebarOverlay').addEventListener('click', closeSidebar);
 // Close drawer when a filter is applied on mobile
-['selMaterial','selPattern','selColor'].forEach(id=>{
+['selPattern','selColor'].forEach(id=>{
   document.getElementById(id).addEventListener('change',()=>{ if(window.innerWidth<=640) closeSidebar(); });
 });
 document.getElementById('resetBtn').addEventListener('click',()=>{ if(window.innerWidth<=640) setTimeout(closeSidebar,150); });
@@ -1915,7 +1918,7 @@ function showEditRow(code){
 // ── MUESTRARIO ──
 // ── MUESTRARIO ──
 const PAGE_SIZE = 4;
-let S={sel:null,mat:'',pat:'',grp:'',pages:{lino:0,lino_nico:0,velveton:0,algodon:0},filteredCount:12};
+let S={sel:null,mat:'',pat:'',grp:'',q:'',pages:{lino:0,lino_nico:0,velveton:0,algodon:0},filteredCount:12};
 
 // Use the public object URL directly; the render/image endpoint is returning 404.
 function thumbUrl(url){
@@ -1944,8 +1947,17 @@ function getActiveMaterials(){
   const mats=S.mat?[S.mat]:MAT_LIST;
   return mats.filter(m=>FABRICS_META.some(f=>
     f.material===m&&f.visible!==false&&f.visible!=='false'&&
-    (!S.pat||f.pattern===S.pat)&&(!S.grp||f.group===S.grp)
+    (!S.pat||f.pattern===S.pat)&&(!S.grp||f.group===S.grp)&&matchesNameSearch(f)
   ));
+}
+
+function normalizeSearchText(txt){
+  return (txt||'').toString().normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim();
+}
+function matchesNameSearch(f){
+  const q=normalizeSearchText(S.q);
+  if(!q) return true;
+  return normalizeSearchText(f.name||f.code||'').includes(q);
 }
 
 function getFilteredByMat(mat){
@@ -1954,6 +1966,7 @@ function getFilteredByMat(mat){
     if(f.material!==mat)return false;
     if(S.pat&&f.pattern!==S.pat)return false;
     if(S.grp&&f.group!==S.grp)return false;
+    if(!matchesNameSearch(f))return false;
     return true;
   }).sort((a,b)=>(a.name||'').localeCompare(b.name||'','es'));
 }
@@ -1965,6 +1978,7 @@ function getFiltered(){
     if(S.mat&&f.material!==S.mat)return false;
     if(S.pat&&f.pattern!==S.pat)return false;
     if(S.grp&&f.group!==S.grp)return false;
+    if(!matchesNameSearch(f))return false;
     return true;
   }).sort((a,b)=>{
     const oa=MAT_ORDER[a.material]??9,ob=MAT_ORDER[b.material]??9;
@@ -1998,16 +2012,11 @@ async function loadFlatAll(){
 }
 
 function rebuildSelects(){
-  const ma=MAT_LIST; // Use MAT_LIST instead of FABRICS_META to ensure all materials are available
-  const sm=document.getElementById('selMaterial');const cm=sm.value;
-  sm.innerHTML='<option value="">Todos</option>';
-  ma.forEach(v=>{const o=document.createElement('option');o.value=v;o.textContent=ML[v]||v;sm.appendChild(o);});
-  // Only change select value if S.mat is empty (not set by tabs)
-  if(!S.mat){
-    sm.value=ma.includes(cm)?cm:'';
+  const sq=document.getElementById('searchName');
+  if(sq){
+    if(sq.value!==S.q) sq.value=S.q||'';
+    sq.className='f-search'+(S.q?' active-filter':'');
   }
-  if(cm && !ma.includes(cm)) S.mat=''; // Keep this to reset S.mat if select value is invalid
-  sm.className='f-select'+(S.mat?' active-filter':'');
 
   const pa=[...new Set(FABRICS_META.map(f=>f.pattern).filter(Boolean))].sort();
   const sp=document.getElementById('selPattern');const cp=sp.value;
@@ -2182,15 +2191,10 @@ document.getElementById('previewCloseBtn').addEventListener('click',()=>{
   window.scrollTo({top:0,behavior:'smooth'});
 });
 
-document.getElementById('selMaterial').addEventListener('change',e=>{
-  S.mat=e.target.value;
-  // Reset tab selection when material is changed via select
-  document.querySelectorAll('.type-tab-btn').forEach(b=>b.classList.remove('active'));
-  render();
-});
+document.getElementById('searchName').addEventListener('input',e=>{S.q=e.target.value.trim();render();});
 document.getElementById('selPattern').addEventListener('change',e=>{S.pat=e.target.value;render();});
 document.getElementById('selColor').addEventListener('change',e=>{S.grp=e.target.value;render();});
-document.getElementById('resetBtn').addEventListener('click',()=>{S={sel:S.sel,mat:'',pat:'',grp:'',pages:{lino:0,lino_nico:0,velveton:0,algodon:0}};render();});
+document.getElementById('resetBtn').addEventListener('click',()=>{S={sel:S.sel,mat:'',pat:'',grp:'',q:'',pages:{lino:0,lino_nico:0,velveton:0,algodon:0},filteredCount:12};render();});
 
 // Type tabs listeners
 document.querySelectorAll('.type-tab-btn').forEach(btn=>{
@@ -2198,10 +2202,6 @@ document.querySelectorAll('.type-tab-btn').forEach(btn=>{
     document.querySelectorAll('.type-tab-btn').forEach(b=>b.classList.remove('active'));
     btn.classList.add('active');
     const newMat=btn.dataset.type||'';
-    
-    // Update the material select to match the tab
-    const sm=document.getElementById('selMaterial');
-    sm.value=newMat;
     
     S.mat=newMat;
     S.pages={lino:0,lino_nico:0,velveton:0,algodon:0};
