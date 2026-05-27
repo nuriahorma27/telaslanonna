@@ -92,6 +92,7 @@ header{height:var(--header-h);padding:0 1.2rem;display:flex;align-items:center;j
 @keyframes gi-spin{to{transform:rotate(360deg)}}
 .gi-img{width:100%;height:100%;object-fit:cover;border:none;display:block;opacity:0;transition:opacity .25s ease;}
 .gi-img.loaded{opacity:1;}
+.gi-material-badge{position:absolute;top:.4rem;right:.4rem;z-index:2;max-width:78%;padding:.12rem .42rem;border-radius:20px;background:rgba(245,240,232,.92);border:1px solid rgba(200,169,110,.55);color:#8b7355;font-family:'Cormorant Garamond',serif;font-size:.72rem;font-style:italic;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;box-shadow:0 2px 8px rgba(0,0,0,.12);pointer-events:none;}
 .gi-code{font-size:.95rem;letter-spacing:.02em;color:var(--dark);font-weight:400;font-family:'Cormorant Garamond',serif;font-style:italic;text-align:center;line-height:1.3;padding:.15rem .2rem .25rem;flex-shrink:0;height:2.6em;overflow:hidden;}
 
 /* ── SECTION HEADERS ── */
@@ -234,6 +235,8 @@ header{height:var(--header-h);padding:0 1.2rem;display:flex;align-items:center;j
 .type-btn:hover{border-color:var(--accent);background:rgba(255,255,255,.8);}
 .type-btn .ti{font-size:1.2rem;}
 .type-btn .tn{font-size:.82rem;font-family:'Cormorant Garamond',serif;font-style:italic;color:var(--muted);text-align:center;line-height:1.2;}
+.type-btn.sel{border-color:var(--accent);background:rgba(200,169,110,.12);}
+.type-btn.sel .tn{color:var(--warm);}
 .type-btn[data-t="velveton"].sel{border-color:var(--velveton);background:rgba(107,76,122,.08);}
 .type-btn[data-t="velveton"].sel .tn{color:var(--velveton);}
 .type-btn[data-t="lino"].sel{border-color:var(--lino);background:rgba(74,112,88,.08);}
@@ -245,8 +248,11 @@ header{height:var(--header-h);padding:0 1.2rem;display:flex;align-items:center;j
 
 /* Lab action buttons */
 .lab-actions{display:flex;gap:.5rem;}
-.btn-confirm-one{flex:1;padding:.62rem;background:none;border:1.5px solid var(--border);border-radius:7px;cursor:pointer;font-family:'Cormorant Garamond',serif;font-size:.95rem;font-style:italic;letter-spacing:.02em;color:var(--muted);transition:all .18s;}
-.btn-confirm-one:hover{border-color:var(--warm);color:var(--warm);}
+.btn-confirm-one{flex:1;padding:.62rem;background:var(--dark);border:1.5px solid var(--dark);border-radius:7px;cursor:pointer;font-family:'Cormorant Garamond',serif;font-size:.95rem;font-style:italic;letter-spacing:.02em;color:var(--cream);transition:all .18s;}
+.btn-confirm-one:hover:not(:disabled){background:var(--warm);border-color:var(--warm);}
+.btn-confirm-one:disabled{opacity:.42;cursor:not-allowed;background:none;color:var(--muted);border-color:var(--border);}
+.btn-cancel-fabric{flex:1;padding:.62rem;background:none;border:1.5px solid rgba(176,64,64,.28);border-radius:7px;cursor:pointer;font-family:'Cormorant Garamond',serif;font-size:.95rem;font-style:italic;letter-spacing:.02em;color:#b04040;transition:all .18s;}
+.btn-cancel-fabric:hover{background:#b04040;border-color:#b04040;color:#fff;}
 .btn-confirm-all{flex:2;padding:.62rem;background:var(--dark);color:var(--cream);border:none;border-radius:7px;cursor:pointer;font-family:'Cormorant Garamond',serif;font-size:1rem;font-style:italic;letter-spacing:.03em;transition:background .2s;}
 .btn-confirm-all:hover{background:var(--warm);}
 
@@ -291,6 +297,24 @@ header{height:var(--header-h);padding:0 1.2rem;display:flex;align-items:center;j
 .add-more-lbl{border:1px solid rgba(200,169,110,.5);border-radius:20px;padding:.28rem .72rem;cursor:pointer;color:var(--accent);font-size:.88rem;font-family:'Cormorant Garamond',serif;font-style:italic;white-space:nowrap;position:relative;overflow:hidden;display:inline-flex;align-items:center;gap:.35rem;background:rgba(200,169,110,.08);transition:all .2s;}
 .add-more-lbl:hover{background:var(--accent);color:var(--dark);}
 .add-more-lbl input{position:absolute;inset:0;opacity:0;cursor:pointer;}
+.list-editor-toggle{border:1.5px solid var(--warm);border-radius:7px;padding:.48rem .9rem;cursor:pointer;color:#fff;font-size:1rem;font-family:'Cormorant Garamond',serif;font-style:italic;font-weight:600;letter-spacing:.02em;white-space:nowrap;background:var(--warm);transition:all .2s;box-shadow:0 3px 12px rgba(139,115,85,.22);}
+.list-editor-toggle:hover{background:var(--dark);border-color:var(--dark);color:var(--cream);transform:translateY(-1px);}
+.list-editor-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;}
+.list-editor-box{padding:.85rem .95rem;background:rgba(255,255,255,.55);border:1.5px solid rgba(212,201,184,.55);border-radius:10px;display:flex;flex-direction:column;gap:.65rem;}
+.list-editor-title{font-family:'Cormorant Garamond',serif;font-size:1rem;font-style:italic;color:var(--warm);}
+.list-editor-row{display:flex;gap:.45rem;align-items:center;}
+.list-editor-row .finp,.list-editor-row .col-inp{min-width:0;}
+.list-editor-list{display:flex;flex-direction:column;gap:.35rem;max-height:190px;overflow:auto;padding-right:.2rem;}
+.list-item-row{display:flex;align-items:center;justify-content:space-between;gap:.5rem;padding:.4rem .55rem;border:1px solid rgba(212,201,184,.5);border-radius:7px;background:rgba(255,255,255,.55);font-family:'Cormorant Garamond',serif;font-size:.95rem;color:var(--dark);}
+.list-item-meta{font-size:.78rem;color:var(--muted);font-style:italic;}
+.list-item-del{background:none;border:1px solid rgba(176,64,64,.28);border-radius:5px;padding:.16rem .45rem;cursor:pointer;color:#b04040;font-family:'Cormorant Garamond',serif;font-size:.82rem;font-style:italic;white-space:nowrap;}
+.list-item-del:hover{background:#b04040;color:#fff;border-color:#b04040;}
+#listEditorCard.admin-card{position:fixed;inset:0;z-index:280;display:none;flex-direction:column;align-items:center;justify-content:center;padding:1rem;background:rgba(26,22,18,.48);border:none;border-radius:0;box-shadow:none;backdrop-filter:blur(3px);overflow:auto;}
+#listEditorCard.admin-card .admin-card-hdr,#listEditorCard.admin-card .admin-card-body{width:min(760px,94vw);flex:none;background:#f5f0e8;border-left:1px solid var(--border);border-right:1px solid var(--border);}
+#listEditorCard.admin-card .admin-card-hdr{border-top:1px solid var(--border);border-radius:12px 12px 0 0;}
+#listEditorCard.admin-card .admin-card-body{border-bottom:1px solid var(--border);border-radius:0 0 12px 12px;max-height:72vh;overflow:auto;}
+.list-editor-close{background:none;border:1.5px solid var(--border);border-radius:20px;padding:.24rem .72rem;cursor:pointer;color:var(--muted);font-family:'Cormorant Garamond',serif;font-size:.9rem;font-style:italic;}
+.list-editor-close:hover{border-color:var(--accent);color:var(--accent);}
 
 /* ── SECTION PAGINATION ── */
 .section-nav{grid-column:1/-1;display:flex;align-items:center;justify-content:center;gap:1rem;padding:1.2rem 1rem;border-top:none;background:transparent;}
@@ -708,6 +732,7 @@ input[type="date"].ficha-big-inp{font-size:1.15rem;padding:.88rem 1rem;}
 
   .admin-fabric-row{padding:.75rem .9rem;}
   .admin-fabric-filters{grid-template-columns:1fr;gap:.65rem;}
+  .list-editor-grid{grid-template-columns:1fr;}
   .afinfo{flex-basis:calc(100% - 44px - .65rem);}
   .afside{width:100%;margin-left:calc(44px + .65rem);}
   .afactions{padding-left:calc(44px + .65rem);}
@@ -823,7 +848,7 @@ input[type="date"].ficha-big-inp{font-size:1.15rem;padding:.88rem 1rem;}
       <div class="admin-card">
         <div class="admin-card-hdr">
           <div class="admin-card-title">Cargar fotos</div>
-          <span class="admin-card-title" style="font-size:.85rem;color:var(--muted);">1 foto por tela</span>
+          <button class="list-editor-toggle" id="toggleListEditor" type="button">Editar listados</button>
         </div>
         <div class="admin-card-body">
           <div class="upload-zone" id="uploadZone">
@@ -835,6 +860,37 @@ input[type="date"].ficha-big-inp{font-size:1.15rem;padding:.88rem 1rem;}
           <div class="storage-row">
             <div class="storage-txt" id="storageInfo">Sin fotos pendientes</div>
             <button class="btn-sm-ghost" id="clearPendingBtn">Borrar pendientes</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="admin-card" id="listEditorCard" style="display:none;">
+        <div class="admin-card-hdr">
+          <div class="admin-card-title">Editar listados</div>
+          <button class="list-editor-close" id="closeListEditor" type="button">Cerrar</button>
+        </div>
+        <div class="admin-card-body">
+          <div class="list-editor-grid">
+            <div class="list-editor-box">
+              <div class="list-editor-title">Añadir nuevo material</div>
+              <div class="list-editor-row">
+                <input type="text" class="finp" id="newMaterialName" placeholder="Nombre del material" autocomplete="off">
+                <select class="col-inp" id="newMaterialPattern">
+                  <option value="liso">Liso</option>
+                  <option value="estampado">Estampado</option>
+                </select>
+              </div>
+              <button class="btn-confirm-one" id="addMaterialBtn" type="button">Añadir material</button>
+              <div class="list-editor-list" id="materialListEditor"></div>
+            </div>
+            <div class="list-editor-box">
+              <div class="list-editor-title">Añadir nueva colección</div>
+              <div class="list-editor-row">
+                <input type="text" class="finp" id="newCollectionName" placeholder="Nombre de la colección" autocomplete="off">
+                <button class="btn-confirm-one" id="addCollectionBtn" type="button">Añadir</button>
+              </div>
+              <div class="list-editor-list" id="collectionListEditor"></div>
+            </div>
           </div>
         </div>
       </div>
@@ -856,19 +912,15 @@ input[type="date"].ficha-big-inp{font-size:1.15rem;padding:.88rem 1rem;}
           </div>
           <div class="fabric-form-section step-hidden" id="labStepType">
             <label class="flbl">Seleccionar tipo de tela</label>
-            <div class="type-grid">
-              <button class="type-btn" data-t="lino"><span class="ti">🌿</span><span class="tn">Lino liso</span></button>
-              <button class="type-btn" data-t="lino_nico"><span class="ti">🍃</span><span class="tn">Lino Nico</span></button>
-              <button class="type-btn" data-t="velveton"><span class="ti">🪶</span><span class="tn">Velvetón</span></button>
-              <button class="type-btn" data-t="algodon"><span class="ti">🌸</span><span class="tn">Algodón estampado</span></button>
-            </div>
+            <div class="type-grid" id="labTypeGrid"></div>
           </div>
           <div class="fabric-form-section collection-section step-hidden" id="labStepCollection">
             <label class="flbl">Seleccionar colección</label>
             <select class="col-inp" id="labCol"><option value="">Elige una colección…</option><option value="Tonos burdeos y rojos">Tonos burdeos y rojos</option><option value="Tonos verdes">Tonos verdes</option><option value="Tonos azules">Tonos azules</option><option value="Tonos beige y marrones">Tonos beige y marrones</option></select>
           </div>
-          <div class="lab-actions step-hidden" id="labStepActions">
-            <button class="btn-confirm-one" id="labConfirmOne">Subir tela →</button>
+          <div class="lab-actions" id="labStepActions">
+            <button class="btn-cancel-fabric" id="labCancelFabric" type="button">Cancelar</button>
+            <button class="btn-confirm-one" id="labConfirmOne" type="button" disabled>Guardar</button>
           </div>
         </div>
       </div>
@@ -1198,6 +1250,15 @@ function nextSuggestName(type) {
 }
 
 // ── MUESTRARIO DATA ──
+const BUILTIN_MATERIALS=[
+  {key:'lino',label:'Lino',pattern:'liso',icon:'🌿'},
+  {key:'lino_nico',label:'Lino Nico',pattern:'liso',icon:'🍃'},
+  {key:'velveton',label:'Velvetón',pattern:'liso',icon:'🪶'},
+  {key:'algodon',label:'Algodón estampado',pattern:'estampado',icon:'🌸'}
+];
+const DEFAULT_COLLECTIONS=['Tonos burdeos y rojos','Tonos verdes','Tonos azules','Tonos beige y marrones'];
+const NO_COLLECTION='__none__';
+const NO_MATERIAL='__none_material__';
 const ML = {lino:'Lino',lino_nico:'Lino Nico',velveton:'Velvetón',algodon:'Algodón estampado'};
 const PL = {liso:'Liso',estampado:'Estampado'};
 const TM = {velveton:'velveton',lino:'lino',lino_nico:'lino_nico',algodon:'algodon'};
@@ -1209,6 +1270,63 @@ let FABRICS_FLAT = []; // flat sorted list for "Todas" view
 let FABRICS_FLAT_loaded = false;
 let ADMIN_FABRIC_FILTERS = {q:'',mat:'',pat:'',grp:''};
 const adminUndoStack = [];
+
+function readJsonStore(key,fallback){
+  try{return JSON.parse(localStorage.getItem(key)||'')||fallback;}catch(e){return fallback;}
+}
+function writeJsonStore(key,value){
+  try{localStorage.setItem(key,JSON.stringify(value));}catch(e){}
+}
+function slugifyKey(txt){
+  return (txt||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim().replace(/[^a-z0-9]+/g,'_').replace(/^_+|_+$/g,'')||`material_${Date.now()}`;
+}
+function getCustomMaterials(){return readJsonStore('nonna_custom_materials',[]);}
+function saveCustomMaterials(items){writeJsonStore('nonna_custom_materials',items);}
+function getDeletedMaterials(){return readJsonStore('nonna_deleted_materials',[]);}
+function saveDeletedMaterials(items){writeJsonStore('nonna_deleted_materials',items);}
+function getCustomCollections(){return readJsonStore('nonna_custom_collections',[]);}
+function saveCustomCollections(items){writeJsonStore('nonna_custom_collections',items);}
+function getDeletedCollections(){return readJsonStore('nonna_deleted_collections',[]);}
+function saveDeletedCollections(items){writeJsonStore('nonna_deleted_collections',items);}
+function getMaterialOptions(){
+  const map=new Map();
+  const deleted=new Set(getDeletedMaterials());
+  [...BUILTIN_MATERIALS,...getCustomMaterials()].filter(m=>!deleted.has(m.key)).forEach(m=>map.set(m.key,m));
+  [...FABRICS,...FABRICS_META].forEach(f=>{
+    if(f.material&&!map.has(f.material)) map.set(f.material,{key:f.material,label:ML[f.material]||f.material,pattern:f.pattern||'liso',icon:'▫'});
+  });
+  map.forEach(m=>{ML[m.key]=m.label;TP[m.key]=m.pattern;TM[m.key]=m.key;});
+  return [...map.values()];
+}
+function getMaterialLabel(key){return getMaterialOptions().find(m=>m.key===key)?.label||ML[key]||key||'—';}
+function getMaterialPattern(key){return getMaterialOptions().find(m=>m.key===key)?.pattern||TP[key]||'liso';}
+function getCollectionOptions(){
+  const deleted=new Set(getDeletedCollections());
+  const values=[...DEFAULT_COLLECTIONS,...getCustomCollections(),...FABRICS.map(f=>f.group).filter(Boolean)]
+    .filter(v=>!deleted.has(v));
+  return [...new Set(values)].sort((a,b)=>a.localeCompare(b,'es'));
+}
+function fillCollectionSelect(sel,current,{includeNone=false,placeholder='Elige una colección…'}={}){
+  if(!sel) return;
+  sel.innerHTML='';
+  const ph=document.createElement('option');
+  ph.value='';
+  ph.textContent=placeholder;
+  sel.appendChild(ph);
+  if(includeNone){
+    const none=document.createElement('option');
+    none.value=NO_COLLECTION;
+    none.textContent='Sin colección';
+    sel.appendChild(none);
+  }
+  getCollectionOptions().forEach(v=>{
+    const o=document.createElement('option');
+    o.value=v;
+    o.textContent=v;
+    sel.appendChild(o);
+  });
+  sel.value=current||'';
+}
 
 function updateAdminUndoButton(){
   const btn=document.getElementById('adminUndoBtn');
@@ -1352,9 +1470,9 @@ async function uploadOneFabric(idx, name, type, group) {
   const url  = await uploadPhoto(blob, `${code}.jpg`);
   const row  = await sbPost('/rest/v1/fabrics', {
     code, name: finalName,
-    material: TM[finalType],
-    pattern:  TP[finalType],
-    group:    finalGroup,
+    material: finalType,
+    pattern:  getMaterialPattern(finalType),
+    group:    finalGroup===NO_COLLECTION ? null : finalGroup,
     image_url: url
   });
   // Add to local arrays immediately
@@ -1459,6 +1577,37 @@ document.getElementById('adminUndoBtn').addEventListener('click',async()=>{
       const restored=fabricPayload(action.fabric);
       await sbPost('/rest/v1/fabrics',restored);
       mutationDone=true;
+    }else if(action.type==='add_material'){
+      saveCustomMaterials(getCustomMaterials().filter(m=>m.key!==action.material.key));
+      refreshMaterialCollectionUi();
+      mutationDone=true;
+    }else if(action.type==='delete_material'){
+      const items=getCustomMaterials();
+      saveDeletedMaterials(getDeletedMaterials().filter(k=>k!==action.material.key));
+      if(action.wasCustom&&!items.some(m=>m.key===action.material.key)) saveCustomMaterials([...items,action.material]);
+      for(const f of action.affected||[]){
+        await sbPatch(`/rest/v1/fabrics?code=eq.${encodeURIComponent(f.code)}`,{material:f.material,pattern:f.pattern});
+      }
+      await loadFabrics();
+      refreshMaterialCollectionUi();
+      mutationDone=true;
+    }else if(action.type==='add_collection'){
+      saveCustomCollections(getCustomCollections().filter(c=>c!==action.name));
+      if(action.wasDeleted) saveDeletedCollections([...new Set([...getDeletedCollections(),action.name])]);
+      refreshMaterialCollectionUi();
+      mutationDone=true;
+    }else if(action.type==='delete_collection'){
+      if(action.wasCustom){
+        const items=getCustomCollections();
+        if(!items.includes(action.name)) saveCustomCollections([...items,action.name]);
+      }
+      saveDeletedCollections(getDeletedCollections().filter(c=>c!==action.name));
+      for(const f of action.affected||[]){
+        await sbPatch(`/rest/v1/fabrics?code=eq.${encodeURIComponent(f.code)}`,{group:f.group});
+      }
+      await loadFabrics();
+      refreshMaterialCollectionUi();
+      mutationDone=true;
     }
     await refreshFabricViews();
     hideLoading();
@@ -1551,6 +1700,8 @@ function showLabCard(){
   const card=document.getElementById('labCard');
   if(!pendFnames.length){card.style.display='none';return;}
   card.style.display='';
+  renderLabTypeButtons();
+  fillCollectionSelect(document.getElementById('labCol'),'',{includeNone:true});
   document.querySelectorAll('.admin-tab').forEach(t=>t.classList.remove('active'));
   document.querySelectorAll('.tab-body').forEach(b=>b.classList.remove('active'));
   document.querySelector('[data-tab="telas"]').classList.add('active');
@@ -1601,13 +1752,24 @@ function renderChips(type,cur){
   // Nombre manual: no se muestran propuestas automáticas al crear telas.
 }
 
+function renderLabTypeButtons(){
+  const grid=document.getElementById('labTypeGrid');
+  if(!grid) return;
+  grid.innerHTML=getMaterialOptions().map(m=>`
+    <button class="type-btn${labType===m.key?' sel':''}" data-t="${m.key}">
+      <span class="ti">${m.icon||'▫'}</span><span class="tn">${m.label}</span>
+    </button>
+  `).join('');
+}
+
 function updateLabSteps(){
   const hasName=!!document.getElementById('labName')?.value.trim();
   const hasType=!!labType;
   const hasCollection=!!document.getElementById('labCol')?.value.trim();
   document.getElementById('labStepType')?.classList.toggle('step-hidden',!hasName);
   document.getElementById('labStepCollection')?.classList.toggle('step-hidden',!hasName||!hasType);
-  document.getElementById('labStepActions')?.classList.toggle('step-hidden',!hasName||!hasType||!hasCollection);
+  const saveBtn=document.getElementById('labConfirmOne');
+  if(saveBtn) saveBtn.disabled=!hasName||!hasType||!hasCollection;
 }
 
 document.getElementById('labName').addEventListener('input',()=>{
@@ -1620,15 +1782,16 @@ document.getElementById('labName').addEventListener('input',()=>{
 });
 document.getElementById('labCol').addEventListener('change',updateLabSteps);
 
-document.querySelectorAll('.type-btn').forEach(btn=>{
-  btn.addEventListener('click',()=>{
+document.getElementById('labTypeGrid').addEventListener('click',e=>{
+  const btn=e.target.closest('.type-btn');
+  if(btn){
     labType=btn.dataset.t;
-    document.querySelectorAll('.type-btn').forEach(b=>b.classList.remove('sel'));
+    document.querySelectorAll('#labTypeGrid .type-btn').forEach(b=>b.classList.remove('sel'));
     btn.classList.add('sel');
     document.getElementById('labCol').value='';
     updateLabSteps();
     setTimeout(()=>document.getElementById('labCol')?.focus(),60);
-  });
+  }
 });
 
 function removeFromPending(idx) {
@@ -1637,6 +1800,136 @@ function removeFromPending(idx) {
   labIdx=Math.min(labIdx,Math.max(0,pendFnames.length-1));
   savePendMeta();
 }
+
+document.getElementById('labCancelFabric').addEventListener('click',async()=>{
+  if(!pendFnames.length) return;
+  if(!confirm('¿Cancelar esta tela y descartar la foto pendiente?')) return;
+  await clearPendAll();
+  labType=null;
+  document.getElementById('labName').value='';
+  document.getElementById('labCol').value='';
+  document.querySelectorAll('.type-btn').forEach(b=>b.classList.remove('sel'));
+  document.getElementById('labCard').style.display='none';
+  updateLabSteps();
+  updateStorageInfo();
+  toast('Alta de tela cancelada');
+});
+
+function renderListEditor(){
+  const materialEl=document.getElementById('materialListEditor');
+  const collectionEl=document.getElementById('collectionListEditor');
+  if(materialEl){
+    materialEl.innerHTML=getMaterialOptions().map(m=>{
+      const isBuiltIn=BUILTIN_MATERIALS.some(b=>b.key===m.key);
+      return `<div class="list-item-row">
+        <div><div>${m.icon||'▫'} ${m.label}</div><div class="list-item-meta">${PL[m.pattern]||m.pattern}${isBuiltIn?' · fijo':''}</div></div>
+        <button class="list-item-del" data-del-material="${m.key}">Eliminar</button>
+      </div>`;
+    }).join('');
+  }
+  if(collectionEl){
+    const usedCounts=FABRICS.reduce((acc,f)=>{if(f.group)acc[f.group]=(acc[f.group]||0)+1;return acc;},{});
+    collectionEl.innerHTML=getCollectionOptions().map(c=>`<div class="list-item-row">
+      <div><div>${c}</div><div class="list-item-meta">${usedCounts[c]||0} tela${usedCounts[c]===1?'':'s'}</div></div>
+      <button class="list-item-del" data-del-collection="${c.replace(/"/g,'&quot;')}">Eliminar</button>
+    </div>`).join('')||'<div class="admin-empty" style="padding:1rem;">No hay colecciones.</div>';
+  }
+}
+
+function refreshMaterialCollectionUi(){
+  renderListEditor();
+  renderLabTypeButtons();
+  fillCollectionSelect(document.getElementById('labCol'),document.getElementById('labCol')?.value||'',{includeNone:true});
+  renderAdminList();
+  render();
+}
+
+document.getElementById('toggleListEditor').addEventListener('click',()=>{
+  const card=document.getElementById('listEditorCard');
+  card.style.display='flex';
+  renderListEditor();
+});
+document.getElementById('closeListEditor').addEventListener('click',()=>{
+  document.getElementById('listEditorCard').style.display='none';
+});
+document.getElementById('listEditorCard').addEventListener('click',e=>{
+  if(e.target.id==='listEditorCard') e.currentTarget.style.display='none';
+});
+document.getElementById('addMaterialBtn').addEventListener('click',()=>{
+  const input=document.getElementById('newMaterialName');
+  const label=input.value.trim();
+  const pattern=document.getElementById('newMaterialPattern').value;
+  if(!label){toast('Escribe el nombre del material');input.focus();return;}
+  const keyBase=slugifyKey(label);
+  const existing=new Set(getMaterialOptions().map(m=>m.key));
+  let key=keyBase,n=2;
+  while(existing.has(key)){key=`${keyBase}_${n++}`;}
+  const items=getCustomMaterials();
+  const material={key,label,pattern,icon:pattern==='estampado'?'🌸':'▫'};
+  items.push(material);
+  saveCustomMaterials(items);
+  pushAdminUndo({type:'add_material',label:'material',material});
+  input.value='';
+  refreshMaterialCollectionUi();
+  toast('Material añadido');
+});
+document.getElementById('addCollectionBtn').addEventListener('click',()=>{
+  const input=document.getElementById('newCollectionName');
+  const name=input.value.trim();
+  if(!name){toast('Escribe el nombre de la colección');input.focus();return;}
+  const wasDeleted=getDeletedCollections().includes(name);
+  const deleted=getDeletedCollections().filter(c=>c!==name);
+  saveDeletedCollections(deleted);
+  const items=getCustomCollections();
+  if(!getCollectionOptions().includes(name)&&!items.includes(name)) items.push(name);
+  saveCustomCollections([...new Set(items)]);
+  pushAdminUndo({type:'add_collection',label:'colección',name,wasDeleted});
+  input.value='';
+  refreshMaterialCollectionUi();
+  toast('Colección añadida');
+});
+document.getElementById('materialListEditor').addEventListener('click',async e=>{
+  const btn=e.target.closest('[data-del-material]');
+  if(!btn) return;
+  const key=btn.dataset.delMaterial;
+  const material=getMaterialOptions().find(m=>m.key===key);
+  if(!material) return;
+  const wasCustom=getCustomMaterials().some(m=>m.key===key);
+  const affected=FABRICS.filter(f=>f.material===key).map(f=>({code:f.code,material:f.material,pattern:f.pattern}));
+  if(affected.length&&!confirm(`¿Eliminar "${material.label}"? ${affected.length} tela${affected.length===1?'':'s'} quedarán sin material.`)) return;
+  showLoading('Eliminando material…','Actualizando telas…',50);
+  try{
+    for(const f of affected){
+      await sbPatch(`/rest/v1/fabrics?code=eq.${encodeURIComponent(f.code)}`,{material:null,pattern:null});
+    }
+    saveCustomMaterials(getCustomMaterials().filter(m=>m.key!==key));
+    if(!wasCustom) saveDeletedMaterials([...new Set([...getDeletedMaterials(),key])]);
+    pushAdminUndo({type:'delete_material',label:'material',material,affected,wasCustom});
+    await loadFabrics();
+    hideLoading();
+    refreshMaterialCollectionUi();
+    toast('Material eliminado');
+  }catch(err){hideLoading();toast('Error: '+err.message);}
+});
+document.getElementById('collectionListEditor').addEventListener('click',async e=>{
+  const btn=e.target.closest('[data-del-collection]');
+  if(!btn) return;
+  const name=btn.dataset.delCollection;
+  if(!confirm(`¿Eliminar la colección "${name}"? Las telas quedarán sin colección.`)) return;
+  showLoading('Eliminando colección…','Quitando colección de las telas…',50);
+  try{
+    const affected=FABRICS.filter(f=>f.group===name).map(f=>({code:f.code,group:f.group}));
+    const wasCustom=getCustomCollections().includes(name);
+    await sbPatch(`/rest/v1/fabrics?group=eq.${encodeURIComponent(name)}`,{group:null});
+    saveCustomCollections(getCustomCollections().filter(c=>c!==name));
+    saveDeletedCollections([...new Set([...getDeletedCollections(),name])]);
+    pushAdminUndo({type:'delete_collection',label:'colección',name,affected,wasCustom});
+    await loadFabrics();
+    hideLoading();
+    refreshMaterialCollectionUi();
+    toast('Colección eliminada');
+  }catch(err){hideLoading();toast('Error: '+err.message);}
+});
 
 // ── SUBIR ESTA (una sola) ──
 document.getElementById('labConfirmOne').addEventListener('click', async()=>{
@@ -1698,9 +1991,15 @@ function rebuildAdminFabricFilters(){
     sel.value=values.some(v=>v.value===current)?current:'';
     sel.className='admin-filter-select'+(sel.value?' active-filter':'');
   };
-  const mats=MAT_LIST.filter(m=>FABRICS.some(f=>f.material===m)).map(m=>({value:m,label:ML[m]||m}));
+  const mats=[
+    {value:NO_MATERIAL,label:'Sin material'},
+    ...getMaterialOptions().filter(m=>FABRICS.some(f=>f.material===m.key)).map(m=>({value:m.key,label:m.label}))
+  ];
   const pats=[...new Set(FABRICS.map(f=>f.pattern).filter(Boolean))].sort().map(p=>({value:p,label:PL[p]||p}));
-  const groups=[...new Set(FABRICS.map(f=>f.group).filter(Boolean))].sort().map(g=>({value:g,label:g}));
+  const groups=[
+    ...(FABRICS.some(f=>!f.group)?[{value:NO_COLLECTION,label:'Sin colección'}]:[]),
+    ...getCollectionOptions().map(g=>({value:g,label:g}))
+  ];
   setSelect('adminFabricMaterial',mats,'Todos',ADMIN_FABRIC_FILTERS.mat);
   setSelect('adminFabricPattern',pats,'Todos',ADMIN_FABRIC_FILTERS.pat);
   setSelect('adminFabricGroup',groups,'Todas',ADMIN_FABRIC_FILTERS.grp);
@@ -1710,9 +2009,11 @@ function getAdminFilteredFabrics(){
   const q=normalizeSearchText(ADMIN_FABRIC_FILTERS.q);
   return FABRICS.filter(f=>{
     if(q&&!normalizeSearchText(`${f.name||''} ${f.code||''}`).includes(q)) return false;
-    if(ADMIN_FABRIC_FILTERS.mat&&f.material!==ADMIN_FABRIC_FILTERS.mat) return false;
+    if(ADMIN_FABRIC_FILTERS.mat===NO_MATERIAL&&f.material) return false;
+    if(ADMIN_FABRIC_FILTERS.mat&&ADMIN_FABRIC_FILTERS.mat!==NO_MATERIAL&&f.material!==ADMIN_FABRIC_FILTERS.mat) return false;
     if(ADMIN_FABRIC_FILTERS.pat&&f.pattern!==ADMIN_FABRIC_FILTERS.pat) return false;
-    if(ADMIN_FABRIC_FILTERS.grp&&f.group!==ADMIN_FABRIC_FILTERS.grp) return false;
+    if(ADMIN_FABRIC_FILTERS.grp===NO_COLLECTION&&f.group) return false;
+    if(ADMIN_FABRIC_FILTERS.grp&&ADMIN_FABRIC_FILTERS.grp!==NO_COLLECTION&&f.group!==ADMIN_FABRIC_FILTERS.grp) return false;
     return true;
   });
 }
@@ -1739,7 +2040,7 @@ function renderAdminList(){
     const isHidden=f.visible===false;
     if(isHidden) row.classList.add('is-hidden');
     const badgeCls=f.material||'unlabeled';
-    const badgeTxt={velveton:'Velvetón',lino:'Lino',lino_nico:'Lino Nico',algodon:'Algodón'}[f.material]||'Sin tipo';
+    const badgeTxt=getMaterialLabel(f.material)||'Sin tipo';
 
     // Detect nameless fabrics
     const hasNoName=!f.name||f.name.startsWith('Sin nombre')||f.name.startsWith('Tela ')||/\.(jpg|jpeg|png|webp)/i.test(f.name||'')||f.name===f.code||/\d{12}/.test(f.name||'');
@@ -1750,7 +2051,7 @@ function renderAdminList(){
       <img class="afthumb" src="${src}" alt="">
       <div class="afinfo" style="min-width:0;flex:1;">
         <div class="afname">${f.name||'Sin nombre'}${isHidden?' <span style="font-size:.5rem;color:var(--muted);">(oculta)</span>':''}</div>
-        <div class="afmeta">${ML[f.material]||'—'} · ${f.group||'—'}</div>
+        <div class="afmeta">${f.material?getMaterialLabel(f.material):'Sin material'} · ${f.group||'Sin colección'}</div>
       </div>
       <div class="afside">
         <span class="af-badge ${badgeCls}">${badgeTxt}</span>
@@ -1865,12 +2166,12 @@ function showEditRow(code){
 
   const C={velveton:'var(--velveton)',lino:'var(--lino)',lino_nico:'var(--lino-nico)',algodon:'var(--algodon)'};
   const BG={velveton:'#f3eef6',lino:'#eef4f0',lino_nico:'#eef2e8',algodon:'#eef1f6'};
-  const typeBtn=(t,label)=>{
+  const typeBtn=(t,label,icon='▫')=>{
     const a=f.material===t;
     return `<button class="et-btn" data-t="${t}" style="padding:.42rem .1rem;border-radius:5px;
-      border:1.5px solid ${a?C[t]:'var(--border)'};background:${a?BG[t]:'var(--cream)'};
+      border:1.5px solid ${a?(C[t]||'var(--accent)'):'var(--border)'};background:${a?(BG[t]||'rgba(200,169,110,.12)'):'var(--cream)'};
       cursor:pointer;font-size:.6rem;font-family:'Barlow',sans-serif;font-weight:600;
-      color:${a?C[t]:'var(--muted)'};">${label}</button>`;
+      color:${a?(C[t]||'var(--warm)'):'var(--muted)'};">${icon} ${label}</button>`;
   };
 
   row.innerHTML=`
@@ -1897,7 +2198,7 @@ function showEditRow(code){
     <div class="fabric-form-section">
       <label class="flbl">Seleccionar tipo de tela</label>
       <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:.35rem;">
-        ${typeBtn('lino','🌿 Lino')}${typeBtn('lino_nico','🍃 Lino Nico')}${typeBtn('velveton','🪶 Velvetón')}${typeBtn('algodon','🌸 Algodón')}
+        ${getMaterialOptions().map(m=>typeBtn(m.key,m.label,m.icon)).join('')}
       </div>
     </div>
     <div class="fabric-form-section collection-section">
@@ -1916,9 +2217,9 @@ function showEditRow(code){
       et=b.dataset.t;
       row.querySelectorAll('.et-btn').forEach(x=>{
         const a=x.dataset.t===et;
-        x.style.borderColor=a?C[et]:'var(--border)';
-        x.style.background=a?BG[et]:'var(--cream)';
-        x.style.color=a?C[et]:'var(--muted)';
+        x.style.borderColor=a?(C[et]||'var(--accent)'):'var(--border)';
+        x.style.background=a?(BG[et]||'rgba(200,169,110,.12)'):'var(--cream)';
+        x.style.color=a?(C[et]||'var(--warm)'):'var(--muted)';
       });
     });
   });
@@ -1935,10 +2236,7 @@ function showEditRow(code){
   (function(){
     const sel=document.getElementById('ec-'+code);
     if(!sel) return;
-    const o0=document.createElement("option");o0.value="Tonos burdeos y rojos";o0.textContent="Tonos burdeos y rojos";if(f.group==="Tonos burdeos y rojos")o0.selected=true;sel.appendChild(o0);
-    const o1=document.createElement("option");o1.value="Tonos verdes";o1.textContent="Tonos verdes";if(f.group==="Tonos verdes")o1.selected=true;sel.appendChild(o1);
-    const o2=document.createElement("option");o2.value="Tonos azules";o2.textContent="Tonos azules";if(f.group==="Tonos azules")o2.selected=true;sel.appendChild(o2);
-    const o3=document.createElement("option");o3.value="Tonos beige y marrones";o3.textContent="Tonos beige y marrones";if(f.group==="Tonos beige y marrones")o3.selected=true;sel.appendChild(o3);
+    fillCollectionSelect(sel,f.group||NO_COLLECTION,{includeNone:true,placeholder:'Selecciona colección…'});
     sel.style.cssText="appearance:none;-webkit-appearance:none;cursor:pointer;";
   })();
 
@@ -1957,7 +2255,7 @@ function showEditRow(code){
     showLoading('Guardando…','',80);
     try{
       await sbPatch(`/rest/v1/fabrics?code=eq.${encodeURIComponent(code)}`,
-        {name:n,material:TM[et]||et,pattern:TP[et]||'liso',group:g});
+        {name:n,material:et,pattern:getMaterialPattern(et),group:g===NO_COLLECTION?null:g});
       pushAdminUndo({
         type:'update_fabric',
         label:'editar',
@@ -2034,11 +2332,15 @@ async function loadFabrics(){
   }catch(e){console.error('Error cargando telas:',e);}
 }
 
-const MAT_ORDER={lino:0,lino_nico:1,velveton:2,algodon:3};
-const MAT_LIST=['lino','lino_nico','velveton','algodon'];
+function getMaterialOrder(){
+  return Object.fromEntries(getMaterialOptions().map((m,i)=>[m.key,i]));
+}
+function getMaterialList(){
+  return getMaterialOptions().map(m=>m.key);
+}
 
 function getActiveMaterials(){
-  const mats=S.mat?[S.mat]:MAT_LIST;
+  const mats=S.mat?[S.mat]:getMaterialList();
   return mats.filter(m=>FABRICS_META.some(f=>
     f.material===m&&f.visible!==false&&f.visible!=='false'&&
     (!S.pat||f.pattern===S.pat)&&(!S.grp||f.group===S.grp)&&matchesNameSearch(f)
@@ -2075,6 +2377,7 @@ function getFiltered(){
     if(!matchesNameSearch(f))return false;
     return true;
   }).sort((a,b)=>{
+    const MAT_ORDER=getMaterialOrder();
     const oa=MAT_ORDER[a.material]??9,ob=MAT_ORDER[b.material]??9;
     if(oa!==ob)return oa-ob;
     return (a.name||'').localeCompare(b.name||'','es');
@@ -2154,6 +2457,7 @@ async function renderGrid(){
     const wrap=document.createElement('div');
     const spinner=document.createElement('div');
     const img=document.createElement('img');
+    const badge=document.createElement('div');
     const code=document.createElement('div');
 
     div.className='gi'+(S.sel===f.code?' active':'');
@@ -2180,9 +2484,12 @@ async function renderGrid(){
 
     code.className='gi-code';
     code.textContent=f.name||'Sin nombre';
+    badge.className='gi-material-badge';
+    badge.textContent=f.material?getMaterialLabel(f.material):'Sin material';
 
     wrap.appendChild(spinner);
     wrap.appendChild(img);
+    wrap.appendChild(badge);
     div.appendChild(wrap);
     div.appendChild(code);
     div.addEventListener('click',()=>openViewer(f, matOverride||f.material));
@@ -2248,7 +2555,7 @@ function selectFabric(f){
   }
   S.sel=f.code;
   document.getElementById('previewBox').style.display='';
-  document.getElementById('previewCode').textContent=ML[f.material]||'';
+  document.getElementById('previewCode').textContent=getMaterialLabel(f.material)||'';
   const w=document.getElementById('previewWrap');
   if(f.image_url){w.innerHTML=`<img class="preview-img animate-in" src="${f.image_url}" alt="">`;}
   else{w.innerHTML='<div class="preview-empty">Sin foto</div>';}
@@ -2433,7 +2740,7 @@ function renderViewerMain(fabric, dir = 0) {
   }
 
   document.getElementById('viewerName').textContent = fabric.name || fabric.code || '';
-  document.getElementById('viewerMeta').textContent = [ML[fabric.material], fabric.group].filter(Boolean).join(' · ');
+  document.getElementById('viewerMeta').textContent = [getMaterialLabel(fabric.material), fabric.group].filter(Boolean).join(' · ');
 }
 
 function renderViewerCarousel() {
