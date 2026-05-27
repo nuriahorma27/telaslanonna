@@ -2919,33 +2919,22 @@ init();
 const CAR_SIZE = 3;
 let VIEWER = {open:false, fabric:null, mat:null, carPage:0, fabrics:[]};
 
-async function openViewer(fabric, mat) {
+function openViewer(fabric, mat) {
   VIEWER.fabric = fabric;
   VIEWER.mat = mat || fabric.material;
   VIEWER.open = true;
-  VIEWER.fabrics = [];
   VIEWER.carPage = 0;
 
-  // Show overlay immediately with the clicked fabric
+  // Show overlay immediately
   document.getElementById('viewerOverlay').classList.remove('hidden');
   document.body.style.overflow = 'hidden';
   renderViewerMain(fabric);
-  document.getElementById('viewerCarTrack').innerHTML = '<span style="color:rgba(255,255,255,.3);font-size:.7rem;">Cargando…</span>';
-  document.getElementById('viewerCarInfo').textContent = '';
 
-  // Load all section fabrics (only needed fields) respecting active filters
-  try {
-    let q = `/rest/v1/fabrics?select=code,name,material,group,image_url&visible=eq.true&order=name.asc`;
-    if(S.mat) q += `&material=eq.${encodeURIComponent(S.mat)}`;
-    if(S.pat) q += `&pattern=eq.${encodeURIComponent(S.pat)}`;
-    if(S.grp) q += `&group=eq.${encodeURIComponent(S.grp)}`;
-    const items = await sbGet(q);
-    VIEWER.fabrics = items.sort((a,b)=>(a.name||'').localeCompare(b.name||'','es'));
-  } catch(e) {
-    VIEWER.fabrics = [fabric];
-  }
+  // Use already-loaded FABRICS_META filtered and sorted exactly like the grid
+  // This avoids a Supabase round-trip and ensures order/visibility match what the user sees
+  VIEWER.fabrics = S.mat ? getFilteredByMat(S.mat) : getFiltered();
 
-  // Position carousel to include the selected fabric
+  // Position carousel to the clicked fabric
   const idx = VIEWER.fabrics.findIndex(f => f.code === fabric.code);
   VIEWER.carPage = idx >= 0 ? Math.floor(idx / CAR_SIZE) : 0;
   renderViewerCarousel();
