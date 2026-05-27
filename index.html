@@ -2431,27 +2431,51 @@ function matchesNameSearch(f){
   return normalizeSearchText(f.name||f.code||'').includes(q);
 }
 
+function hasActiveFilters(){
+  return !!(S.q.trim()||S.pat||S.grp);
+}
+
 function getFilteredByMat(mat){
-  return FABRICS_META.filter(f=>{
+  const filtered=FABRICS_META.filter(f=>{
     if(f.visible===false||f.visible==='false')return false;
     if(f.material!==mat)return false;
     if(S.pat&&f.pattern!==S.pat)return false;
     if(S.grp&&f.group!==S.grp)return false;
     if(!matchesNameSearch(f))return false;
     return true;
-  }).sort((a,b)=>(a.name||'').localeCompare(b.name||'','es'));
+  });
+  if(!hasActiveFilters()){
+    // Sin filtros: agrupar por colección → nombre dentro de cada colección
+    return filtered.sort((a,b)=>{
+      const ga=a.group||'zzz',gb=b.group||'zzz';
+      if(ga!==gb)return ga.localeCompare(gb,'es');
+      return (a.name||'').localeCompare(b.name||'','es');
+    });
+  }
+  return filtered.sort((a,b)=>(a.name||'').localeCompare(b.name||'','es'));
 }
 
 // Legacy getFiltered — now uses FABRICS_META
 function getFiltered(){
-  return FABRICS_META.filter(f=>{
+  const filtered=FABRICS_META.filter(f=>{
     if(f.visible===false||f.visible==='false')return false;
     if(S.mat&&f.material!==S.mat)return false;
     if(S.pat&&f.pattern!==S.pat)return false;
     if(S.grp&&f.group!==S.grp)return false;
     if(!matchesNameSearch(f))return false;
     return true;
-  }).sort((a,b)=>{
+  });
+  if(!hasActiveFilters()){
+    const MAT_ORDER=getMaterialOrder();
+    return filtered.sort((a,b)=>{
+      const oa=MAT_ORDER[a.material]??9,ob=MAT_ORDER[b.material]??9;
+      if(oa!==ob)return oa-ob;
+      const ga=a.group||'zzz',gb=b.group||'zzz';
+      if(ga!==gb)return ga.localeCompare(gb,'es');
+      return (a.name||'').localeCompare(b.name||'','es');
+    });
+  }
+  return filtered.sort((a,b)=>{
     const MAT_ORDER=getMaterialOrder();
     const oa=MAT_ORDER[a.material]??9,ob=MAT_ORDER[b.material]??9;
     if(oa!==ob)return oa-ob;
