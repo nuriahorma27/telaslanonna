@@ -72,6 +72,8 @@ header{height:var(--header-h);padding:0 1.2rem;display:flex;align-items:center;j
 .grid-box{background:transparent;border:none;border-radius:0;overflow:visible;}
 .grid-hdr{padding:0 0 1rem 0;border-bottom:none;}
 .grid-title{font-size:1rem;letter-spacing:.04em;color:var(--warm);font-weight:400;font-style:italic;font-family:'Cormorant Garamond',serif;}
+.grid-mat-desc{font-family:'Cormorant Garamond',serif;font-size:.95rem;font-style:italic;color:var(--muted);margin-top:.3rem;line-height:1.5;display:none;}
+.grid-mat-desc.visible{display:block;}
 .fabric-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;background:transparent;align-items:start;padding-top:.75rem;}
 .fabric-grid.filtered{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;background:transparent;align-items:start;}
 
@@ -1087,7 +1089,10 @@ input[type="date"].ficha-big-inp{font-size:1.15rem;padding:.88rem 1rem;}
         <div class="preview-name" id="previewName"></div>
       </div>
       <div class="grid-box">
-        <div class="grid-hdr"><div class="grid-title" id="gridCount">Telas disponibles</div></div>
+        <div class="grid-hdr">
+          <div class="grid-title" id="gridCount">Telas disponibles</div>
+          <div class="grid-mat-desc" id="gridMatDesc"></div>
+        </div>
         <div class="fabric-grid" id="fabricGrid"></div>
       </div>
     </div>
@@ -2622,12 +2627,26 @@ function rebuildSelects(){
 }
 
 const SECTION_LABELS={lino:'Linos',lino_nico:'Lino Nico',velveton:'Velvetones',algodon:'Estampados'};
+const MAT_DESC={
+  algodon:'100% algodón natural de tacto suave.',
+  lino:'Mezcla de lino y algodón para lograr un tejido menos propenso a arrugarse.',
+  lino_nico:'Lino rústico con una caída más fluida que un lino normal.',
+  velveton:'Terciopelo de algodón resistente al uso, perfecto para los meses de invierno.'
+};
 
 async function renderGrid(){
   const el=document.getElementById('fabricGrid');
   const ce=document.getElementById('gridCount');
   const re=document.getElementById('resultCount');
+  const de=document.getElementById('gridMatDesc');
   el.innerHTML='';
+
+  // Material description
+  if(de){
+    const desc=S.mat?MAT_DESC[S.mat]||'':'';
+    de.textContent=desc;
+    de.classList.toggle('visible',!!desc);
+  }
 
   // Add filtered class when material filter is active
   el.className = 'fabric-grid' + (S.mat ? ' filtered' : '');
