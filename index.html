@@ -2522,17 +2522,17 @@ function rebuildSelects(){
   }
 
   const pa=[...new Set(FABRICS_META.map(f=>f.pattern).filter(Boolean))].sort();
-  const sp=document.getElementById('selPattern');const cp=sp.value;
+  const sp=document.getElementById('selPattern');
   sp.innerHTML='<option value="">Todos</option>';
   pa.forEach(v=>{const o=document.createElement('option');o.value=v;o.textContent=PL[v]||v;sp.appendChild(o);});
-  sp.value=pa.includes(cp)?cp:'';if(!pa.includes(cp))S.pat='';
+  sp.value=pa.includes(S.pat)?S.pat:'';if(!pa.includes(S.pat))S.pat='';
   sp.className='f-select'+(S.pat?' active-filter':'');
 
   const ga=[...new Set(FABRICS_META.map(f=>f.group).filter(Boolean))].sort();
-  const sc=document.getElementById('selColor');const cg=sc.value;
+  const sc=document.getElementById('selColor');
   sc.innerHTML='<option value="">Todas</option>';
   ga.forEach(v=>{const o=document.createElement('option');o.value=v;o.textContent=v;sc.appendChild(o);});
-  sc.value=ga.includes(cg)?cg:'';if(!ga.includes(cg))S.grp='';
+  sc.value=ga.includes(S.grp)?S.grp:'';if(!ga.includes(S.grp))S.grp='';
   sc.className='f-select'+(S.grp?' active-filter':'');
 }
 
