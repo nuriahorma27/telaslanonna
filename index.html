@@ -147,6 +147,9 @@ header{height:var(--header-h);padding:0 1.2rem;display:flex;align-items:center;j
 .admin-live-dot{width:5px;height:5px;border-radius:50%;background:#5aaa6a;animation:pulse 2s infinite;}
 @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.35;}}
 .admin-header-right{display:flex;align-items:center;gap:.55rem;}
+.admin-undo-btn{background:rgba(255,255,255,.55);border:1px solid var(--border);border-radius:4px;padding:.28rem .72rem;cursor:pointer;color:var(--muted);font-size:.95rem;font-family:'Cormorant Garamond',serif;font-style:italic;letter-spacing:.02em;transition:all .2s;white-space:nowrap;}
+.admin-undo-btn:hover:not(:disabled){border-color:var(--accent);color:var(--accent);background:#fff;}
+.admin-undo-btn:disabled{opacity:.38;cursor:not-allowed;}
 .admin-close-btn{background:none;border:1px solid var(--border);border-radius:4px;padding:.28rem .72rem;cursor:pointer;color:var(--muted);font-size:.95rem;font-family:'Cormorant Garamond',serif;font-style:italic;letter-spacing:.02em;transition:all .2s;}
 .admin-close-btn:hover{border-color:var(--accent);color:var(--accent);}
 
@@ -213,6 +216,12 @@ header{height:var(--header-h);padding:0 1.2rem;display:flex;align-items:center;j
 .finp{width:100%;padding:.5rem .65rem;border:1.5px solid rgba(212,201,184,.7);border-radius:7px;background:rgba(255,255,255,.65);color:var(--dark);font-family:'Cormorant Garamond',serif;font-size:1rem;transition:all .2s;}
 .finp:focus,.col-inp:focus{outline:none;border-color:var(--accent);background:rgba(255,255,255,.9);}
 .col-inp{width:100%;padding:.46rem .62rem;border:1.5px solid rgba(212,201,184,.7);border-radius:7px;background:rgba(255,255,255,.65);color:var(--dark);font-family:'Cormorant Garamond',serif;font-size:.95rem;transition:all .2s;}
+.fabric-form-section{padding:.85rem .9rem;background:rgba(255,255,255,.58);border:1.5px solid rgba(212,201,184,.62);border-radius:10px;display:flex;flex-direction:column;gap:.55rem;}
+.fabric-form-section.step-hidden,.lab-actions.step-hidden{display:none;}
+.fabric-form-section.collection-section{border-color:rgba(200,169,110,.65);background:rgba(200,169,110,.1);box-shadow:0 2px 12px rgba(200,169,110,.1);}
+.fabric-form-section .flbl{margin-bottom:0;font-size:.84rem;color:var(--warm);}
+.fabric-form-section.collection-section .flbl{font-weight:600;color:#7d6040;}
+.fabric-form-section.collection-section .col-inp{border-color:rgba(139,115,85,.55);background:#fffaf2;font-size:1.02rem;}
 .chips-hint{font-size:.82rem;color:var(--muted);margin-top:.2rem;font-family:'Cormorant Garamond',serif;font-style:italic;}
 .chips{display:flex;flex-wrap:wrap;gap:.32rem;margin-top:.32rem;}
 .chip{font-size:.82rem;padding:.2rem .58rem;border-radius:20px;background:rgba(255,255,255,.6);color:var(--warm);border:1px solid var(--border);cursor:pointer;font-family:'Cormorant Garamond',serif;transition:all .15s;white-space:nowrap;}
@@ -787,6 +796,7 @@ input[type="date"].ficha-big-inp{font-size:1.15rem;padding:.88rem 1rem;}
     <div class="admin-header-right">
       <div class="admin-live-badge"><div class="admin-live-dot"></div>En directo</div>
       <div class="admin-badge">Admin</div>
+      <button class="admin-undo-btn" id="adminUndoBtn" disabled>↶ Deshacer</button>
       <button class="admin-close-btn" id="adminClose">← Volver</button>
     </div>
   </div>
@@ -801,14 +811,14 @@ input[type="date"].ficha-big-inp{font-size:1.15rem;padding:.88rem 1rem;}
       <div class="admin-card">
         <div class="admin-card-hdr">
           <div class="admin-card-title">Cargar fotos</div>
-          <label class="add-more-lbl">+ Añadir más<input type="file" id="addMoreInput" accept="image/*" multiple></label>
+          <span class="admin-card-title" style="font-size:.85rem;color:var(--muted);">1 foto por tela</span>
         </div>
         <div class="admin-card-body">
           <div class="upload-zone" id="uploadZone">
-            <input type="file" id="uploadInput" accept="image/*" multiple>
+            <input type="file" id="uploadInput" accept="image/*">
             <div class="uz-icon">🗂️</div>
-            <div class="uz-title">Arrastra aquí las fotos de tela</div>
-            <div class="uz-hint">Selecciona todas las imágenes a la vez.<br><strong>Se suben directamente a la nube.</strong></div>
+            <div class="uz-title">Arrastra aquí una foto de tela</div>
+            <div class="uz-hint">Selecciona una sola imagen por cada tela.<br><strong>Se sube directamente a la nube.</strong></div>
           </div>
           <div class="storage-row">
             <div class="storage-txt" id="storageInfo">Sin fotos pendientes</div>
@@ -825,22 +835,15 @@ input[type="date"].ficha-big-inp{font-size:1.15rem;padding:.88rem 1rem;}
         <div class="admin-card-body">
           <div class="lab-thumbs" id="labThumbs"></div>
           <div class="lab-img-wrap">
-            <button class="lab-nav lab-nav-l" id="labPrev">‹</button>
             <img id="labImg" src="" alt="">
-            <button class="lab-nav lab-nav-r" id="labNext">›</button>
             <div class="lab-fname" id="labFname"></div>
           </div>
-          <div>
-            <label class="flbl">Nombre (opcional)</label>
-            <div style="display:flex;gap:.4rem;align-items:center;">
-              <input type="text" class="finp" id="labName" placeholder="Ej: Flores rojas sobre crudo" style="flex:1;">
-              <button id="suggestNameBtn" type="button" style="flex-shrink:0;background:none;border:1.5px solid var(--accent);border-radius:5px;padding:.42rem .55rem;cursor:pointer;color:var(--accent);font-size:.7rem;white-space:nowrap;font-family:'Barlow',sans-serif;" title="Sugerir nombre">🎲 Sugerir</button>
-            </div>
-            <div class="chips-hint" id="chipsHint">Elige el tipo para ver sugerencias de nombre</div>
-            <div class="chips" id="chipsWrap"></div>
+          <div class="fabric-form-section" id="labStepName">
+            <label class="flbl">Seleccionar nombre</label>
+            <input type="text" class="finp" id="labName" placeholder="Ej: Flores rojas sobre crudo" autocomplete="off" required>
           </div>
-          <div>
-            <label class="flbl">Tipo de tela (opcional)</label>
+          <div class="fabric-form-section step-hidden" id="labStepType">
+            <label class="flbl">Seleccionar tipo de tela</label>
             <div class="type-grid">
               <button class="type-btn" data-t="lino"><span class="ti">🌿</span><span class="tn">Lino liso</span></button>
               <button class="type-btn" data-t="lino_nico"><span class="ti">🍃</span><span class="tn">Lino Nico</span></button>
@@ -848,13 +851,12 @@ input[type="date"].ficha-big-inp{font-size:1.15rem;padding:.88rem 1rem;}
               <button class="type-btn" data-t="algodon"><span class="ti">🌸</span><span class="tn">Algodón estampado</span></button>
             </div>
           </div>
-          <div>
-            <label class="flbl">Colección</label>
-            <select class="col-inp" id="labCol"><option value="Tonos burdeos y rojos">Tonos burdeos y rojos</option><option value="Tonos verdes">Tonos verdes</option><option value="Tonos azules">Tonos azules</option><option value="Tonos beige y marrones">Tonos beige y marrones</option></select>
+          <div class="fabric-form-section collection-section step-hidden" id="labStepCollection">
+            <label class="flbl">Seleccionar colección</label>
+            <select class="col-inp" id="labCol"><option value="">Elige una colección…</option><option value="Tonos burdeos y rojos">Tonos burdeos y rojos</option><option value="Tonos verdes">Tonos verdes</option><option value="Tonos azules">Tonos azules</option><option value="Tonos beige y marrones">Tonos beige y marrones</option></select>
           </div>
-          <div class="lab-actions">
-            <button class="btn-confirm-one" id="labConfirmOne">Subir esta foto →</button>
-            <button class="btn-confirm-all" id="labConfirmAll">Subir todas las fotos →</button>
+          <div class="lab-actions step-hidden" id="labStepActions">
+            <button class="btn-confirm-one" id="labConfirmOne">Subir tela →</button>
           </div>
         </div>
       </div>
@@ -1174,6 +1176,48 @@ let FABRICS_META = []; // lightweight (no image_url) — used by public view/fil
 let FABRICS_BY_MAT = {}; // {mat:[full items]} for current page per section
 let FABRICS_FLAT = []; // flat sorted list for "Todas" view
 let FABRICS_FLAT_loaded = false;
+const adminUndoStack = [];
+
+function updateAdminUndoButton(){
+  const btn=document.getElementById('adminUndoBtn');
+  if(!btn) return;
+  const last=adminUndoStack[adminUndoStack.length-1];
+  btn.disabled=!last;
+  btn.textContent='↶ Deshacer';
+}
+function cloneFabric(f){
+  return JSON.parse(JSON.stringify(f||{}));
+}
+function fabricPayload(f){
+  return {
+    code:f.code,
+    name:f.name,
+    material:f.material,
+    pattern:f.pattern,
+    group:f.group,
+    visible:f.visible,
+    image_url:f.image_url
+  };
+}
+async function fetchImageBlob(url){
+  if(!url) return null;
+  try{
+    const r=await fetch(url);
+    if(!r.ok) return null;
+    return await r.blob();
+  }catch(_){return null;}
+}
+function pushAdminUndo(action){
+  adminUndoStack.push(action);
+  if(adminUndoStack.length>30) adminUndoStack.shift();
+  updateAdminUndoButton();
+}
+async function refreshFabricViews(){
+  await loadFabrics();
+  render();
+  renderAdminList();
+  updateAdminUndoButton();
+}
 
 // ── INDEXEDDB FOR PENDING ──
 let db = null;
@@ -1205,7 +1249,9 @@ function loadPendMeta() {
     const f=localStorage.getItem('nonna_pend_fnames');
     const i=localStorage.getItem('nonna_pend_idx');
     if(f) pendFnames=JSON.parse(f);
+    if(pendFnames.length>1) pendFnames=pendFnames.slice(0,1);
     if(i) labIdx=parseInt(i)||0;
+    labIdx=0;
     pendPreviews=new Array(pendFnames.length).fill(null);
   } catch(e) {}
 }
@@ -1284,14 +1330,28 @@ async function uploadOneFabric(idx, name, type, group) {
   if(newFabric){
     FABRICS.push(newFabric);
     FABRICS_META.push({code:newFabric.code,material:newFabric.material,pattern:newFabric.pattern,group:newFabric.group,visible:newFabric.visible,name:newFabric.name});
+    pushAdminUndo({type:'add_fabric',label:'alta',code:newFabric.code,name:newFabric.name||newFabric.code});
   }
   return newFabric;
 }
 
 // ── AUTH ──
 const ADMIN_PWD = 'Jh140157.';
+const ADMIN_SESSION_KEY = 'nonna_admin_session_until';
+const ADMIN_SESSION_MS = 60 * 60 * 1000;
 let isAdmin = false;
 
+function saveAdminSession(){
+  try{localStorage.setItem(ADMIN_SESSION_KEY,String(Date.now()+ADMIN_SESSION_MS));}catch(e){}
+}
+function hasAdminSession(){
+  try{
+    const until=parseInt(localStorage.getItem(ADMIN_SESSION_KEY)||'0',10);
+    if(until>Date.now()) return true;
+    localStorage.removeItem(ADMIN_SESSION_KEY);
+  }catch(e){}
+  return false;
+}
 // ── SIDEBAR DRAWER (mobile) ──
 function openSidebar(){
   document.querySelector('.sidebar').classList.add('open');
@@ -1310,6 +1370,11 @@ document.getElementById('sidebarOverlay').addEventListener('click', closeSidebar
 document.getElementById('resetBtn').addEventListener('click',()=>{ if(window.innerWidth<=640) setTimeout(closeSidebar,150); });
 
 document.getElementById('openAdminBtn').addEventListener('click',()=>{
+  if(hasAdminSession()){
+    isAdmin=true;
+    openAdmin();
+    return;
+  }
   document.getElementById('loginModal').classList.remove('hidden');
   document.getElementById('loginPwd').focus();
 });
@@ -1324,6 +1389,7 @@ function doLogin() {
   const p=document.getElementById('loginPwd').value;
   if(p===ADMIN_PWD){
     isAdmin=true;
+    saveAdminSession();
     document.getElementById('loginModal').classList.add('hidden');
     document.getElementById('loginPwd').value='';
     document.getElementById('loginError').textContent='';
@@ -1334,7 +1400,9 @@ function doLogin() {
   }
 }
 function openAdmin(){
+  if(!isAdmin&&hasAdminSession()) isAdmin=true;
   document.getElementById('adminPanel').classList.remove('hidden');
+  updateAdminUndoButton();
   updateStorageInfo();
   if(pendFnames.length>0) showLabCard();
   // Load full data for admin panel if not yet loaded
@@ -1342,6 +1410,34 @@ function openAdmin(){
 }
 document.getElementById('adminClose').addEventListener('click',()=>{
   document.getElementById('adminPanel').classList.add('hidden');
+});
+document.getElementById('adminUndoBtn').addEventListener('click',async()=>{
+  const action=adminUndoStack.pop();
+  if(!action){updateAdminUndoButton();return;}
+  showLoading('Deshaciendo…',action.label||'',50);
+  let mutationDone=false;
+  try{
+    if(action.type==='add_fabric'){
+      await sbDelete(`/rest/v1/fabrics?code=eq.${encodeURIComponent(action.code)}`);
+      mutationDone=true;
+    }else if(action.type==='update_fabric'){
+      await sbPatch(`/rest/v1/fabrics?code=eq.${encodeURIComponent(action.code)}`,action.oldFields);
+      mutationDone=true;
+    }else if(action.type==='delete_fabric'){
+      const restored=fabricPayload(action.fabric);
+      await sbPost('/rest/v1/fabrics',restored);
+      mutationDone=true;
+    }
+    await refreshFabricViews();
+    hideLoading();
+    toast('Cambio deshecho');
+  }catch(e){
+    if(!mutationDone) adminUndoStack.push(action);
+    updateAdminUndoButton();
+    hideLoading();
+    toast('No se pudo deshacer: '+e.message);
+    console.error(e);
+  }
 });
 
 // ── TABS ──
@@ -1370,13 +1466,15 @@ uploadZone.addEventListener('dragover',e=>{e.preventDefault();uploadZone.classLi
 uploadZone.addEventListener('dragleave',()=>uploadZone.classList.remove('over'));
 uploadZone.addEventListener('drop',e=>{e.preventDefault();uploadZone.classList.remove('over');addFiles(e.dataTransfer.files);});
 uploadInput.addEventListener('change',()=>{addFiles(uploadInput.files);uploadInput.value='';});
-document.getElementById('addMoreInput').addEventListener('change',function(){addFiles(this.files);this.value='';});
+document.getElementById('addMoreInput')?.addEventListener('change',function(){addFiles(this.files);this.value='';});
 
 async function addFiles(fileList) {
-  const imgs=[...fileList].filter(f=>f.type.startsWith('image/'));
+  const imgs=[...fileList].filter(f=>f.type.startsWith('image/')).slice(0,1);
   if(!imgs.length) return;
-  showLoading('Guardando fotos…','Preparando…',0);
-  const startIdx=pendFnames.length;
+  if(fileList.length>1) toast('Solo se puede subir una foto por tela');
+  await clearPendAll();
+  showLoading('Guardando foto…','Preparando…',0);
+  const startIdx=0;
   pendFnames.push(...imgs.map(f=>f.name));
   pendPreviews.push(...new Array(imgs.length).fill(null));
   savePendMeta();
@@ -1397,23 +1495,23 @@ async function addFiles(fileList) {
   hideLoading();
   showLabCard();
   updateStorageInfo();
-  if(imgs.length>1) toast(`${imgs.length} fotos listas`);
+  toast('Foto lista para etiquetar');
 }
 
 document.getElementById('clearPendingBtn').addEventListener('click',async()=>{
   if(!pendFnames.length) return;
-  if(!confirm(`¿Borrar ${pendFnames.length} fotos pendientes?`)) return;
+  if(!confirm('¿Borrar la foto pendiente?')) return;
   await clearPendAll();
   document.getElementById('labCard').style.display='none';
   updateStorageInfo();
-  toast('Fotos pendientes eliminadas');
+  toast('Foto pendiente eliminada');
 });
 
 function updateStorageInfo(){
   const el=document.getElementById('storageInfo');
   if(!el) return;
   if(!pendFnames.length){el.textContent='Sin fotos pendientes';return;}
-  el.innerHTML=`<span>${pendFnames.length} fotos</span> pendientes de subir`;
+  el.innerHTML='<span>1 foto</span> pendiente de subir';
 }
 
 // ── LAB CARD ──
@@ -1444,15 +1542,17 @@ function buildLabThumbs(){
     el.addEventListener('click',()=>showLabFabric(i));
     strip.appendChild(el);
   });
-  document.getElementById('labProgText').textContent=`${pendFnames.length} pendientes`;
+  document.getElementById('labProgText').textContent='1 pendiente';
 }
 
 async function showLabFabric(idx){
   labIdx=idx; labType=null; savePendMeta();
   document.getElementById('labFname').textContent=pendFnames[idx]||'';
   document.getElementById('labName').value='';
+  document.getElementById('labCol').value='';
   document.querySelectorAll('.type-btn').forEach(b=>b.classList.remove('sel'));
   renderChips(null,'');
+  updateLabSteps();
   const mainImg=document.getElementById('labImg');
   mainImg.src='';
   const p=await getPreview(idx);
@@ -1462,48 +1562,40 @@ async function showLabFabric(idx){
     if(!el.querySelector('img')&&pendPreviews[i]) el.innerHTML=`<img src="${pendPreviews[i]}" alt="">`;
   });
   document.getElementById(`lth-${idx}`)?.scrollIntoView({behavior:'smooth',inline:'center',block:'nearest'});
+  setTimeout(()=>document.getElementById('labName')?.focus(),60);
 }
 
 function renderChips(type,cur){
-  const w=document.getElementById('chipsWrap');
-  const h=document.getElementById('chipsHint');
-  w.innerHTML='';
-  if(!type){h.textContent='Elige el tipo para ver sugerencias de nombre';return;}
-  h.textContent='Sugerencias — toca para usar:';
-  (SUGS[type]||[]).forEach(name=>{
-    const c=document.createElement('button');
-    c.className=`chip${name===cur?' on':''}`;
-    c.textContent=name;
-    c.addEventListener('click',()=>{
-      document.getElementById('labName').value=name;
-      document.querySelectorAll('.chip').forEach(x=>x.classList.remove('on'));
-      c.classList.add('on');
-    });
-    w.appendChild(c);
-  });
+  // Nombre manual: no se muestran propuestas automáticas al crear telas.
 }
 
-// Suggest button
-document.getElementById('suggestNameBtn').addEventListener('click',()=>{
-  const name=nextSuggestName(labType);
-  if(name){
-    document.getElementById('labName').value=name;
-    document.querySelectorAll('.chip').forEach(c=>c.classList.toggle('on',c.textContent===name));
+function updateLabSteps(){
+  const hasName=!!document.getElementById('labName')?.value.trim();
+  const hasType=!!labType;
+  const hasCollection=!!document.getElementById('labCol')?.value.trim();
+  document.getElementById('labStepType')?.classList.toggle('step-hidden',!hasName);
+  document.getElementById('labStepCollection')?.classList.toggle('step-hidden',!hasName||!hasType);
+  document.getElementById('labStepActions')?.classList.toggle('step-hidden',!hasName||!hasType||!hasCollection);
+}
+
+document.getElementById('labName').addEventListener('input',()=>{
+  if(!document.getElementById('labName').value.trim()){
+    labType=null;
+    document.getElementById('labCol').value='';
+    document.querySelectorAll('.type-btn').forEach(b=>b.classList.remove('sel'));
   }
+  updateLabSteps();
 });
+document.getElementById('labCol').addEventListener('change',updateLabSteps);
 
 document.querySelectorAll('.type-btn').forEach(btn=>{
   btn.addEventListener('click',()=>{
     labType=btn.dataset.t;
     document.querySelectorAll('.type-btn').forEach(b=>b.classList.remove('sel'));
     btn.classList.add('sel');
-    const cur=document.getElementById('labName').value.trim();
-    renderChips(labType,cur);
-    if(!cur){
-      const first=SUGS[labType]?.[0]||'';
-      document.getElementById('labName').value=first;
-      document.querySelector('.chip')?.classList.add('on');
-    }
+    document.getElementById('labCol').value='';
+    updateLabSteps();
+    setTimeout(()=>document.getElementById('labCol')?.focus(),60);
   });
 });
 
@@ -1517,7 +1609,10 @@ function removeFromPending(idx) {
 // ── SUBIR ESTA (una sola) ──
 document.getElementById('labConfirmOne').addEventListener('click', async()=>{
   const name  = document.getElementById('labName').value.trim();
-  const group = document.getElementById('labCol').value.trim()||'Colección 2026';
+  const group = document.getElementById('labCol').value.trim();
+  if(!name){toast('Primero escribe el nombre');document.getElementById('labName').focus();updateLabSteps();return;}
+  if(!labType){toast('Ahora selecciona el tipo de tela');updateLabSteps();return;}
+  if(!group){toast('Por último selecciona la colección');document.getElementById('labCol').focus();updateLabSteps();return;}
   if(name) usedNamesSession.add(name.toLowerCase().trim());
   showLoading('Subiendo tela…','Subiendo imagen a la nube…',20);
   try {
@@ -1549,54 +1644,6 @@ document.getElementById('labConfirmOne').addEventListener('click', async()=>{
     toast('Error: '+err.message);
     console.error(err);
   }
-});
-
-// ── SUBIR TODAS ──
-document.getElementById('labConfirmAll').addEventListener('click', async()=>{
-  const total = pendFnames.length;
-  if(!total) return;
-  const group = document.getElementById('labCol').value.trim()||'Colección 2026';
-
-  showLoading(`Subiendo ${total} fotos…`,'Preparando…',0);
-  let done = 0, errors = 0;
-  const allRecs = await idbGetAll();
-  const recMap  = {};
-  allRecs.forEach(r => { recMap[r.id] = r; });
-
-  for(let i=0;i<total;i++){
-    try {
-      const pct = Math.round(((i+1)/total)*100);
-      document.getElementById('loadingBar').style.width=pct+'%';
-      document.getElementById('loadingTxt').textContent=`${i+1} / ${total} fotos subidas`;
-      await uploadOneFabric(i, pendFnames[i], null, group);
-      done++;
-    } catch(err) {
-      errors++;
-      console.warn(`Error subiendo foto ${i}:`, err);
-    }
-  }
-
-  // Clear all pending
-  await idbClear();
-  pendFnames=[]; pendPreviews=[]; labIdx=0;
-  usedNamesSession.clear();
-  localStorage.removeItem('nonna_pend_fnames');
-  localStorage.removeItem('nonna_pend_idx');
-
-  hideLoading();
-  document.getElementById('labCard').style.display='none';
-  updateStorageInfo();
-  render();
-  renderAdminList();
-
-  if(errors===0) toast(`¡${done} telas publicadas! 🎉`);
-  else toast(`${done} subidas, ${errors} errores`);
-
-  // Auto-switch to telas
-  document.querySelectorAll('.admin-tab').forEach(t=>t.classList.remove('active'));
-  document.querySelectorAll('.tab-body').forEach(b=>b.classList.remove('active'));
-  document.querySelector('[data-tab="telas"]').classList.add('active');
-  document.getElementById('tab-telas').classList.add('active');
 });
 
 // ── GESTIONAR ──
@@ -1645,9 +1692,11 @@ function renderAdminList(){
     row.querySelector('input[type=file]').addEventListener('change',function(){
       const file=this.files[0];if(!file)return;
       const code=this.dataset.code;
+      const oldImageUrl=f.image_url||'';
       showLoading('Cambiando foto…','',50);
       uploadPhoto(file,`${code}.jpg?t=${Date.now()}`)
         .then(url=>sbPatch(`/rest/v1/fabrics?code=eq.${encodeURIComponent(code)}`,{image_url:url}))
+        .then(()=>pushAdminUndo({type:'update_fabric',label:'foto',code,oldFields:{image_url:oldImageUrl}}))
         .then(()=>loadFabrics())
         .then(()=>{render();renderAdminList();hideLoading();toast('Foto actualizada ✓');})
         .catch(e=>{hideLoading();toast('Error: '+e.message);});
@@ -1658,6 +1707,7 @@ function renderAdminList(){
       const newVisible=f.visible===false;
       try{
         await sbPatch(`/rest/v1/fabrics?code=eq.${encodeURIComponent(f.code)}`,{visible:newVisible});
+        pushAdminUndo({type:'update_fabric',label:newVisible?'mostrar':'ocultar',code:f.code,oldFields:{visible:f.visible!==false}});
         await loadFabrics(); render(); renderAdminList();
         toast(newVisible?`"${f.name||f.code}" visible ✓`:`"${f.name||f.code}" ocultada`);
       }catch(e){toast('Error: '+e.message);}
@@ -1671,8 +1721,9 @@ function renderAdminList(){
       if(!confirm(`¿Eliminar "${f.name||f.code}"?`))return;
       showLoading('Eliminando…','',80);
       try{
-        await deletePhoto(`${f.code}.jpg`);
+        const deletedFabric=cloneFabric(f);
         await sbDelete(`/rest/v1/fabrics?code=eq.${encodeURIComponent(f.code)}`);
+        pushAdminUndo({type:'delete_fabric',label:'eliminar',fabric:deletedFabric});
         await loadFabrics(); render(); renderAdminList(); hideLoading(); toast('Tela eliminada');
       }catch(e){hideLoading();toast('Error: '+e.message);}
     });
@@ -1741,11 +1792,20 @@ function showEditRow(code){
         <label class="edit-img-lbl">📷 Cambiar<input type="file" accept="image/*" id="edit-photo-${code}"></label>
       </div>
     </div>
-    <input type="text" class="finp" id="en-${code}" value="${f.name||''}" placeholder="Nombre"
-      style="font-size:.88rem;padding:.42rem .6rem;">
-    <select id="ec-${code}" class="col-inp ec-sel"></select>
-    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:.35rem;">
-      ${typeBtn('lino','🌿 Lino')}${typeBtn('lino_nico','🍃 Lino Nico')}${typeBtn('velveton','🪶 Velvetón')}${typeBtn('algodon','🌸 Algodón')}
+    <div class="fabric-form-section">
+      <label class="flbl">Seleccionar nombre</label>
+      <input type="text" class="finp" id="en-${code}" value="${f.name||''}" placeholder="Nombre"
+        style="font-size:.88rem;padding:.42rem .6rem;">
+    </div>
+    <div class="fabric-form-section">
+      <label class="flbl">Seleccionar tipo de tela</label>
+      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:.35rem;">
+        ${typeBtn('lino','🌿 Lino')}${typeBtn('lino_nico','🍃 Lino Nico')}${typeBtn('velveton','🪶 Velvetón')}${typeBtn('algodon','🌸 Algodón')}
+      </div>
+    </div>
+    <div class="fabric-form-section collection-section">
+      <label class="flbl">Seleccionar colección</label>
+      <select id="ec-${code}" class="col-inp ec-sel"></select>
     </div>
     <button id="save-edit-${code}" style="width:100%;padding:.52rem;background:var(--dark);
       color:var(--cream);border:none;border-radius:5px;cursor:pointer;font-family:'Barlow',sans-serif;
@@ -1782,7 +1842,7 @@ function showEditRow(code){
     const o1=document.createElement("option");o1.value="Tonos verdes";o1.textContent="Tonos verdes";if(f.group==="Tonos verdes")o1.selected=true;sel.appendChild(o1);
     const o2=document.createElement("option");o2.value="Tonos azules";o2.textContent="Tonos azules";if(f.group==="Tonos azules")o2.selected=true;sel.appendChild(o2);
     const o3=document.createElement("option");o3.value="Tonos beige y marrones";o3.textContent="Tonos beige y marrones";if(f.group==="Tonos beige y marrones")o3.selected=true;sel.appendChild(o3);
-    sel.style.cssText="width:100%;padding:.38rem .6rem;border:1.5px solid var(--border);border-radius:5px;background:var(--cream);font-family:'Barlow',sans-serif;font-size:.78rem;appearance:none;-webkit-appearance:none;cursor:pointer;";
+    sel.style.cssText="appearance:none;-webkit-appearance:none;cursor:pointer;";
   })();
 
   document.getElementById(`close-edit-${code}`).addEventListener('click',e=>{
@@ -1801,6 +1861,12 @@ function showEditRow(code){
     try{
       await sbPatch(`/rest/v1/fabrics?code=eq.${encodeURIComponent(code)}`,
         {name:n,material:TM[et]||et,pattern:TP[et]||'liso',group:g});
+      pushAdminUndo({
+        type:'update_fabric',
+        label:'editar',
+        code,
+        oldFields:{name:f.name,material:f.material,pattern:f.pattern,group:f.group}
+      });
       await loadFabrics();
       render(); renderAdminList(); hideLoading(); toast('Actualizada ✓');
     }catch(e){hideLoading();toast('Error: '+e.message);}
@@ -1822,9 +1888,11 @@ function showEditRow(code){
     // Remove outside listener before showing loading
     document.removeEventListener('click',window._activeOutsideHandler);
     window._activeOutsideHandler=null;
+    const oldImageUrl=f.image_url||'';
     showLoading('Cambiando foto…','',50);
     uploadPhoto(file,`${code}.jpg?t=${Date.now()}`)
       .then(url=>sbPatch(`/rest/v1/fabrics?code=eq.${encodeURIComponent(code)}`,{image_url:url}))
+      .then(()=>pushAdminUndo({type:'update_fabric',label:'foto',code,oldFields:{image_url:oldImageUrl}}))
       .then(()=>loadFabrics())
       .then(()=>{
         const imgEl=document.getElementById(`edit-img-${code}`);
@@ -2191,6 +2259,7 @@ async function migrateIfNeeded(){
 async function init(){
   await openDB();
   loadPendMeta();
+  isAdmin=hasAdminSession();
   await loadFabricsMeta(); // lightweight: metadata only (no image_url)
   await migrateIfNeeded(); // only runs if FABRICS_META is empty (first time)
   render(); // async: loads section pages in background
@@ -4841,8 +4910,11 @@ document.getElementById('cropApply').addEventListener('click',async()=>{
   showLoading('Guardando recorte…','',50);
   out.toBlob(async blob=>{
     try{
+      const oldFabric=FABRICS.find(f=>f.code===_cropCode);
+      const oldImageUrl=oldFabric?.image_url||'';
       const url=await uploadPhoto(blob,`${_cropCode}.jpg?t=${Date.now()}`);
       await sbPatch(`/rest/v1/fabrics?code=eq.${encodeURIComponent(_cropCode)}`,{image_url:url});
+      pushAdminUndo({type:'update_fabric',label:'recorte',code:_cropCode,oldFields:{image_url:oldImageUrl}});
       if(_cropCallback) _cropCallback(url);
       await loadFabrics();render();renderAdminList();hideLoading();toast('Imagen recortada ✓');
     }catch(err){hideLoading();toast('Error: '+err.message);}
